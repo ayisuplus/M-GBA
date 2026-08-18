@@ -1,0 +1,8 @@
+{
+  "model_version": "reference-multirate-runner-0.1",
+  "l0_interval": 5,
+  "l4_interval": 10,
+  "max_total_ticks": 10000,
+  "max_cells": 256,
+  "max_events_per_tick": 32
+}

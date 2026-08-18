@@ -1,0 +1,14 @@
+{
+  "model_version": "reference-l3-tissue-environment-0.1",
+  "resource_recovery": 0.1,
+  "consumption_gain": 0.6,
+  "stress_retention": 0.75,
+  "stress_diffusion": 0.1,
+  "resource_stress_gain": 0.2,
+  "apoptosis_stress_gain": 0.3,
+  "repair_stress_reduction": 0.6,
+  "signal_retention": 0.2,
+  "secretion_coupling": 0.8,
+  "damage_stress_weight": 0.6,
+  "damage_viability_weight": 0.4
+}

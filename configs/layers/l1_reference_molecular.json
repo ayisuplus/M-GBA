@@ -1,0 +1,37 @@
+{
+  "model_version": "reference-l1-coarse-molecular-0.1",
+  "local_signal_gain": 0.5,
+  "feedback_inhibition": 0.4,
+  "species": {
+    "damage_receptor": {
+      "transcript": "damage_response",
+      "synthesis_rate": 0.3,
+      "degradation_rate": 0.4
+    },
+    "signal_protein": {
+      "transcript": "signal_expression",
+      "synthesis_rate": 0.35,
+      "degradation_rate": 0.45
+    },
+    "repair_protein": {
+      "transcript": "repair_expression",
+      "synthesis_rate": 0.3,
+      "degradation_rate": 0.35
+    },
+    "metabolic_capacity": {
+      "transcript": "metabolic_expression",
+      "synthesis_rate": 0.25,
+      "degradation_rate": 0.3
+    },
+    "death_effector": {
+      "transcript": "death_expression",
+      "synthesis_rate": 0.25,
+      "degradation_rate": 0.45
+    },
+    "feedback_inhibitor": {
+      "transcript": "negative_feedback_expression",
+      "synthesis_rate": 0.3,
+      "degradation_rate": 0.4
+    }
+  }
+}

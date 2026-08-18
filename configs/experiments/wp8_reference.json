@@ -1,0 +1,26 @@
+{
+  "model_version": "reference-causal-matrix-0.1",
+  "ticks": 30,
+  "seeds": [41, 42, 43],
+  "perturbations": [
+    {
+      "condition_id": "repair_kd_000",
+      "cell_id": "cell-a",
+      "gene": "repair_expression",
+      "value": 0.0
+    },
+    {
+      "condition_id": "repair_clamp_050",
+      "cell_id": "cell-a",
+      "gene": "repair_expression",
+      "value": 0.5
+    },
+    {
+      "condition_id": "repair_oe_100",
+      "cell_id": "cell-a",
+      "gene": "repair_expression",
+      "value": 1.0
+    }
+  ],
+  "ablations": ["l1_static", "l2_static", "l3_static"]
+}

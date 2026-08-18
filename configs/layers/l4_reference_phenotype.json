@@ -1,0 +1,11 @@
+{
+  "model_version": "reference-l4-phenotype-observer-0.1",
+  "vitality_support_weights": [0.4, 0.6],
+  "inflammation_weights": [0.5, 0.3, 0.2],
+  "homeostasis_weights": [0.45, 0.3, 0.25],
+  "recovery_weights": [0.5, 0.3, 0.2],
+  "failed_vitality_max": 0.2,
+  "failed_damage_min": 0.8,
+  "recovered_homeostasis_min": 0.7,
+  "trend_delta_min": 0.05
+}

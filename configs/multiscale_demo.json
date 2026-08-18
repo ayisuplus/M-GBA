@@ -1,0 +1,70 @@
+{
+  "seed": 42,
+  "environment_stress": 0.35,
+  "resource_level": 1.0,
+  "incoming_signal": 0.0,
+  "agents": [
+    {
+      "id": "cell-a",
+      "genome": {
+        "version": "abstract-genome-0.2",
+        "traits": {
+          "damage_response": 0.2,
+          "signal_expression": 0.8,
+          "repair_expression": 0.7,
+          "metabolic_expression": 0.8,
+          "death_expression": 0.1,
+          "negative_feedback_expression": 0.2
+        }
+      }
+    },
+    {
+      "id": "cell-b",
+      "genome": {
+        "version": "abstract-genome-0.2",
+        "traits": {
+          "damage_response": 0.25,
+          "signal_expression": 0.6,
+          "repair_expression": 0.5,
+          "metabolic_expression": 0.7,
+          "death_expression": 0.15,
+          "negative_feedback_expression": 0.25
+        }
+      }
+    },
+    {
+      "id": "cell-c",
+      "genome": {
+        "version": "abstract-genome-0.2",
+        "traits": {
+          "damage_response": 0.15,
+          "signal_expression": 0.4,
+          "repair_expression": 0.9,
+          "metabolic_expression": 0.6,
+          "death_expression": 0.05,
+          "negative_feedback_expression": 0.3
+        }
+      }
+    },
+    {
+      "id": "cell-d",
+      "genome": {
+        "version": "abstract-genome-0.2",
+        "traits": {
+          "damage_response": 0.3,
+          "signal_expression": 0.7,
+          "repair_expression": 0.6,
+          "metabolic_expression": 0.9,
+          "death_expression": 0.12,
+          "negative_feedback_expression": 0.2
+        }
+      }
+    }
+  ],
+  "edges": [
+    ["cell-a", "cell-b"],
+    ["cell-b", "cell-c"],
+    ["cell-c", "cell-d"],
+    ["cell-d", "cell-a"]
+  ]
+}
