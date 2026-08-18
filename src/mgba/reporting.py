@@ -710,7 +710,11 @@ def _repair_path_svg(rows: list[dict[str, Any]], condition_id: str) -> str:
         width=width,
         height=height,
         title=f"{condition_id} propagation path",
-        description="Line plot of mean absolute effect from L0 to L4 for the complete repair knockdown condition.",
+        description=(
+            "Line plot of mean absolute effect from L0 to L4 for the complete repair knockdown condition."
+            if condition_id == "repair_kd_000"
+            else f"Line plot of mean absolute effect from L0 to L4 for {condition_id}."
+        ),
         body="\n".join(parts),
     )
 
@@ -853,6 +857,7 @@ def _report_html(
     matrix: _MatrixInput,
     condition_rows: list[dict[str, Any]],
     selected_seed: int,
+    path_condition: str,
 ) -> str:
     table_rows = []
     for row in condition_rows:
@@ -869,6 +874,14 @@ def _report_html(
             f"<td>{row['delta_homeostasis']:.6f}</td>"
             "</tr>"
         )
+    path_figure = (
+        '<figure><img src="repair-path.svg" alt="Repair knockdown propagation from L0 to L4"><figcaption>Complete repair knockdown attenuates strongly from L0 into L3, then remains measurable at L4.</figcaption></figure>'
+        if path_condition == "repair_kd_000"
+        else (
+            '<figure><img src="repair-path.svg" alt="Selected perturbation propagation from L0 to L4">'
+            f'<figcaption><code>{html.escape(path_condition)}</code> propagation across the frozen adjacent layer path.</figcaption></figure>'
+        )
+    )
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -899,7 +912,7 @@ code {{ font-family: ui-monospace, monospace; }}
 <tbody>{''.join(table_rows)}</tbody>
 </table>
 <figure><img src="layer-effects.svg" alt="Layer effects for every non-baseline condition"><figcaption>Mean absolute state distance across L0–L4. The log display keeps small perturbation effects visible beside large ablations.</figcaption></figure>
-<figure><img src="repair-path.svg" alt="Repair knockdown propagation from L0 to L4"><figcaption>Complete repair knockdown attenuates strongly from L0 into L3, then remains measurable at L4.</figcaption></figure>
+{path_figure}
 <figure><img src="tissue-damage.svg" alt="Tissue damage over time for all conditions"><figcaption>Raw L3 tissue damage at every tick for seed {selected_seed}.</figcaption></figure>
 <figure><img src="metric-effects.svg" alt="Final L4 metric differences"><figcaption>Signed final phenotype differences relative to the same-seed baseline.</figcaption></figure>
 <h2>Rebuildable data</h2>
@@ -1024,7 +1037,8 @@ def build_causal_report(
         _metric_effects_svg(metric_rows, matrix.condition_order), encoding="utf-8"
     )
     paths.html.write_text(
-        _report_html(matrix, condition_rows, selected_seed), encoding="utf-8"
+        _report_html(matrix, condition_rows, selected_seed, repair_condition),
+        encoding="utf-8",
     )
     manifest_payload = {
         "schema_version": _REPORT_SCHEMA,

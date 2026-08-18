@@ -147,3 +147,6 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 完成 WP9：只从 `matrix-7da4137aa39d5122` raw artifact 重建 5 份 CSV、4 张 SVG、静态 HTML 和 SHA-256 manifest，不在绘图阶段调参。
 - [x] 完成 WP10 发布冻结：中英文技术报告、wheel 安装与空环境复现、full/fallback 演示和发布清单。
 - [x] 项目所有者于 2026-08-19 接受 E0–E2 范围，并授权首次 Git commit、`v0.1.0` tag 与 GitHub 推送。
+- [x] 将旧 CAR-M 资产适配为首个独立场景包，保持核心 DTO/Protocol 和参考模型不变。
+- [x] 从 752 个旧 TCGA-BRCA 预测生成无样本 ID 的聚合 profile，并保存源 artifact 摘要与代理标签声明。
+- [x] 完成 63-Cell CAR-M 固定图、群体 L0 剂量、L2/L3 场景模型及 21-run E0–E2 矩阵。

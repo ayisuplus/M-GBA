@@ -34,6 +34,16 @@ from .runner import (
     save_checkpoint,
     save_run_artifact,
 )
+from .scenarios.carm import (
+    CARM_MODEL_STATUS,
+    build_carm_profile,
+    build_carm_runners,
+    compile_carm_scenario,
+    load_carm_scenario_config,
+    run_carm_matrix,
+    save_carm_artifacts,
+    save_carm_profile,
+)
 from .simulation import load_scenario, run_scenario
 
 
@@ -159,6 +169,58 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir", help="optional report directory; defaults inside the matrix"
     )
 
+    carm_import = commands.add_parser(
+        "carm-import",
+        help="build a de-identified CAR-M cohort profile from legacy JSON",
+    )
+    carm_import.add_argument(
+        "--legacy-root",
+        required=True,
+        help="legacy CAR-M project root or its app/public/data/tcga directory",
+    )
+    carm_import.add_argument(
+        "--output", required=True, help="output aggregate cohort profile JSON"
+    )
+
+    carm_experiment = commands.add_parser(
+        "carm-experiment",
+        help="run the frozen TCGA-proxy-anchored CAR-M vertical slice",
+    )
+    carm_experiment.add_argument(
+        "--config",
+        default="configs/scenarios/carm/high_immune_her2.json",
+        help="CAR-M scenario JSON",
+    )
+    carm_experiment.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    carm_experiment.add_argument(
+        "--matrix-config",
+        default="configs/experiments/carm_vertical_slice.json",
+        help="CAR-M causal matrix JSON",
+    )
+    carm_experiment.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="L0 discrete GRN JSON",
+    )
+    carm_experiment.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    carm_experiment.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    carm_experiment.add_argument(
+        "--artifact-root",
+        help="optional root for raw runs, provenance, summary, and report",
+    )
+
     sten = commands.add_parser("sten-smoke", help="run the L3 STEN subsystem smoke test")
     sten.add_argument("--config", default="configs/demo.json", help="STEN scenario JSON")
     sten.add_argument("--ticks", type=int, help="override scenario tick count")
@@ -209,6 +271,40 @@ def main() -> None:
             "report_manifest": str(paths.manifest),
             "files": report_manifest["files"],
         }
+    elif args.command == "carm-import":
+        profile = build_carm_profile(args.legacy_root)
+        save_carm_profile(args.output, profile)
+        result = {
+            "schema_version": profile.schema_version,
+            "cohort_id": profile.cohort_id,
+            "sample_count": profile.sample_count,
+            "total_sample_count": profile.total_sample_count,
+            "subtype_counts": dict(profile.subtype_counts),
+            "output": args.output,
+            "proxy_label_notice": profile.proxy_label_notice,
+        }
+    elif args.command == "carm-experiment":
+        compiled = compile_carm_scenario(load_carm_scenario_config(args.config))
+        matrix_config = load_causal_config(args.matrix_config)
+        runners = build_carm_runners(
+            compiled,
+            matrix_config,
+            runner_config=load_runner_config(args.runner_config),
+            l0_config=args.l0_config,
+            l1_config=args.l1_config,
+            l4_config=args.l4_config,
+        )
+        matrix = run_carm_matrix(compiled, matrix_config, runners=runners)
+        result = matrix.report_dict()
+        result["model_status"] = CARM_MODEL_STATUS
+        result["cohort_id"] = compiled.config.profile.cohort_id
+        result["profile_digest"] = compiled.profile_digest
+        if args.artifact_root:
+            artifacts = save_carm_artifacts(args.artifact_root, matrix, compiled)
+            report_paths = build_causal_report(artifacts.causal.root)
+            result["artifact_root"] = str(artifacts.causal.root)
+            result["provenance"] = str(artifacts.provenance)
+            result["report"] = str(report_paths.html)
     else:
         if args.ticks is not None and args.ticks < 1:
             raise SystemExit("--ticks must be positive")

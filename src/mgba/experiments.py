@@ -62,11 +62,42 @@ class PerturbationCondition:
 
 
 @dataclass(frozen=True, slots=True)
+class GroupPerturbationCondition:
+    condition_id: str
+    targets: tuple[str, ...]
+    gene: str
+    value: float
+
+    def __post_init__(self) -> None:
+        if not _CONDITION_ID.fullmatch(self.condition_id):
+            raise ValueError("condition_id contains unsupported path characters")
+        if self.condition_id == "baseline":
+            raise ValueError("baseline is reserved for the control condition")
+        if not self.targets or self.targets != tuple(sorted(self.targets)):
+            raise ValueError("group perturbation targets must be non-empty and sorted")
+        if len(set(self.targets)) != len(self.targets):
+            raise ValueError("group perturbation targets must be unique")
+        if any(not target.strip() for target in self.targets) or not self.gene.strip():
+            raise ValueError("perturbation Cell and gene names must not be empty")
+        if not math.isfinite(self.value) or not 0.0 <= self.value <= 1.0:
+            raise ValueError("perturbation value must be finite and in [0, 1]")
+
+
+PerturbationSpec = PerturbationCondition | GroupPerturbationCondition
+
+
+def _condition_targets(condition: PerturbationSpec) -> tuple[str, ...]:
+    if isinstance(condition, GroupPerturbationCondition):
+        return condition.targets
+    return (condition.cell_id,)
+
+
+@dataclass(frozen=True, slots=True)
 class CausalExperimentConfig:
     model_version: str
     ticks: int
     seeds: tuple[int, ...]
-    perturbations: tuple[PerturbationCondition, ...]
+    perturbations: tuple[PerturbationSpec, ...]
     ablations: tuple[str, ...]
 
     def __post_init__(self) -> None:
@@ -101,19 +132,34 @@ class CausalExperimentConfig:
 def load_causal_config(path: str | Path) -> CausalExperimentConfig:
     try:
         raw: dict[str, Any] = json.loads(Path(path).read_text(encoding="utf-8"))
+
+        def load_perturbation(item: Mapping[str, Any]) -> PerturbationSpec:
+            has_cell_id = "cell_id" in item
+            has_targets = "targets" in item
+            if has_cell_id == has_targets:
+                raise ValueError(
+                    "each perturbation requires exactly one of cell_id or targets"
+                )
+            common = {
+                "condition_id": str(item["condition_id"]),
+                "gene": str(item["gene"]),
+                "value": float(item["value"]),
+            }
+            if has_targets:
+                raw_targets = item["targets"]
+                if not isinstance(raw_targets, list):
+                    raise ValueError("group perturbation targets must be a JSON array")
+                return GroupPerturbationCondition(
+                    targets=tuple(str(target) for target in raw_targets),
+                    **common,
+                )
+            return PerturbationCondition(cell_id=str(item["cell_id"]), **common)
+
         return CausalExperimentConfig(
             model_version=str(raw["model_version"]),
             ticks=raw["ticks"],
             seeds=tuple(raw["seeds"]),
-            perturbations=tuple(
-                PerturbationCondition(
-                    condition_id=str(item["condition_id"]),
-                    cell_id=str(item["cell_id"]),
-                    gene=str(item["gene"]),
-                    value=float(item["value"]),
-                )
-                for item in raw["perturbations"]
-            ),
+            perturbations=tuple(load_perturbation(item) for item in raw["perturbations"]),
             ablations=tuple(str(item) for item in raw["ablations"]),
         )
     except (KeyError, TypeError, json.JSONDecodeError) as error:
@@ -530,7 +576,9 @@ class CausalExperimentRunner:
             raise TypeError("causal matrix requires a MultiscaleScenario")
         known_cell_ids = {cell_id for cell_id, _ in scenario.genomes}
         unknown_targets = {
-            item.cell_id for item in self.config.perturbations
+            target
+            for item in self.config.perturbations
+            for target in _condition_targets(item)
         } - known_cell_ids
         if unknown_targets:
             raise ValueError(
@@ -552,7 +600,10 @@ class CausalExperimentRunner:
                 item.condition_id,
                 ConditionKind.PERTURBATION,
                 self.runners["baseline"],
-                {item.cell_id: {item.gene: item.value}},
+                {
+                    target: {item.gene: item.value}
+                    for target in _condition_targets(item)
+                },
             )
             for item in self.config.perturbations
         )

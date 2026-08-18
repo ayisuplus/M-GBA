@@ -1,0 +1,61 @@
+{
+  "cancer_type": "TCGA-BRCA",
+  "cohort_id": "tcga_brca_high_immune",
+  "graph_edge_count": 8688,
+  "graph_node_count": 5000,
+  "graph_source": "string",
+  "immune_subtype": "high_immune",
+  "legacy_preset_name": "高免疫浸润型",
+  "legacy_reported_sample_count": 45,
+  "mean_immune_infiltration": {
+    "B_cells_memory": 0.04288513931888545,
+    "B_cells_naive": 0.057673684210526314,
+    "Dendritic_cells_activated": 0.04147829721362229,
+    "Dendritic_cells_resting": 0.04459117647058824,
+    "Eosinophils": 0.05306953560371517,
+    "Macrophages_M0": 0.04159130030959752,
+    "Macrophages_M1": 0.03772600619195046,
+    "Macrophages_M2": 0.043966656346749226,
+    "Mast_cells_activated": 0.044873219814241486,
+    "Mast_cells_resting": 0.04649043343653251,
+    "Monocytes": 0.04354213622291021,
+    "NK_cells_activated": 0.04542653250773994,
+    "NK_cells_resting": 0.04829092879256966,
+    "Neutrophils": 0.0388552012383901,
+    "Plasma_cells": 0.03422572755417957,
+    "T_cells_CD4_memory_activated": 0.04917349845201238,
+    "T_cells_CD4_memory_resting": 0.051525572755417956,
+    "T_cells_CD4_naive": 0.04779904024767802,
+    "T_cells_CD8": 0.04989473684210526,
+    "T_cells_follicular_helper": 0.050643529411764705,
+    "T_cells_gamma_delta": 0.038153065015479874,
+    "T_cells_regulatory_Tregs": 0.04812640866873065
+  },
+  "proxy_label_notice": "TCGA-BRCA immune values are legacy GAT predictions trained against gene-signature-derived proxy labels; they are not clinical ground truth.",
+  "sample_count": 323,
+  "schema_version": "mgba-carm-cohort-profile-0.1",
+  "source_artifacts": [
+    {
+      "name": "tcga_graph_info.json",
+      "sha256": "29f0bf99237db9148b346491c220c5ef16ce492ad14696a6fa100a3185ff48f6"
+    },
+    {
+      "name": "tcga_patient_scenarios.json",
+      "sha256": "06bce18de9bd8f1ff34d5c0da5b839f40897c1631c3f87904b4629b8fb6a4d84"
+    },
+    {
+      "name": "tcga_predictions.json",
+      "sha256": "dd2e231fd04312598ca21f677ab63cfd21425e15440579201e2bddd71f79cdaf"
+    }
+  ],
+  "source_backend": "numpy",
+  "source_model": "GAT-2layer-4heads",
+  "subtype_accuracy": 0.5717,
+  "subtype_counts": {
+    "high_immune": 323,
+    "low_immune": 273,
+    "normal": 156
+  },
+  "survival_auc": 0.4744,
+  "total_sample_count": 752
+}

@@ -35,6 +35,8 @@ L0 基因/转录调控
 - WP8 已完成 7 条件 × 3 seed 的配对矩阵，保存 21 份完整 raw trace、逐层效应和传播 tick。
 - WP9 已完成 raw-only 报告链：重算 5 份 CSV、4 张 SVG 和无 JavaScript 的只读 HTML，并用 SHA-256 manifest 固定输出。
 - WP10 已冻结为 0.1.0：中英文报告、full/fallback 演示、wheel 安装复现和发布清单已就绪；项目所有者已接受 E0–E2 发布范围。
+- v0.2 已增加首个 CAR-M 场景包：从旧 TCGA-BRCA 预测重算 752 个样本的去标识化聚合 profile，并以 63 个 Cell 的固定图贯通 CAR 信号程序 L0→L4。
+- CAR-M 21-run 矩阵已验证群体 L0 钳制、L2/L3 场景适配器、三层消融、checkpoint 恢复和 raw-only 报告；当前高剂量结果是炎症上升且最终负担代理略升的负面基线。
 - 默认与三档 repair 钳制均为 `FAILED`；L2 静态替换产生最大差异并转为 `RECOVERED`，因此当前优先诊断五态 L2 累积规则。
 - 现有 STEN 代码保留为 L3 子系统 smoke test。
 - 三个 seed 的轨迹效应完全相同，当前尚无有效随机重复、统计推断或 L4 下行反馈；整个系统不能用于生物学、群体动力学或涌现结论。
@@ -58,6 +60,9 @@ L0 基因/转录调控
 - [WP8 reference matrix 实验记录](docs/实验记录/WP8-reference-matrix-2026-08-18.md)
 - [ADR-0009：WP9 可重建报告与可视化](docs/决策记录/ADR-0009-WP9-可重建报告与可视化.md)
 - [ADR-0010：WP10 交付冻结](docs/决策记录/ADR-0010-WP10-交付冻结.md)
+- [CAR-M v0.2 实施记录](docs/计划文件/CAR-M-v0.2实施计划.md)
+- [ADR-0011：CAR-M 场景包与群体扰动](docs/决策记录/ADR-0011-CAR-M场景包与群体扰动.md)
+- [CAR-M v0.2 实验记录](docs/实验记录/CAR-M-vertical-slice-2026-08-19.md)
 - [0.1.0 中文设计报告](docs/报告/M-GBA-MVP-中文设计报告.md)
 - [0.1.0 English technical report](docs/报告/M-GBA-MVP-English-Technical-Report.md)
 - [0.1.0 复现说明](docs/复现/MVP-0.1.0-复现说明.md)
@@ -76,6 +81,8 @@ python -m venv .venv
 .\.venv\Scripts\mgba simulate --ticks 100
 .\.venv\Scripts\mgba experiment --artifact-root artifacts
 .\.venv\Scripts\mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
+.\.venv\Scripts\mgba carm-import --legacy-root "..\car-m-virtual-cell-main\car-m-virtual-cell-main" --output data/carm/tcga_brca_high_immune.json
+.\.venv\Scripts\mgba carm-experiment --artifact-root artifacts/carm
 .\.venv\Scripts\mgba sten-smoke --config configs/demo.json
 .\.venv\Scripts\python -m unittest discover -s tests -v
 .\.venv\Scripts\python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
@@ -90,20 +97,24 @@ python -m venv .venv
 .venv/bin/mgba simulate --ticks 100
 .venv/bin/mgba experiment --artifact-root artifacts
 .venv/bin/mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
+.venv/bin/mgba carm-import --legacy-root ../car-m-virtual-cell-main/car-m-virtual-cell-main --output data/carm/tcga_brca_high_immune.json
+.venv/bin/mgba carm-experiment --artifact-root artifacts/carm
 .venv/bin/mgba sten-smoke --config configs/demo.json
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
 ```
 
-`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`scripts/mvp_demo.py` 将这些步骤与冻结身份校验组合为 full demo；`--mode fallback` 不生成 WP8/WP9 证据。五层命令可用 `--l0-config` 至 `--l4-config` 替换层配置；多速率命令另用 `--runner-config` 冻结时钟与预算。`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。离线 wheel 安装和空虚拟环境流程见复现说明。
+`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
 
 ## 当前目录
 
 ```text
 M-GBA/
+├── data/carm/                # 去标识化 TCGA 代理聚合 profile
 ├── configs/
 │   ├── layers/              # 版本化层模型配置
 │   ├── experiments/         # 冻结批量实验矩阵
+│   ├── scenarios/carm/      # CAR-M 场景、角色、环境与模型参数
 │   ├── runner_reference.json # 多速率时钟与预算
 │   ├── multiscale_demo.json # 默认五层纵向契约场景
 │   └── demo.json            # L3 STEN 子系统场景
@@ -123,6 +134,7 @@ M-GBA/
 │   ├── reporting.py         # raw-only CSV/SVG/HTML 报告重建
 │   ├── multiscale.py        # 五层参考实现、runner 与 trace
 │   ├── runner.py            # 多速率调度、逐 tick trace、checkpoint 与恢复
+│   ├── scenarios/carm/      # 数据导入、场景编译、L2/L3 适配器与工作流
 │   ├── models.py            # Genome、消息与拓扑协议
 │   ├── sten.py              # L3 路由、拓扑、约束和事件
 │   ├── simulation.py        # L3 规则 Agent smoke runner
@@ -142,6 +154,7 @@ M-GBA/
 8. 已完成：从冻结 raw artifact 字节级重建结果表、逐层效应图、时间序列图和只读报告。
 9. 已完成：WP10 的中英文报告、full/fallback 演示、空虚拟环境 wheel 复现和 0.1.0 发布冻结。
 10. 已完成：项目所有者于 2026-08-19 接受 E0–E2 范围并授权首次 Git commit、`v0.1.0` tag 与 GitHub 推送。
-11. 建立有效随机重复和统计协议后，再引入 L4 慢反馈、GNN、STEN 增强和 LLM Policy。
+11. 已完成：CAR-M 真实数据代理锚定场景、群体 L0 扰动、L2/L3 适配器与 21-run 纵向矩阵。
+12. 建立有效随机重复和统计协议后，再重新训练层内模型并引入空间 L3、L4 慢反馈、STEN 增强和 LLM Policy。
 
 每次只升级一层，当前标准库参考模型长期保留为可复现基线。

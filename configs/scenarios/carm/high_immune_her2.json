@@ -1,0 +1,112 @@
+{
+  "schema_version": "mgba-carm-scenario-0.1",
+  "model_version": "carm-high-immune-her2-scenario-0.2",
+  "seed": 42,
+  "cohort_profile": "../../../data/carm/tcga_brca_high_immune.json",
+  "car_design": {
+    "signaling_domain": "CD3ζ",
+    "target_antigen": "HER2",
+    "affinity": 7.0,
+    "checkpoint_blockade": {
+      "CD47_SIRPa": false,
+      "CD24_Siglec10": false
+    }
+  },
+  "population": {
+    "engineered_macrophages": 15,
+    "wild_type_macrophages": 10,
+    "tumor_cells": 20,
+    "cd8_t_cells": 18
+  },
+  "microenvironment": {
+    "oxygen": 0.6,
+    "lactate": 0.3,
+    "tgf_beta": 0.4,
+    "stress_weights": {
+      "hypoxia": 0.4,
+      "lactate": 0.2,
+      "tgf_beta": 0.2,
+      "m2_ratio": 0.2
+    },
+    "signal_weights": {
+      "cd8": 0.5,
+      "m1": 0.5
+    }
+  },
+  "genome_templates": {
+    "engineered_macrophage": {
+      "version": "carm-coarse-program-0.2",
+      "traits": {
+        "damage_response": 0.25,
+        "signal_expression": 0.0,
+        "repair_expression": 0.5,
+        "metabolic_expression": 0.7,
+        "death_expression": 0.15,
+        "negative_feedback_expression": 0.25
+      }
+    },
+    "wild_type_macrophage": {
+      "version": "carm-coarse-program-0.2",
+      "traits": {
+        "damage_response": 0.25,
+        "signal_expression": 0.0,
+        "repair_expression": 0.5,
+        "metabolic_expression": 0.7,
+        "death_expression": 0.15,
+        "negative_feedback_expression": 0.25
+      }
+    },
+    "tumor": {
+      "version": "carm-coarse-program-0.2",
+      "traits": {
+        "damage_response": 0.3,
+        "signal_expression": 0.7,
+        "repair_expression": 0.6,
+        "metabolic_expression": 0.9,
+        "death_expression": 0.12,
+        "negative_feedback_expression": 0.2
+      }
+    },
+    "cd8_t_cell": {
+      "version": "carm-coarse-program-0.2",
+      "traits": {
+        "damage_response": 0.2,
+        "signal_expression": 0.8,
+        "repair_expression": 0.7,
+        "metabolic_expression": 0.8,
+        "death_expression": 0.1,
+        "negative_feedback_expression": 0.2
+      }
+    }
+  },
+  "topology": {
+    "tumor_neighbors_per_immune": 2
+  },
+  "cell_model": {
+    "model_version": "carm-l2-deterministic-expected-value-0.2",
+    "feedback_suppression": 0.6,
+    "macrophage_signal_weight": 0.75,
+    "macrophage_repair_gain": 1.0,
+    "cd8_signal_weight": 0.65,
+    "tumor_growth_rate": 0.025,
+    "immune_recovery_rate": 0.02,
+    "immune_stress_rate": 0.06,
+    "tumor_stress_rate": 0.12,
+    "apoptosis_threshold": 0.05,
+    "activation_threshold": 0.25,
+    "stress_threshold": 0.7
+  },
+  "tissue_model": {
+    "model_version": "carm-l3-fixed-tme-0.2",
+    "resource_recovery": 0.04,
+    "resource_consumption_gain": 0.08,
+    "stress_retention": 0.75,
+    "signal_retention": 0.6,
+    "secretion_coupling": 0.3,
+    "macrophage_effector_gain": 0.85,
+    "cd8_effector_gain": 0.45,
+    "tumor_suppression_gain": 0.35,
+    "immune_stress_recovery": 0.2,
+    "tumor_burden_weight": 0.8
+  }
+}

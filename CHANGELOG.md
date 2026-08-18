@@ -2,6 +2,23 @@
 
 All notable changes to M-GBA are documented here.
 
+## 0.2.0 - 2026-08-19
+
+### Added
+
+- A TCGA-proxy-anchored CAR-M scenario package compiled into the unchanged L0–L4 contracts.
+- De-identified cohort aggregation with source SHA-256 provenance and explicit proxy-label boundaries.
+- Deterministic CAR-M Cell and fixed tumor-microenvironment models for L2 and L3.
+- Backward-compatible group perturbations and a frozen 21-run CAR signal dose/ablation matrix.
+- `carm-import` and `carm-experiment` commands, CAR-M provenance artifacts, tests, and documentation.
+
+### Scientific boundary
+
+- The CAR-M slice is a mechanism-informed reference model, not a calibrated biological or clinical predictor.
+- The legacy patient-level GAT is not used in the generative hot path.
+- The frozen high-dose result increases inflammation and slightly increases the final burden proxy; it is retained as a negative baseline.
+- Spatial ABM behavior, stochastic replication, model retraining, dynamic topology, and the React UI remain deferred.
+
 ## 0.1.0 - 2026-08-19
 
 ### Added

@@ -1,0 +1,74 @@
+{
+  "model_version": "carm-vertical-slice-matrix-0.2",
+  "ticks": 30,
+  "seeds": [41, 42, 43],
+  "perturbations": [
+    {
+      "condition_id": "car_off_000",
+      "targets": [
+        "eng-mac-001",
+        "eng-mac-002",
+        "eng-mac-003",
+        "eng-mac-004",
+        "eng-mac-005",
+        "eng-mac-006",
+        "eng-mac-007",
+        "eng-mac-008",
+        "eng-mac-009",
+        "eng-mac-010",
+        "eng-mac-011",
+        "eng-mac-012",
+        "eng-mac-013",
+        "eng-mac-014",
+        "eng-mac-015"
+      ],
+      "gene": "signal_expression",
+      "value": 0.0
+    },
+    {
+      "condition_id": "car_affinity_070",
+      "targets": [
+        "eng-mac-001",
+        "eng-mac-002",
+        "eng-mac-003",
+        "eng-mac-004",
+        "eng-mac-005",
+        "eng-mac-006",
+        "eng-mac-007",
+        "eng-mac-008",
+        "eng-mac-009",
+        "eng-mac-010",
+        "eng-mac-011",
+        "eng-mac-012",
+        "eng-mac-013",
+        "eng-mac-014",
+        "eng-mac-015"
+      ],
+      "gene": "signal_expression",
+      "value": 0.7
+    },
+    {
+      "condition_id": "car_max_100",
+      "targets": [
+        "eng-mac-001",
+        "eng-mac-002",
+        "eng-mac-003",
+        "eng-mac-004",
+        "eng-mac-005",
+        "eng-mac-006",
+        "eng-mac-007",
+        "eng-mac-008",
+        "eng-mac-009",
+        "eng-mac-010",
+        "eng-mac-011",
+        "eng-mac-012",
+        "eng-mac-013",
+        "eng-mac-014",
+        "eng-mac-015"
+      ],
+      "gene": "signal_expression",
+      "value": 1.0
+    }
+  ],
+  "ablations": ["l1_static", "l2_static", "l3_static"]
+}
