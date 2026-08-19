@@ -19,6 +19,12 @@ All notable changes to M-GBA are documented here.
 - The frozen high-dose result increases inflammation and slightly increases the final burden proxy; it is retained as a negative baseline.
 - Spatial ABM behavior, stochastic replication, model retraining, dynamic topology, and the React UI remain deferred.
 
+### Reference identity note
+
+- `code_version` moved to `0.2.0`, so manifest-derived run identities moved honestly: single-tick `mgba-3a179a5a3c399f6d`, 100-tick `mgba-06a3c6124501f1d6`, history digest `4b008f6ca8fa481df1025683f16f306cc3a44505ddff359131e09167ed3920a2`.
+- Layer dynamics did not move: the single-tick trace digest is still `20f9578497fd67d04071cd4cd08627262ff883a620d5c7c02ea7dff4014a0135`, the 100-tick outcome is still `FAILED`, and the WP8 matrix is still `matrix-7da4137aa39d5122`.
+- The `m-gba==0.1.0` identities remain recorded in the 0.1.0 release documents and still reproduce from the 0.1.0 wheel.
+
 ## 0.1.0 - 2026-08-19
 
 ### Added

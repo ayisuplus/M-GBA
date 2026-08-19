@@ -24,7 +24,7 @@ class MvpDemoTests(unittest.TestCase):
         result = json.loads(completed.stdout)
 
         self.assertEqual("fallback", result["mode"])
-        self.assertEqual("mgba-023f543fb5a130ab", result["single_tick_experiment_id"])
+        self.assertEqual("mgba-3a179a5a3c399f6d", result["single_tick_experiment_id"])
         self.assertIn("30-tick runner", result["scope"])
         self.assertEqual(64, len(result["history_digest"]))
         self.assertEqual(64, len(result["sten_event_digest"]))
