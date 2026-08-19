@@ -2,6 +2,18 @@
 
 All notable changes to M-GBA are documented here.
 
+## Unreleased
+
+### Added
+
+- `mgba run-report` and `mgba.run_report.build_run_report`: rebuild a deterministic per-tick L0–L4 trajectory record (6 SVG charts, 6 CSVs, read-only HTML, SHA-256 manifest) from any saved run artifact (`simulate --trace-out` or a matrix raw run).
+- Run artifacts are validated fail-closed before charting: experiment manifest, history hash chain, and checkpoint identity are recomputed from raw ticks; tampered or checkpoint-resumed partial artifacts are rejected.
+- The default report output refuses locations inside a raw artifact directory; pass `--output-dir` explicitly for matrix raw runs.
+
+### Scientific boundary
+
+- Charts show dimensionless reference-model proxies; L0–L3 series are per-tick means across cells, and L4 is charted only at scheduled slow-clock observations.
+
 ## 0.2.0 - 2026-08-19
 
 ### Added

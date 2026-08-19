@@ -27,6 +27,7 @@ from .multiscale import (
     summarize_trace,
 )
 from .reporting import build_causal_report
+from .run_report import build_run_report
 from .runner import (
     MultirateCrossScaleRunner,
     load_checkpoint,
@@ -169,6 +170,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir", help="optional report directory; defaults inside the matrix"
     )
 
+    run_report = commands.add_parser(
+        "run-report",
+        help="rebuild per-tick L0-to-L4 trajectory charts from a saved run artifact",
+    )
+    run_report.add_argument(
+        "--run",
+        required=True,
+        help="run artifact JSON from simulate --trace-out or a matrix raw run",
+    )
+    run_report.add_argument(
+        "--output-dir",
+        help="optional report directory; defaults to <run-stem>-report beside the run file",
+    )
+
     carm_import = commands.add_parser(
         "carm-import",
         help="build a de-identified CAR-M cohort profile from legacy JSON",
@@ -267,6 +282,16 @@ def main() -> None:
         report_manifest = json.loads(paths.manifest.read_text(encoding="utf-8"))
         result = {
             "matrix_id": report_manifest["matrix_id"],
+            "report_root": str(paths.root),
+            "report_manifest": str(paths.manifest),
+            "files": report_manifest["files"],
+        }
+    elif args.command == "run-report":
+        paths = build_run_report(args.run, args.output_dir)
+        report_manifest = json.loads(paths.manifest.read_text(encoding="utf-8"))
+        result = {
+            "experiment_id": report_manifest["experiment_id"],
+            "history_digest": report_manifest["history_digest"],
             "report_root": str(paths.root),
             "report_manifest": str(paths.manifest),
             "files": report_manifest["files"],

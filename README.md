@@ -78,7 +78,8 @@ Windows PowerShell：
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -e .
 .\.venv\Scripts\mgba run --config configs/multiscale_demo.json
-.\.venv\Scripts\mgba simulate --ticks 100
+.\.venv\Scripts\mgba simulate --ticks 100 --trace-out artifacts/run.json
+.\.venv\Scripts\mgba run-report --run artifacts/run.json
 .\.venv\Scripts\mgba experiment --artifact-root artifacts
 .\.venv\Scripts\mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
 .\.venv\Scripts\mgba carm-import --legacy-root "..\car-m-virtual-cell-main\car-m-virtual-cell-main" --output data/carm/tcga_brca_high_immune.json
@@ -94,7 +95,8 @@ Linux / WSL：
 python -m venv .venv
 .venv/bin/python -m pip install -e .
 .venv/bin/mgba run --config configs/multiscale_demo.json
-.venv/bin/mgba simulate --ticks 100
+.venv/bin/mgba simulate --ticks 100 --trace-out artifacts/run.json
+.venv/bin/mgba run-report --run artifacts/run.json
 .venv/bin/mgba experiment --artifact-root artifacts
 .venv/bin/mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
 .venv/bin/mgba carm-import --legacy-root ../car-m-virtual-cell-main/car-m-virtual-cell-main --output data/carm/tcga_brca_high_immune.json
@@ -104,7 +106,7 @@ python -m venv .venv
 .venv/bin/python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
 ```
 
-`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
+`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
 
 ## 当前目录
 
@@ -132,6 +134,7 @@ M-GBA/
 │   ├── experiment.py        # manifest、实验 ID、事件与 artifact 协议
 │   ├── experiments.py       # 配对扰动/消融、逐层效应与矩阵 artifact
 │   ├── reporting.py         # raw-only CSV/SVG/HTML 报告重建
+│   ├── run_report.py        # 单 run 逐 tick L0–L4 轨迹可视化记录
 │   ├── multiscale.py        # 五层参考实现、runner 与 trace
 │   ├── runner.py            # 多速率调度、逐 tick trace、checkpoint 与恢复
 │   ├── scenarios/carm/      # 数据导入、场景编译、L2/L3 适配器与工作流
