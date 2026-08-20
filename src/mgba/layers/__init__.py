@@ -1,5 +1,6 @@
 """Stable DTOs and Protocols for the five M-GBA layers."""
 
+from .agent import CellAgent
 from .contracts import (
     CellAction,
     CellModel,
@@ -29,6 +30,7 @@ from .contracts import (
 
 __all__ = [
     "CellAction",
+    "CellAgent",
     "CellModel",
     "CellPhase",
     "CellState",

@@ -14,6 +14,7 @@ from .experiment import (
 )
 from .layers import (
     CellAction,
+    CellAgent,
     CellModel,
     CellPhase,
     CellState,
@@ -349,6 +350,17 @@ class MultirateCrossScaleRunner:
         perturbations: Mapping[str, Mapping[str, float]] | None = None,
         checkpoint: RunnerCheckpoint | None = None,
     ) -> MultirateRun:
+        """Advance the scenario with one explicit CellAgent per cell.
+
+        Each agent owns its cell identity, genome, and current L0/L1/L2
+        states and decides through the CellModel policy boundary; the runner
+        remains responsible for advancing L0/L1 layer services and the
+        tissue-level L3/L4 state. The agents are object-form carriers of the
+        per-cell previous-state bookkeeping this method used before the
+        agent-centric refactor: every model call receives exactly the same
+        argument values as before, so traces, history digests, checkpoints,
+        and experiment matrices are bit-identical to the pre-refactor runner.
+        """
         if not isinstance(scenario, MultiscaleScenario):
             raise TypeError("multirate runner requires a MultiscaleScenario")
         if isinstance(ticks, bool) or not isinstance(ticks, int) or ticks < 1:
@@ -380,11 +392,14 @@ class MultirateCrossScaleRunner:
             model_versions=dict(self.model_versions),
         )
 
+        sorted_genomes = tuple(sorted(scenario.genomes, key=lambda item: item[0]))
+        agents = tuple(
+            CellAgent(cell_id, genome, self.cell_model)
+            for cell_id, genome in sorted_genomes
+        )
+
         if checkpoint is None:
             start_tick = 1
-            previous_l0: tuple[TranscriptState, ...] | None = None
-            previous_l1: tuple[MolecularState, ...] | None = None
-            previous_l2: tuple[CellState, ...] | None = None
             previous_l3: TissueState | None = None
             l4_observations: list[OrganismState] = []
             history_digest = digest_payload(
@@ -393,9 +408,21 @@ class MultirateCrossScaleRunner:
         else:
             self._validate_checkpoint(checkpoint, manifest)
             start_tick = checkpoint.logical_time + 1
-            previous_l0 = checkpoint.l0
-            previous_l1 = checkpoint.l1
-            previous_l2 = checkpoint.l2
+            for agent, l0_state, l1_state, l2_state in zip(
+                agents, checkpoint.l0, checkpoint.l1, checkpoint.l2, strict=True
+            ):
+                if not (
+                    agent.cell_id
+                    == l0_state.cell_id
+                    == l1_state.cell_id
+                    == l2_state.cell_id
+                ):
+                    raise ValueError(
+                        "checkpoint cell identities do not match scenario"
+                    )
+                agent.advance_l0(l0_state)
+                agent.advance_l1(l1_state)
+                agent.advance_l2(l2_state)
             previous_l3 = checkpoint.l3
             l4_observations = list(checkpoint.l4_observations)
             history_digest = checkpoint.history_digest
@@ -405,78 +432,77 @@ class MultirateCrossScaleRunner:
             raise ValueError("run exceeds runner max_total_ticks budget")
 
         traces: list[MultiscaleTickTrace] = []
-        genomes = tuple(sorted(scenario.genomes, key=lambda item: item[0]))
         regulatory_input = RegulatoryInput(
             damage_signal=scenario.environment_stress
         )
 
         for logical_time in range(start_tick, end_tick + 1):
+            previous_l1 = (
+                tuple(agent.l1 for agent in agents)
+                if agents and agents[0].l1 is not None
+                else None
+            )
+            previous_l2 = (
+                tuple(agent.l2 for agent in agents)
+                if agents and agents[0].l2 is not None
+                else None
+            )
             l0_updated = (logical_time - 1) % self.config.l0_interval == 0
             if l0_updated:
-                previous_l0_by_id = {
-                    state.cell_id: state for state in previous_l0 or ()
-                }
                 l0_results = tuple(
                     self.genome_model.step(
-                        cell_id=cell_id,
-                        genome=genome,
-                        previous_state=previous_l0_by_id.get(cell_id),
+                        cell_id=agent.cell_id,
+                        genome=agent.genome,
+                        previous_state=agent.l0,
                         regulatory_input=regulatory_input,
-                        perturbations=normalized_perturbations.get(cell_id, {}),
+                        perturbations=normalized_perturbations.get(
+                            agent.cell_id, {}
+                        ),
                         logical_time=logical_time,
                     )
-                    for cell_id, genome in genomes
+                    for agent in agents
                 )
-                l0 = tuple(result.state for result in l0_results)
+                for agent, result in zip(agents, l0_results, strict=True):
+                    agent.advance_l0(result.state)
+                l0 = tuple(agent.l0 for agent in agents)
                 l0_events = tuple(
                     event
                     for result in l0_results
                     for event in result.perturbation_events
                 )
             else:
-                if previous_l0 is None:
+                if agents[0].l0 is None:
                     raise RuntimeError("L0 cannot be held before initialization")
-                l0 = previous_l0
+                l0 = tuple(agent.l0 for agent in agents)
                 l0_events = ()
 
-            previous_l2_by_id = {
-                state.cell_id: state for state in previous_l2 or ()
-            }
             l1_inputs = tuple(
                 MolecularInput(
                     metadata=_metadata(
                         logical_time=logical_time,
                         model_version="l2-to-l1-activation-boundary-0.2",
                         source={
-                            "cell_id": transcript.cell_id,
-                            "previous_cell": previous_l2_by_id.get(
-                                transcript.cell_id
-                            ),
+                            "cell_id": agent.cell_id,
+                            "previous_cell": agent.l2,
                         },
                     ),
-                    cell_id=transcript.cell_id,
+                    cell_id=agent.cell_id,
                     local_signal=(
-                        previous_l2_by_id[transcript.cell_id].activation
-                        if transcript.cell_id in previous_l2_by_id
-                        else 0.0
+                        agent.l2.activation if agent.l2 is not None else 0.0
                     ),
                 )
-                for transcript in l0
+                for agent in agents
             )
-            previous_l1_by_id = {
-                state.cell_id: state for state in previous_l1 or ()
-            }
-            l1 = tuple(
-                self.molecular_model.step(
-                    transcript,
-                    previous_state=previous_l1_by_id.get(transcript.cell_id),
-                    molecular_input=molecular_input,
-                    logical_time=logical_time,
+            for agent, molecular_input in zip(agents, l1_inputs, strict=True):
+                agent.advance_l1(
+                    self.molecular_model.step(
+                        agent.l0,
+                        previous_state=agent.l1,
+                        molecular_input=molecular_input,
+                        logical_time=logical_time,
+                    )
                 )
-                for transcript, molecular_input in zip(
-                    l0, l1_inputs, strict=True
-                )
-            )
+            l1 = tuple(agent.l1 for agent in agents)
 
             if previous_l3 is None:
                 environments = tuple(
@@ -504,14 +530,9 @@ class MultirateCrossScaleRunner:
                 )
 
             l2_pairs = tuple(
-                self.cell_model.step(
-                    molecular,
-                    environment,
-                    previous_state=previous_l2_by_id.get(molecular.cell_id),
-                    logical_time=logical_time,
-                )
-                for molecular, environment in zip(
-                    l1, environments, strict=True
+                agent.decide(molecular, environment, logical_time=logical_time)
+                for agent, molecular, environment in zip(
+                    agents, l1, environments, strict=True
                 )
             )
             l2 = tuple(pair[0] for pair in l2_pairs)
@@ -575,16 +596,11 @@ class MultirateCrossScaleRunner:
                 {"previous": history_digest, "tick": trace}
             )
             traces.append(trace)
-            previous_l0 = l0
-            previous_l1 = l1
-            previous_l2 = l2
             previous_l3 = l3
 
-        if (
-            previous_l0 is None
-            or previous_l1 is None
-            or previous_l2 is None
-            or previous_l3 is None
+        if previous_l3 is None or any(
+            agent.l0 is None or agent.l1 is None or agent.l2 is None
+            for agent in agents
         ):
             raise RuntimeError("multirate run ended without complete layer state")
         checkpoint_result = RunnerCheckpoint(
@@ -592,9 +608,9 @@ class MultirateCrossScaleRunner:
             experiment_id=manifest.experiment_id,
             logical_time=end_tick,
             model_versions=self.model_versions,
-            l0=previous_l0,
-            l1=previous_l1,
-            l2=previous_l2,
+            l0=tuple(agent.l0 for agent in agents),
+            l1=tuple(agent.l1 for agent in agents),
+            l2=tuple(agent.l2 for agent in agents),
             l3=previous_l3,
             l4_observations=tuple(l4_observations),
             history_digest=history_digest,

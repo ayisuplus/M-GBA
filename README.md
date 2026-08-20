@@ -38,6 +38,7 @@ L0 基因/转录调控
 - v0.2 已增加首个 CAR-M 场景包：从旧 TCGA-BRCA 预测重算 752 个样本的去标识化聚合 profile，并以 63 个 Cell 的固定图贯通 CAR 信号程序 L0→L4。
 - CAR-M 21-run 矩阵已验证群体 L0 钳制、L2/L3 适配器、三层消融、checkpoint 恢复和 raw-only 报告；当前高剂量结果是炎症上升且最终负担代理略升的负面基线。
 - `mgba demo-export` 已提供自包含离线 HTML 演示：seed-42 的 4 剂量条件组织动画、L4 曲线与逐细胞 L0→L4 检查器，负面基线在页脚原样保留。
+- 主运行链已重构为 agent 中心：每细胞一个 `CellAgent` 持有 L0/L1/L2 状态并经 `CellModel` 协议决策；trace、checkpoint 与冻结矩阵行为与重构前逐字节一致。
 - 默认与三档 repair 钳制均为 `FAILED`；L2 静态替换产生最大差异并转为 `RECOVERED`，因此当前优先诊断五态 L2 累积规则。
 - 现有 STEN 代码保留为 L3 子系统 smoke test。
 - 三个 seed 的轨迹效应完全相同，当前尚无有效随机重复、统计推断或 L4 下行反馈；整个系统不能用于生物学、群体动力学或涌现结论。
