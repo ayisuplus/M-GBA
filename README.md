@@ -36,7 +36,8 @@ L0 基因/转录调控
 - WP9 已完成 raw-only 报告链：重算 5 份 CSV、4 张 SVG 和无 JavaScript 的只读 HTML，并用 SHA-256 manifest 固定输出。
 - WP10 已冻结为 0.1.0：中英文报告、full/fallback 演示、wheel 安装复现和发布清单已就绪；项目所有者已接受 E0–E2 发布范围。
 - v0.2 已增加首个 CAR-M 场景包：从旧 TCGA-BRCA 预测重算 752 个样本的去标识化聚合 profile，并以 63 个 Cell 的固定图贯通 CAR 信号程序 L0→L4。
-- CAR-M 21-run 矩阵已验证群体 L0 钳制、L2/L3 场景适配器、三层消融、checkpoint 恢复和 raw-only 报告；当前高剂量结果是炎症上升且最终负担代理略升的负面基线。
+- CAR-M 21-run 矩阵已验证群体 L0 钳制、L2/L3 适配器、三层消融、checkpoint 恢复和 raw-only 报告；当前高剂量结果是炎症上升且最终负担代理略升的负面基线。
+- `mgba demo-export` 已提供自包含离线 HTML 演示：seed-42 的 4 剂量条件组织动画、L4 曲线与逐细胞 L0→L4 检查器，负面基线在页脚原样保留。
 - 默认与三档 repair 钳制均为 `FAILED`；L2 静态替换产生最大差异并转为 `RECOVERED`，因此当前优先诊断五态 L2 累积规则。
 - 现有 STEN 代码保留为 L3 子系统 smoke test。
 - 三个 seed 的轨迹效应完全相同，当前尚无有效随机重复、统计推断或 L4 下行反馈；整个系统不能用于生物学、群体动力学或涌现结论。
@@ -84,6 +85,7 @@ python -m venv .venv
 .\.venv\Scripts\mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
 .\.venv\Scripts\mgba carm-import --legacy-root "..\car-m-virtual-cell-main\car-m-virtual-cell-main" --output data/carm/tcga_brca_high_immune.json
 .\.venv\Scripts\mgba carm-experiment --artifact-root artifacts/carm
+.\.venv\Scripts\mgba demo-export
 .\.venv\Scripts\mgba sten-smoke --config configs/demo.json
 .\.venv\Scripts\python -m unittest discover -s tests -v
 .\.venv\Scripts\python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
@@ -101,12 +103,13 @@ python -m venv .venv
 .venv/bin/mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
 .venv/bin/mgba carm-import --legacy-root ../car-m-virtual-cell-main/car-m-virtual-cell-main --output data/carm/tcga_brca_high_immune.json
 .venv/bin/mgba carm-experiment --artifact-root artifacts/carm
+.venv/bin/mgba demo-export
 .venv/bin/mgba sten-smoke --config configs/demo.json
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
 ```
 
-`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
+`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba demo-export` 在内存中回放冻结 CAR-M 矩阵（去掉消融、取 seed 42），向 `artifacts/demo/` 写出自包含单文件 HTML 演示（4 个剂量条件的组织动画、L4 曲线与 L0→L4 细胞检查器）、playbook JSON 和 SHA-256 manifest；内容为冻结配置的字节级确定函数，保留负面基线表述，不写任何 raw artifact。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
 
 ## 当前目录
 

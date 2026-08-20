@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 
+from .demo import export_carm_demo
 from .experiments import (
     CausalExperimentRunner,
     load_causal_config,
@@ -236,6 +237,46 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional root for raw runs, provenance, summary, and report",
     )
 
+    demo_export = commands.add_parser(
+        "demo-export",
+        help="export the self-contained offline CAR-M stage demo (HTML player)",
+    )
+    demo_export.add_argument(
+        "--config",
+        default="configs/scenarios/carm/high_immune_her2.json",
+        help="CAR-M scenario JSON",
+    )
+    demo_export.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    demo_export.add_argument(
+        "--matrix-config",
+        default="configs/experiments/carm_vertical_slice.json",
+        help="CAR-M causal matrix JSON",
+    )
+    demo_export.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="L0 discrete GRN JSON",
+    )
+    demo_export.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    demo_export.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    demo_export.add_argument(
+        "--output-dir",
+        default="artifacts/demo",
+        help="demo output directory (playbook, HTML player, manifest)",
+    )
+
     sten = commands.add_parser("sten-smoke", help="run the L3 STEN subsystem smoke test")
     sten.add_argument("--config", default="configs/demo.json", help="STEN scenario JSON")
     sten.add_argument("--ticks", type=int, help="override scenario tick count")
@@ -330,6 +371,29 @@ def main() -> None:
             result["artifact_root"] = str(artifacts.causal.root)
             result["provenance"] = str(artifacts.provenance)
             result["report"] = str(report_paths.html)
+    elif args.command == "demo-export":
+        paths = export_carm_demo(
+            scenario_config=args.config,
+            matrix_config=args.matrix_config,
+            runner_config=args.runner_config,
+            l0_config=args.l0_config,
+            l1_config=args.l1_config,
+            l4_config=args.l4_config,
+            output_dir=args.output_dir,
+        )
+        playbook = json.loads(paths.playbook.read_text(encoding="utf-8"))
+        manifest = json.loads(paths.manifest.read_text(encoding="utf-8"))
+        result = {
+            "playbook": str(paths.playbook),
+            "html": str(paths.html),
+            "manifest": str(paths.manifest),
+            "conditions": [
+                condition["condition_id"] for condition in playbook["conditions"]
+            ],
+            "ticks": len(playbook["conditions"][0]["ticks"]),
+            "cells": len(playbook["roles"]),
+            "playbook_digest": manifest["playbook_digest"],
+        }
     else:
         if args.ticks is not None and args.ticks < 1:
             raise SystemExit("--ticks must be positive")
