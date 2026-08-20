@@ -1,0 +1,5 @@
+{
+  "model_version": "e5-topology-comparison-0.1",
+  "ticks": 30,
+  "seeds": [7, 42, 1337]
+}

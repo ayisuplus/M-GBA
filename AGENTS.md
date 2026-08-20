@@ -193,3 +193,28 @@ AI Agent 可以帮助实现、测试、调研、重构和生成实验脚本，�
 - CAR-M L0/L1/L4 沿用参考模型，L2/L3 使用确定性场景适配器；旧患者级 GAT 不在生成热路径中。
 - CAR-M 21-run 矩阵显示 0.7/1.0 剂量均传播到 L4，但当前高剂量增加炎症且最终负担代理略升；必须保留为负面基线，不得为展示效果静默调参。
 - 当前 69 项测试包含原有 60 项回归和 9 项 CAR-M 数据、场景、群体扰动、checkpoint、矩阵与报告门禁。
+- `src/mgba/feedback.py` 已实现可选 L4→L3 稳态反馈控制器（离散 PI + 死区 + back-calculation 反饱和经济通道；无记忆安全屏障压力地板）；它只消费正式 `OrganismState`、只输出 `FeedbackConstraint`，不指定 L2 动作，不读取 L0–L2 内部对象。
+- `src/mgba/layers/l3.py` 新增 `ConstraintAwareTissueModel`；无约束时与参考 L3 动力学逐字段等价，有约束时约束进入 L3 source digest 哈希链。静态/参考 L3 模型与 CAR-M 适配器收到非空约束时显式抛错。
+- `src/mgba/runner.py` 支持可选 `feedback_policy` 注入；checkpoint 恢复通过重放 `l4_observations` 重建控制器状态，checkpoint schema 与字段集不变；无注入时 0.2.0 基线位级不变。
+- `src/mgba/feedback_experiments.py` 与 `mgba feedback-experiment` 已实现 E4 三条件（无/固定/状态反馈）对照矩阵，复用 WP8 配对比较指标与 artifact 协议。
+- `scripts/synthetic_feedback_benchmark.py` 生成确定性仿真场景集（4 压力档 ×12 Cell）并运行 E4 基准；所有合成场景当前均为 `FAILED` 负面基线，不得为展示效果静默调参。
+- 当前 109 项测试包含原有 83 项回归、23 项反馈边缘/防崩溃与确定性测试和 3 项冻结身份门禁。
+- `src/mgba/layers/l2_active_inference.py` 已实现可选主动推理（变分自由能）L2 策略：预期自由能（风险+歧义）最小化、确定性 argmin、无采样；只消费本 Cell 的 L1 状态与局部环境，遵守 `CellModel` 协议；规则状态机未修改且仍是默认。
+- `src/mgba/policy_experiments.py` 与 `mgba policy-experiment` 已实现规则 vs 主动推理 L2 策略配对对照，复用 WP8 配对比较指标；矩阵构造器强制两 runner 仅 L2 不同。
+- `scripts/synthetic_policy_benchmark.py` 复用反馈基准数据集生成器运行策略对照基准；AIF 当前不优于规则基线（所有合成场景均 `FAILED`），不得为展示效果静默调参。
+- 当前 127 项测试包含原有 109 项和 18 项主动推理数值极端/防崩溃/契约/配对矩阵测试。
+- `src/mgba/layers/l3_adaptive.py` 已实现可选受治理动态拓扑：应激回避 T1 式边交换、提案→授权→提交治理链、每 tick 交换预算与入度守恒；Agent 只能提出意图，系统约束负责授权与提交；每次提交进入 L3 source digest 哈希链留痕。静态固定图模型未修改且仍是默认。
+- `src/mgba/topology_experiments.py` 与 `mgba topology-experiment` 已实现 E5 静态 vs 动态拓扑配对对照，含拓扑稳定性指标；矩阵构造器强制两 runner 仅 L3 不同。
+- `scripts/synthetic_topology_benchmark.py` 复用共享数据集生成器运行 E5 基准；冻结阈值下默认场景零提交、合成场景仅 calm 档每 seed 1 次确定性交换，结局仍全部 `FAILED`，不得为展示效果静默调参。
+- 当前 142 项测试包含原有 127 项和 15 项动态拓扑极端/守恒/预算/契约/配对矩阵测试。
+- `src/mgba/layers/l0_noisy.py` 已实现可选种子化转录噪声 L0：确定性右端位级不变 + 有界乘性噪声，噪声流由 `sha256(seed|cell|time)` 派生（显式种子、checkpoint 精确恢复、哈希链留痕）；确定性 GRN 未修改且仍是默认。`noise_sigma=0` 时基因值与确定性基线逐位一致。
+- `src/mgba/e3_statistics.py` 与 `e3_experiments.py` 及 `mgba e3-experiment` 已实现 W14/M9 的 E3 群体统计协议：多种子噪声集合按预注册判据（CV 稳定性、微观驱动解耦、持续性）分级；不同 seed 已形成可统计分布。
+- `scripts/synthetic_e3_benchmark.py` 复用共享数据集生成器运行 E3 基准；calm 档出现 2 个预注册判据命中的 emergence_candidate，按 §4 术语不构成已验证涌现，不得越级宣称。
+- 当前 158 项测试包含原有 142 项和 16 项噪声/E3 确定性、边界、防崩溃与冻结基线门禁测试。
+- `src/mgba/closed_loop_experiments.py` 与 `mgba closed-loop-experiment` 已实现 E4×E3 随机闭环对照（噪声开环 / 噪声闭环 / 确定性闭环三条件），按预注册稳定性判据（变号数、振幅、趋势）分级每 run 的慢时钟稳态序列；构造器强制闭环条件仅差噪声或仅差反馈。
+- `scripts/synthetic_closed_loop_benchmark.py` 复用共享数据集生成器运行闭环基准；全部场景当前均为 `deterioration`/`lock`/`indeterminate`，无 `recovery` 或 `oscillation`——诚实负基线，不得为展示效果静默调参。
+- 当前 169 项测试包含原有 158 项和 11 项闭环稳定性分级/防崩溃/契约/配对矩阵与冻结基线门禁测试。
+- `src/mgba/neural.py` 已实现纯标准库神经基元（sha256 逐元素派生的 Xavier 式种子化矩阵、溢出安全 MLP 前向、入邻均值消息传递）；`src/mgba/layers/l0_neural.py` 与 `src/mgba/layers/l3_gnn.py` 已实现可选冻结权重 L0 MLP 与 L3 GNN 契约演示器（ADR-0017）：权重由显式 seed 派生而非训练，扰动钳制语义与静态拓扑门禁不变，GNN 不进入反馈闭环且不修改拓扑；确定性参考模型未修改且仍是默认。
+- `src/mgba/neural_experiments.py` 与 `mgba neural-experiment`（`--layer l0|l3`）已实现参考 vs 神经单层替换配对对照，复用 WP8 配对比较指标；矩阵构造器强制两 runner 仅在 swapped 层不同。
+- `scripts/synthetic_neural_benchmark.py` 复用共享数据集生成器运行 L0/L3 两组替换基准（4 场景 × 2 层 × 2 条件 × 3 seed）；神经变体是契约演示器，不宣称神经真实拟合或算力收益。
+- 当前 191 项测试包含原有 169 项和 22 项神经基元/L0/L3 变体/配对矩阵/冻结基线门禁测试。

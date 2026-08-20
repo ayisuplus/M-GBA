@@ -1,0 +1,11 @@
+{
+  "model_version": "closed-loop-stochastic-0.1",
+  "ticks": 60,
+  "seeds": [7, 42, 1337, 2026, 31337],
+  "sign_change_min": 2,
+  "amplitude_min": 0.01,
+  "lock_std_max": 0.002,
+  "recovery_delta_min": 0.05,
+  "recovery_homeostasis_min": 0.6,
+  "deterioration_delta_min": 0.05
+}

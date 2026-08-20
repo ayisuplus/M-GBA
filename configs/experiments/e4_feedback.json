@@ -1,0 +1,7 @@
+{
+  "model_version": "e4-feedback-matrix-0.1",
+  "ticks": 60,
+  "seeds": [7, 42, 1337],
+  "fixed_resource_ceiling": 0.7,
+  "fixed_stress_floor": 0.3
+}

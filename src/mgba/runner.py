@@ -18,6 +18,8 @@ from .layers import (
     CellModel,
     CellPhase,
     CellState,
+    FeedbackConstraint,
+    FeedbackPolicy,
     GenomeModel,
     L0PerturbationEvent,
     LayerId,
@@ -315,6 +317,7 @@ class MultirateCrossScaleRunner:
         cell_model: CellModel,
         tissue_model: TissueModel,
         phenotype_model: WindowedPhenotypeModel,
+        feedback_policy: FeedbackPolicy | None = None,
     ) -> None:
         self.config = config
         self.genome_model = genome_model
@@ -322,6 +325,14 @@ class MultirateCrossScaleRunner:
         self.cell_model = cell_model
         self.tissue_model = tissue_model
         self.phenotype_model = phenotype_model
+        if feedback_policy is not None and (
+            not callable(getattr(feedback_policy, "observe", None))
+            or not callable(getattr(feedback_policy, "reset", None))
+        ):
+            raise TypeError(
+                "feedback_policy must implement the FeedbackPolicy protocol"
+            )
+        self.feedback_policy = feedback_policy
 
     @property
     def model_version(self) -> str:
@@ -380,15 +391,18 @@ class MultirateCrossScaleRunner:
             raise ValueError(
                 f"perturbations target unknown cells: {sorted(unknown_cell_ids)}"
             )
+        manifest_config: dict[str, Any] = {
+            "scenario": scenario,
+            "perturbations": normalized_perturbations,
+            "runner": self.config,
+        }
+        if self.feedback_policy is not None:
+            manifest_config["feedback"] = self.feedback_policy.model_version
         manifest = ExperimentManifest.create(
             experiment_name="multirate-reference-run",
             seed=scenario.seed,
             code_version=__version__,
-            config={
-                "scenario": scenario,
-                "perturbations": normalized_perturbations,
-                "runner": self.config,
-            },
+            config=manifest_config,
             model_versions=dict(self.model_versions),
         )
 
@@ -398,6 +412,9 @@ class MultirateCrossScaleRunner:
             for cell_id, genome in sorted_genomes
         )
 
+        active_constraint: FeedbackConstraint | None = None
+        if self.feedback_policy is not None:
+            self.feedback_policy.reset()
         if checkpoint is None:
             start_tick = 1
             previous_l3: TissueState | None = None
@@ -426,6 +443,12 @@ class MultirateCrossScaleRunner:
             previous_l3 = checkpoint.l3
             l4_observations = list(checkpoint.l4_observations)
             history_digest = checkpoint.history_digest
+            if self.feedback_policy is not None:
+                for observation in checkpoint.l4_observations:
+                    active_constraint = self.feedback_policy.observe(
+                        observation,
+                        logical_time=observation.metadata.logical_time,
+                    )
 
         end_tick = start_tick + ticks - 1
         if end_tick > self.config.max_total_ticks:
@@ -546,6 +569,7 @@ class MultirateCrossScaleRunner:
                 previous_state=previous_l3,
                 edges=scenario.edges,
                 logical_time=logical_time,
+                constraint=active_constraint,
             )
 
             l4_observed = (logical_time - 1) % self.config.l4_interval == 0
@@ -556,6 +580,10 @@ class MultirateCrossScaleRunner:
             )
             if l4 is not None:
                 l4_observations.append(l4)
+                if self.feedback_policy is not None:
+                    active_constraint = self.feedback_policy.observe(
+                        l4, logical_time=logical_time
+                    )
 
             transitions = self._transitions(
                 logical_time=logical_time,

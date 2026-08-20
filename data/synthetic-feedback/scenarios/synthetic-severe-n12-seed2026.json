@@ -1,0 +1,242 @@
+{
+  "agents": [
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.2414,
+          "death_expression": 0.2193,
+          "metabolic_expression": 0.6552,
+          "negative_feedback_expression": 0.2215,
+          "repair_expression": 0.2552,
+          "signal_expression": 0.7617
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-000"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.2304,
+          "death_expression": 0.2766,
+          "metabolic_expression": 0.6858,
+          "negative_feedback_expression": 0.1616,
+          "repair_expression": 0.4398,
+          "signal_expression": 0.3728
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-001"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.3078,
+          "death_expression": 0.2614,
+          "metabolic_expression": 0.6991,
+          "negative_feedback_expression": 0.1278,
+          "repair_expression": 0.3173,
+          "signal_expression": 0.5602
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-002"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.2597,
+          "death_expression": 0.2454,
+          "metabolic_expression": 0.4226,
+          "negative_feedback_expression": 0.4356,
+          "repair_expression": 0.4343,
+          "signal_expression": 0.4173
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-003"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.2807,
+          "death_expression": 0.2853,
+          "metabolic_expression": 0.7555,
+          "negative_feedback_expression": 0.1517,
+          "repair_expression": 0.2877,
+          "signal_expression": 0.7528
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-004"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.312,
+          "death_expression": 0.1992,
+          "metabolic_expression": 0.8783,
+          "negative_feedback_expression": 0.4377,
+          "repair_expression": 0.3534,
+          "signal_expression": 0.7712
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-005"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.256,
+          "death_expression": 0.2166,
+          "metabolic_expression": 0.4393,
+          "negative_feedback_expression": 0.2376,
+          "repair_expression": 0.3328,
+          "signal_expression": 0.5552
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-006"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.2054,
+          "death_expression": 0.2361,
+          "metabolic_expression": 0.6079,
+          "negative_feedback_expression": 0.2303,
+          "repair_expression": 0.406,
+          "signal_expression": 0.5986
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-007"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.2928,
+          "death_expression": 0.2779,
+          "metabolic_expression": 0.7984,
+          "negative_feedback_expression": 0.4391,
+          "repair_expression": 0.4093,
+          "signal_expression": 0.3721
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-008"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.1925,
+          "death_expression": 0.229,
+          "metabolic_expression": 0.7228,
+          "negative_feedback_expression": 0.4133,
+          "repair_expression": 0.4257,
+          "signal_expression": 0.8722
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-009"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.4398,
+          "death_expression": 0.1988,
+          "metabolic_expression": 0.576,
+          "negative_feedback_expression": 0.3248,
+          "repair_expression": 0.4422,
+          "signal_expression": 0.7022
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-010"
+    },
+    {
+      "genome": {
+        "traits": {
+          "damage_response": 0.3289,
+          "death_expression": 0.2467,
+          "metabolic_expression": 0.758,
+          "negative_feedback_expression": 0.3272,
+          "repair_expression": 0.2719,
+          "signal_expression": 0.623
+        },
+        "version": "abstract-genome-synthetic-0.1"
+      },
+      "id": "cell-011"
+    }
+  ],
+  "edges": [
+    [
+      "cell-000",
+      "cell-001"
+    ],
+    [
+      "cell-000",
+      "cell-011"
+    ],
+    [
+      "cell-001",
+      "cell-002"
+    ],
+    [
+      "cell-002",
+      "cell-003"
+    ],
+    [
+      "cell-002",
+      "cell-008"
+    ],
+    [
+      "cell-003",
+      "cell-004"
+    ],
+    [
+      "cell-003",
+      "cell-009"
+    ],
+    [
+      "cell-004",
+      "cell-005"
+    ],
+    [
+      "cell-004",
+      "cell-009"
+    ],
+    [
+      "cell-004",
+      "cell-010"
+    ],
+    [
+      "cell-005",
+      "cell-006"
+    ],
+    [
+      "cell-006",
+      "cell-007"
+    ],
+    [
+      "cell-007",
+      "cell-008"
+    ],
+    [
+      "cell-008",
+      "cell-009"
+    ],
+    [
+      "cell-009",
+      "cell-010"
+    ],
+    [
+      "cell-010",
+      "cell-011"
+    ]
+  ],
+  "environment_stress": 0.6,
+  "incoming_signal": 0.0,
+  "resource_level": 0.5,
+  "seed": 7
+}

@@ -1,0 +1,16 @@
+{
+  "model_version": "homeostatic-feedback-controller-0.1",
+  "setpoint": 0.75,
+  "proportional_gain": 0.4,
+  "integral_gain": 0.1,
+  "back_calculation_gain": 0.25,
+  "deadband": 0.02,
+  "integral_bound": 0.5,
+  "resource_ceiling_idle": 1.0,
+  "resource_gain": 0.4,
+  "resource_ceiling_min": 0.3,
+  "stress_floor_idle": 0.0,
+  "stress_gain": 1.0,
+  "stress_floor_max": 0.8,
+  "alarm_homeostasis": 0.4
+}

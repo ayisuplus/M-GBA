@@ -167,6 +167,52 @@ class LocalEnvironment:
         _require_unit_interval(self.incoming_signal, "incoming_signal")
 
 
+
+@dataclass(frozen=True, slots=True)
+class FeedbackConstraint:
+    """Formal L4-to-L3 downward constraint boundary.
+
+    The constraint only shapes tissue environment fields; it never names a
+    cell or prescribes L2 behavior. The economic channel caps resource
+    recovery via ``resource_ceiling``; the safety channel lifts the stress
+    floor via ``stress_floor``. Audit fields expose the controller state
+    (set-point error, integrator state, actuator saturation) that produced
+    the constraint so every downward action stays traceable.
+    """
+
+    metadata: StateMetadata
+    resource_ceiling: float
+    stress_floor: float
+    error: float
+    integral: float
+    saturated: bool
+
+    def __post_init__(self) -> None:
+        _require_unit_interval(self.resource_ceiling, "resource_ceiling")
+        _require_unit_interval(self.stress_floor, "stress_floor")
+        if not math.isfinite(self.error) or not -1.0 <= self.error <= 1.0:
+            raise ValueError("constraint error must be a finite value in [-1, 1]")
+        if not math.isfinite(self.integral):
+            raise ValueError("constraint integral must be finite")
+        if not isinstance(self.saturated, bool):
+            raise TypeError("constraint saturated flag must be a bool")
+
+    @classmethod
+    def neutral(cls, *, logical_time: int, model_version: str) -> "FeedbackConstraint":
+        """Identity constraint that leaves reference L3 dynamics unchanged."""
+        return cls(
+            metadata=StateMetadata(
+                logical_time=logical_time,
+                model_version=model_version,
+                source_digest="neutral-feedback-constraint",
+            ),
+            resource_ceiling=1.0,
+            stress_floor=0.0,
+            error=0.0,
+            integral=0.0,
+            saturated=False,
+        )
+
 class CellPhase(StrEnum):
     QUIESCENT = "quiescent"
     ACTIVATED = "activated"
@@ -382,6 +428,7 @@ class TissueModel(Protocol):
         previous_state: TissueState | None,
         edges: tuple[tuple[str, str], ...],
         logical_time: int,
+        constraint: FeedbackConstraint | None = None,
     ) -> TissueState: ...
 
 
@@ -397,3 +444,17 @@ class WindowedPhenotypeModel(PhenotypeModel, Protocol):
     def summarize(
         self, states: tuple[OrganismState, ...]
     ) -> PhenotypeWindow: ...
+
+
+class FeedbackPolicy(Protocol):
+    """Low-frequency audited L4 observation producing L3 constraints."""
+
+    model_version: str
+
+    def observe(
+        self, organism: OrganismState, *, logical_time: int
+    ) -> FeedbackConstraint: ...
+
+    def reset(self) -> None:
+        """Restore the pristine initial controller state for a fresh run."""
+        ...

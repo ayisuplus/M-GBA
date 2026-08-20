@@ -150,3 +150,19 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 将旧 CAR-M 资产适配为首个独立场景包，保持核心 DTO/Protocol 和参考模型不变。
 - [x] 从 752 个旧 TCGA-BRCA 预测生成无样本 ID 的聚合 profile，并保存源 artifact 摘要与代理标签声明。
 - [x] 完成 63-Cell CAR-M 固定图、群体 L0 剂量、L2/L3 场景模型及 21-run E0–E2 矩阵。
+- [x] 实现可选 L4→L3 稳态反馈参考控制器（ADR-0012）：离散 PI + 反饱和 + 安全屏障，仅经 `FeedbackConstraint` 改变 L3 环境场；无注入时冻结基线位级不变。
+- [x] 冻结并执行 E4 三条件对照（无反馈/固定反馈/状态反馈），复用 WP8 配对比较指标；当前三条件均为 `FAILED` 负面基线。
+- [x] 提供仿真场景数据集生成与基准脚本 `scripts/synthetic_feedback_benchmark.py`（4 压力档 × 12 Cell，种子确定、幂等、SHA-256 校验）。
+- [x] 实现可选 L2 主动推理（变分自由能）Cell 策略（ADR-0013）：预期自由能最小化、确定性 argmin、无采样；规则状态机保留为默认与永久基线。
+- [x] 冻结并执行规则 vs 主动推理的 L2 策略配对对照（`mgba policy-experiment`），复用 WP8 配对比较指标；当前两策略均为 `FAILED` 负面基线。
+- [x] 提供规则 vs 主动推理仿真基准脚本 `scripts/synthetic_policy_benchmark.py`（复用反馈基准数据集生成器）。
+- [x] 实现可选 L3 受治理动态拓扑（ADR-0014）：应激回避 T1 式边交换、提案→授权→提交治理链、交换预算与入度守恒；固定图保留为默认与永久基线。
+- [x] 冻结并执行 E5 静态 vs 动态拓扑对照（`mgba topology-experiment`），含拓扑稳定性指标（交换计数/交换 tick/边数差）；冻结阈值下默认场景零提交，均为 `FAILED` 负面基线。
+- [x] 提供 E5 仿真基准脚本 `scripts/synthetic_topology_benchmark.py`（复用共享数据集生成器，calm 档每 seed 恰好 1 次确定性交换）。
+- [x] 实现可选 L0 种子化转录噪声模型（ADR-0015）：确定性右端位级不变 + 有界乘性噪声，噪声流由 `sha256(seed|cell|time)` 派生，checkpoint 精确恢复；确定性 GRN 保留为默认。
+- [x] 实现并执行 W14/M9 的 E3 群体统计协议（`mgba e3-experiment`）：多种子噪声集合按预注册判据分级（aggregation / group_dynamics / emergence_candidate）；不同 seed 已形成可统计分布，打破"所有 seed 轨迹相同"的旧限制。
+- [x] 提供 E3 仿真基准脚本 `scripts/synthetic_e3_benchmark.py`（复用共享数据集生成器）；calm 档出现 2 个预注册判据命中的 emergence_candidate，按 §4 术语不构成已验证涌现。
+- [x] 实现 E4×E3 随机闭环实验（ADR-0016）：`mgba closed-loop-experiment` 组合噪声 L0 与 L4→L3 反馈控制器，按预注册稳定性判据（震荡/锁死/恢复/恶化/不定）分级慢时钟稳态序列；当前全部合成场景判为 deterioration/lock/indeterminate，保留为负面基线。
+- [x] 提供随机闭环仿真基准脚本 `scripts/synthetic_closed_loop_benchmark.py`（复用共享数据集生成器）。
+- [x] 实现分层异构神经网络契约演示器（ADR-0017）：纯标准库神经基元 + 可选冻结权重 L0 MLP（`NeuralGrnModel`）与 L3 消息传递 GNN（`GnnTissueModel`）层内变体；确定性参考模型保留为默认与永久基线。
+- [x] 冻结并执行参考 vs 神经单层替换配对对照（`mgba neural-experiment --layer l0|l3`），复用 WP8 配对比较指标；提供仿真基准脚本 `scripts/synthetic_neural_benchmark.py`（复用共享数据集生成器）。

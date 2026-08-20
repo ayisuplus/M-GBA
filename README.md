@@ -40,8 +40,17 @@ L0 基因/转录调控
 - `mgba demo-export` 已提供自包含离线 HTML 演示：seed-42 的 4 剂量条件组织动画、L4 曲线与逐细胞 L0→L4 检查器，负面基线在页脚原样保留。
 - 主运行链已重构为 agent 中心：每细胞一个 `CellAgent` 持有 L0/L1/L2 状态并经 `CellModel` 协议决策；trace、checkpoint 与冻结矩阵行为与重构前逐字节一致。
 - 默认与三档 repair 钳制均为 `FAILED`；L2 静态替换产生最大差异并转为 `RECOVERED`，因此当前优先诊断五态 L2 累积规则。
+- 主运行链已增加可选 L4→L3 稳态反馈控制器（离散 PI + 反饱和 + 安全屏障，ADR-0012）：仅约束 L3 环境场、慢时钟触发、逐 tick 哈希链留痕；无反馈注入时所有冻结基线位级不变。
+- `mgba feedback-experiment` 已实现 E4 三条件对照（无反馈/固定反馈/状态反馈）；`scripts/synthetic_feedback_benchmark.py` 生成确定性仿真场景集并运行基准。
+- L2 已增加可选主动推理（Active Inference / 变分自由能）Cell 策略（ADR-0013）：以预期自由能最小化（风险+歧义分解、确定性 argmin、无采样）选择相位；规则状态机原样保留为默认与永久基线，策略替换仅隔离"决策规则"这一个变量。
+- `mgba policy-experiment` 已实现规则 vs 主动推理的 L2 策略配对对照；`scripts/synthetic_policy_benchmark.py` 在仿真场景集上运行该基准。
+- L3 已增加可选动态拓扑治理（ADR-0014）：应激回避 T1 式边交换，提案→授权→提交治理链、每 tick 交换预算、入度守恒；静态固定图模型原样保留为默认，E5 静态 vs 动态对照可执行（`mgba topology-experiment`）。
+- L0 已增加可选种子化转录噪声模型（ADR-0015）：确定性右端位级不变 + 有界乘性噪声，噪声流由 `sha256(seed|cell|time)` 派生（checkpoint 精确恢复）；确定性 GRN 原样保留为默认。
+- `mgba e3-experiment` 已实现 W14/M9 的 E3 群体统计协议：多种子噪声集合按预注册判据（CV 稳定性、微观驱动解耦、持续性）分级为 aggregation / group_dynamics / emergence_candidate；`scripts/synthetic_e3_benchmark.py` 运行仿真基准。
 - 现有 STEN 代码保留为 L3 子系统 smoke test。
-- 三个 seed 的轨迹效应完全相同，当前尚无有效随机重复、统计推断或 L4 下行反馈；整个系统不能用于生物学、群体动力学或涌现结论。
+- 默认确定性链的多 seed 轨迹仍然相同；可选噪声 L0（ADR-0015）已使不同 seed 形成可统计的分布，E3 预注册判据可执行，但尚未达到 validated result 所需的冻结协议、统计检验与层级消融。
+- E4×E3 组合已实现为随机闭环实验（ADR-0016）：`mgba closed-loop-experiment` 组合反馈控制器与噪声 L0，按预注册稳定性判据（震荡/锁死/恢复/恶化/不定）分级每 run 的慢时钟稳态序列；`scripts/synthetic_closed_loop_benchmark.py` 运行仿真基准。
+- 分层异构神经网络已作为冻结权重契约演示器接入（ADR-0017）：纯标准库神经基元 + 可选 L0 MLP GRN 与 L3 消息传递 GNN 变体，权重由显式种子确定性派生（非训练模型）；`mgba neural-experiment --layer l0|l3` 运行单层替换配对对照，`scripts/synthetic_neural_benchmark.py` 运行仿真基准。
 
 关键文档：
 
@@ -64,6 +73,12 @@ L0 基因/转录调控
 - [ADR-0010：WP10 交付冻结](docs/决策记录/ADR-0010-WP10-交付冻结.md)
 - [CAR-M v0.2 实施记录](docs/计划文件/CAR-M-v0.2实施计划.md)
 - [ADR-0011：CAR-M 场景包与群体扰动](docs/决策记录/ADR-0011-CAR-M场景包与群体扰动.md)
+- [ADR-0012：L4→L3 稳态反馈控制器](docs/决策记录/ADR-0012-L4-L3-稳态反馈控制器.md)
+- [ADR-0013：L2 主动推理 Cell 策略](docs/决策记录/ADR-0013-L2-主动推理Cell策略.md)
+- [ADR-0014：L3 自适应拓扑治理](docs/决策记录/ADR-0014-L3-自适应拓扑治理.md)
+- [ADR-0015：L0 转录噪声与 E3 群体统计](docs/决策记录/ADR-0015-L0-转录噪声与E3群体统计.md)
+- [ADR-0016：噪声闭环与稳定性判据](docs/决策记录/ADR-0016-噪声闭环与稳定性判据.md)
+- [ADR-0017：分层异构神经网络契约演示器](docs/决策记录/ADR-0017-分层异构神经网络契约演示器.md)
 - [CAR-M v0.2 实验记录](docs/实验记录/CAR-M-vertical-slice-2026-08-19.md)
 - [0.1.0 中文设计报告](docs/报告/M-GBA-MVP-中文设计报告.md)
 - [0.1.0 English technical report](docs/报告/M-GBA-MVP-English-Technical-Report.md)
@@ -87,6 +102,19 @@ python -m venv .venv
 .\.venv\Scripts\mgba carm-import --legacy-root "..\car-m-virtual-cell-main\car-m-virtual-cell-main" --output data/carm/tcga_brca_high_immune.json
 .\.venv\Scripts\mgba carm-experiment --artifact-root artifacts/carm
 .\.venv\Scripts\mgba demo-export
+.\.venv\Scripts\mgba feedback-experiment --artifact-root artifacts/e4
+.\.venv\Scripts\python scripts/synthetic_feedback_benchmark.py generate
+.\.venv\Scripts\python scripts/synthetic_feedback_benchmark.py run
+.\.venv\Scripts\mgba policy-experiment --artifact-root artifacts/policy
+.\.venv\Scripts\python scripts/synthetic_policy_benchmark.py run
+.\.venv\Scripts\mgba topology-experiment --artifact-root artifacts/topology
+.\.venv\Scripts\python scripts/synthetic_topology_benchmark.py run
+.\.venv\Scripts\mgba e3-experiment --artifact-root artifacts/e3
+.\.venv\Scripts\python scripts/synthetic_e3_benchmark.py run
+.\.venv\Scripts\mgba closed-loop-experiment --artifact-root artifacts/closed-loop
+.\.venv\Scripts\python scripts/synthetic_closed_loop_benchmark.py run
+.\.venv\Scripts\mgba neural-experiment --layer l3 --artifact-root artifacts/neural
+.\.venv\Scripts\python scripts/synthetic_neural_benchmark.py run
 .\.venv\Scripts\mgba sten-smoke --config configs/demo.json
 .\.venv\Scripts\python -m unittest discover -s tests -v
 .\.venv\Scripts\python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
@@ -105,6 +133,9 @@ python -m venv .venv
 .venv/bin/mgba carm-import --legacy-root ../car-m-virtual-cell-main/car-m-virtual-cell-main --output data/carm/tcga_brca_high_immune.json
 .venv/bin/mgba carm-experiment --artifact-root artifacts/carm
 .venv/bin/mgba demo-export
+.venv/bin/mgba feedback-experiment --artifact-root artifacts/e4
+.venv/bin/python scripts/synthetic_feedback_benchmark.py generate
+.venv/bin/python scripts/synthetic_feedback_benchmark.py run
 .venv/bin/mgba sten-smoke --config configs/demo.json
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
@@ -126,7 +157,13 @@ M-GBA/
 │   └── demo.json            # L3 STEN 子系统场景
 ├── docs/
 ├── scripts/
-│   └── mvp_demo.py          # 冻结 full/fallback 演示
+│   ├── mvp_demo.py          # 冻结 full/fallback 演示
+│   ├── synthetic_feedback_benchmark.py # 仿真场景生成与 E4 基准
+│   ├── synthetic_policy_benchmark.py # 规则 vs 主动推理 L2 策略基准
+│   ├── synthetic_topology_benchmark.py # E5 静态 vs 动态拓扑基准
+│   ├── synthetic_e3_benchmark.py # E3 多种子噪声集合基准
+│   ├── synthetic_closed_loop_benchmark.py # E4×E3 噪声闭环稳定性基准
+│   └── synthetic_neural_benchmark.py # L0/L3 神经变体替换基准
 ├── src/mgba/
 │   ├── layers/              # 五层 DTO 与模型 Protocol
 │   │   ├── contracts.py     # 五层 DTO 与 Protocol
@@ -141,6 +178,19 @@ M-GBA/
 │   ├── run_report.py        # 单 run 逐 tick L0–L4 轨迹可视化记录
 │   ├── multiscale.py        # 五层参考实现、runner 与 trace
 │   ├── runner.py            # 多速率调度、逐 tick trace、checkpoint 与恢复
+│   ├── feedback.py          # L4→L3 稳态反馈控制器（PI+反饱和+安全屏障）与固定策略
+│   ├── feedback_experiments.py # E4 三条件对照矩阵与 artifact
+│   ├── policy_experiments.py # 规则 vs 主动推理 L2 策略对照矩阵与 artifact
+│   ├── layers/l2_active_inference.py # 主动推理（EFE）L2 策略与配置
+│   ├── topology_experiments.py # E5 静态 vs 动态拓扑对照矩阵与稳定性指标
+│   ├── layers/l3_adaptive.py  # 受治理的动态拓扑 L3 模型
+│   ├── e3_statistics.py      # E3 预注册判据与分级阶梯
+│   ├── e3_experiments.py     # E3 多种子集合运行与 artifact
+│   ├── layers/l0_noisy.py   # 种子化转录噪声 L0 模型
+│   ├── neural.py            # 纯标准库神经基元（种子化矩阵/MLP/消息传递）
+│   ├── layers/l0_neural.py  # 冻结权重 MLP L0 GRN 变体
+│   ├── layers/l3_gnn.py     # 冻结权重消息传递 L3 GNN 变体
+│   ├── neural_experiments.py # 参考 vs 神经单层替换对照矩阵与 artifact
 │   ├── scenarios/carm/      # 数据导入、场景编译、L2/L3 适配器与工作流
 │   ├── models.py            # Genome、消息与拓扑协议
 │   ├── sten.py              # L3 路由、拓扑、约束和事件

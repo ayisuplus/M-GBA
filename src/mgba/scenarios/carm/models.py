@@ -8,6 +8,7 @@ from ...layers import (
     CellAction,
     CellPhase,
     CellState,
+    FeedbackConstraint,
     LocalEnvironment,
     MolecularState,
     StateMetadata,
@@ -267,7 +268,13 @@ class CarmTissueModel:
         previous_state: TissueState | None,
         edges: tuple[tuple[str, str], ...],
         logical_time: int,
+        constraint: FeedbackConstraint | None = None,
     ) -> TissueState:
+        if constraint is not None:
+            raise ValueError(
+                "CAR-M tissue model does not support feedback constraints; "
+                "use ConstraintAwareTissueModel for feedback experiments"
+            )
         cells, actions, previous_nodes = self._validated_inputs(
             cell_states,
             cell_actions,

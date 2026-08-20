@@ -1,0 +1,9 @@
+{
+  "model_version": "e3-population-statistics-0.1",
+  "ticks": 30,
+  "seeds": [7, 42, 1337, 2026, 31337],
+  "cv_threshold": 0.02,
+  "coupling_threshold": 0.5,
+  "persistence_threshold": 0.6,
+  "pattern_threshold": 0.4
+}

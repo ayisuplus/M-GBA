@@ -1,0 +1,6 @@
+{
+  "model_version": "neural-l0-grn-0.1",
+  "weight_seed": 20260820,
+  "hidden_dim": 8,
+  "update_rate": 0.35
+}

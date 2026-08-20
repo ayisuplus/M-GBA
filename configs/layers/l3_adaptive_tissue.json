@@ -1,0 +1,6 @@
+{
+  "model_version": "adaptive-l3-topology-governance-0.1",
+  "max_swaps_per_tick": 2,
+  "exchange_gain_threshold": 0.05,
+  "max_out_degree": 4
+}

@@ -1,0 +1,63 @@
+{
+  "e4": {
+    "fixed_resource_ceiling": 0.7,
+    "fixed_stress_floor": 0.3,
+    "model_version": "synthetic-e4-benchmark-0.1",
+    "seeds": [
+      7,
+      42,
+      1337
+    ],
+    "ticks": 60
+  },
+  "generator": {
+    "cells": 12,
+    "chords": 4,
+    "seed": 2026,
+    "seeds": [
+      7,
+      42,
+      1337
+    ],
+    "ticks": 60
+  },
+  "scenarios": [
+    {
+      "cells": 12,
+      "environment_stress": 0.15,
+      "path": "scenarios/synthetic-calm-n12-seed2026.json",
+      "regime": "calm",
+      "resource_level": 1.0,
+      "scenario_id": "synthetic-calm-n12-seed2026",
+      "sha256": "341dccfa0af73917c8a1b517732738963c8ea6fbb5fd8f20c767fc6fd781828c"
+    },
+    {
+      "cells": 12,
+      "environment_stress": 0.35,
+      "path": "scenarios/synthetic-injury-n12-seed2026.json",
+      "regime": "injury",
+      "resource_level": 0.8,
+      "scenario_id": "synthetic-injury-n12-seed2026",
+      "sha256": "1990cb74c11ef3dd57d337b3d1ae3db2086e83f91a5ea09adf34251721a9d3e2"
+    },
+    {
+      "cells": 12,
+      "environment_stress": 0.6,
+      "path": "scenarios/synthetic-severe-n12-seed2026.json",
+      "regime": "severe",
+      "resource_level": 0.5,
+      "scenario_id": "synthetic-severe-n12-seed2026",
+      "sha256": "b8094bfa984a1e94e68f40308da7c52dcae320e72fa5dc69248278d23ce05f7e"
+    },
+    {
+      "cells": 12,
+      "environment_stress": 0.8,
+      "path": "scenarios/synthetic-collapse-n12-seed2026.json",
+      "regime": "collapse",
+      "resource_level": 0.3,
+      "scenario_id": "synthetic-collapse-n12-seed2026",
+      "sha256": "4b15fb367fe973ef73601b50eff8196b73b1121b539fc79db4a28d6059bfa446"
+    }
+  ],
+  "schema_version": "mgba-synthetic-feedback-benchmark-0.1"
+}

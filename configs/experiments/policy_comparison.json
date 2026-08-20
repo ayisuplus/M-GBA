@@ -1,0 +1,5 @@
+{
+  "model_version": "l2-policy-comparison-0.1",
+  "ticks": 30,
+  "seeds": [7, 42, 1337]
+}

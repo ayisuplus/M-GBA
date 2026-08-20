@@ -3,6 +3,49 @@ from __future__ import annotations
 import argparse
 import json
 
+from .feedback import load_feedback_config
+from .feedback_experiments import (
+    FeedbackExperimentRunner,
+    build_feedback_runners,
+    load_feedback_experiment_config,
+    save_feedback_artifacts,
+)
+from .policy_experiments import (
+    PolicyExperimentRunner,
+    load_policy_experiment_config,
+    save_policy_artifacts,
+)
+from .layers.l2_active_inference import (
+    ActiveInferenceCellModel,
+    load_active_inference_config,
+)
+from .layers.l3_adaptive import (
+    DynamicTopologyTissueModel,
+    load_adaptive_topology_config,
+)
+from .topology_experiments import (
+    TopologyExperimentRunner,
+    load_topology_experiment_config,
+    save_topology_artifacts,
+)
+from .layers.l0_noisy import NoisyDiscreteGrnModel, load_noisy_grn_config
+from .e3_experiments import (
+    E3ExperimentRunner,
+    load_e3_experiment_config,
+    save_e3_artifacts,
+)
+from .closed_loop_experiments import (
+    ClosedLoopExperimentRunner,
+    load_closed_loop_config,
+    save_closed_loop_artifacts,
+)
+from .layers.l0_neural import NeuralGrnModel, load_neural_grn_config
+from .layers.l3_gnn import GnnTissueModel, load_gnn_tissue_config
+from .neural_experiments import (
+    NeuralComparisonRunner,
+    load_neural_comparison_config,
+    save_neural_artifacts,
+)
 from .demo import export_carm_demo
 from .experiments import (
     CausalExperimentRunner,
@@ -280,6 +323,173 @@ def build_parser() -> argparse.ArgumentParser:
     sten = commands.add_parser("sten-smoke", help="run the L3 STEN subsystem smoke test")
     sten.add_argument("--config", default="configs/demo.json", help="STEN scenario JSON")
     sten.add_argument("--ticks", type=int, help="override scenario tick count")
+
+    feedback_experiment = commands.add_parser(
+        "feedback-experiment",
+        help="run the E4 no/fixed/state L4-to-L3 feedback comparison matrix",
+    )
+    _add_layered_arguments(feedback_experiment)
+    feedback_experiment.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    feedback_experiment.add_argument(
+        "--matrix-config",
+        default="configs/experiments/e4_feedback.json",
+        help="E4 feedback experiment JSON",
+    )
+    feedback_experiment.add_argument(
+        "--feedback-config",
+        default="configs/layers/l4_feedback_controller.json",
+        help="homeostatic feedback controller JSON",
+    )
+    feedback_experiment.add_argument(
+        "--artifact-root",
+        help="optional root for the complete raw and derived feedback artifacts",
+    )
+
+    policy_experiment = commands.add_parser(
+        "policy-experiment",
+        help="run the L2 rule-vs-active-inference policy comparison matrix",
+    )
+    _add_layered_arguments(policy_experiment)
+    policy_experiment.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    policy_experiment.add_argument(
+        "--matrix-config",
+        default="configs/experiments/policy_comparison.json",
+        help="L2 policy comparison JSON",
+    )
+    policy_experiment.add_argument(
+        "--active-inference-config",
+        default="configs/layers/l2_active_inference.json",
+        help="active inference L2 policy JSON",
+    )
+    policy_experiment.add_argument(
+        "--artifact-root",
+        help="optional root for the complete raw and derived policy artifacts",
+    )
+
+    topology_experiment = commands.add_parser(
+        "topology-experiment",
+        help="run the E5 static-vs-adaptive L3 topology comparison matrix",
+    )
+    _add_layered_arguments(topology_experiment)
+    topology_experiment.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    topology_experiment.add_argument(
+        "--matrix-config",
+        default="configs/experiments/topology_comparison.json",
+        help="E5 topology comparison JSON",
+    )
+    topology_experiment.add_argument(
+        "--adaptive-config",
+        default="configs/layers/l3_adaptive_tissue.json",
+        help="adaptive L3 topology governance JSON",
+    )
+    topology_experiment.add_argument(
+        "--artifact-root",
+        help="optional root for the complete raw and derived topology artifacts",
+    )
+
+
+    e3_experiment = commands.add_parser(
+        "e3-experiment",
+        help="run the multi-seed noisy-L0 E3 population ensemble",
+    )
+    _add_layered_arguments(e3_experiment)
+    e3_experiment.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    e3_experiment.add_argument(
+        "--matrix-config",
+        default="configs/experiments/e3_population.json",
+        help="E3 population ensemble JSON",
+    )
+    e3_experiment.add_argument(
+        "--noisy-config",
+        default="configs/layers/l0_noisy_grn.json",
+        help="noisy L0 discrete GRN JSON",
+    )
+    e3_experiment.add_argument(
+        "--artifact-root",
+        help="optional root for the E3 summary artifacts",
+    )
+
+    closed_loop = commands.add_parser(
+        "closed-loop-experiment",
+        help="run the stochastic closed-loop feedback-under-noise matrix",
+    )
+    _add_layered_arguments(closed_loop)
+    closed_loop.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    closed_loop.add_argument(
+        "--matrix-config",
+        default="configs/experiments/closed_loop_stochastic.json",
+        help="closed-loop stochastic matrix JSON",
+    )
+    closed_loop.add_argument(
+        "--noisy-config",
+        default="configs/layers/l0_noisy_grn.json",
+        help="noisy L0 discrete GRN JSON",
+    )
+    closed_loop.add_argument(
+        "--feedback-config",
+        default="configs/layers/l4_feedback_controller.json",
+        help="homeostatic feedback controller JSON",
+    )
+    closed_loop.add_argument(
+        "--artifact-root",
+        help="optional root for the complete raw and derived closed-loop artifacts",
+    )
+
+    neural_experiment = commands.add_parser(
+        "neural-experiment",
+        help="run the reference-vs-neural single-layer swap comparison matrix",
+    )
+    _add_layered_arguments(neural_experiment)
+    neural_experiment.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    neural_experiment.add_argument(
+        "--matrix-config",
+        default="configs/experiments/neural_comparison.json",
+        help="neural layer-swap comparison JSON",
+    )
+    neural_experiment.add_argument(
+        "--layer",
+        choices=("l0", "l3"),
+        default="l3",
+        help="layer swapped for the frozen-weight neural variant",
+    )
+    neural_experiment.add_argument(
+        "--neural-l0-config",
+        default="configs/layers/l0_neural_grn.json",
+        help="frozen-weight MLP L0 GRN JSON",
+    )
+    neural_experiment.add_argument(
+        "--neural-l3-config",
+        default="configs/layers/l3_gnn_tissue.json",
+        help="frozen-weight GNN L3 tissue JSON",
+    )
+    neural_experiment.add_argument(
+        "--artifact-root",
+        help="optional root for the complete raw and derived neural artifacts",
+    )
     return parser
 
 
@@ -394,6 +604,154 @@ def main() -> None:
             "cells": len(playbook["roles"]),
             "playbook_digest": manifest["playbook_digest"],
         }
+    elif args.command == "feedback-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        e4_config = load_feedback_experiment_config(args.matrix_config)
+        feedback_controller = load_feedback_config(args.feedback_config)
+        runners = build_feedback_runners(
+            layer_models=_load_layer_models(args),
+            runner_config=load_runner_config(args.runner_config),
+            feedback_config=feedback_controller,
+            fixed_resource_ceiling=e4_config.fixed_resource_ceiling,
+            fixed_stress_floor=e4_config.fixed_stress_floor,
+        )
+        matrix = FeedbackExperimentRunner(e4_config, runners=runners).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_feedback_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "policy-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        policy_config = load_policy_experiment_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        rule_models = _load_layer_models(args)
+        inference_models = dict(rule_models)
+        inference_models["cell_model"] = ActiveInferenceCellModel(
+            load_active_inference_config(args.active_inference_config)
+        )
+        runners = {
+            "rule_policy": MultirateCrossScaleRunner(runner_config, **rule_models),
+            "active_inference_policy": MultirateCrossScaleRunner(
+                runner_config, **inference_models
+            ),
+        }
+        matrix = PolicyExperimentRunner(policy_config, runners=runners).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_policy_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "topology-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        topology_config = load_topology_experiment_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        static_models = _load_layer_models(args)
+        adaptive_models = dict(static_models)
+        adaptive_models["tissue_model"] = DynamicTopologyTissueModel(
+            static_models["tissue_model"].config,
+            load_adaptive_topology_config(args.adaptive_config),
+        )
+        runners = {
+            "static_topology": MultirateCrossScaleRunner(
+                runner_config, **static_models
+            ),
+            "adaptive_topology": MultirateCrossScaleRunner(
+                runner_config, **adaptive_models
+            ),
+        }
+        matrix = TopologyExperimentRunner(
+            topology_config, runners=runners
+        ).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_topology_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "e3-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        e3_config = load_e3_experiment_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        grn_config, noise_sigma = load_noisy_grn_config(args.noisy_config)
+        base_models = _load_layer_models(args)
+
+        def build_noisy_runner(seed: int) -> MultirateCrossScaleRunner:
+            models = dict(base_models)
+            models["genome_model"] = NoisyDiscreteGrnModel(
+                grn_config, noise_sigma=noise_sigma, noise_seed=seed
+            )
+            return MultirateCrossScaleRunner(runner_config, **models)
+
+        matrix = E3ExperimentRunner(
+            e3_config, build_runner=build_noisy_runner
+        ).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_e3_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "closed-loop-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        loop_config = load_closed_loop_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        grn_config, noise_sigma = load_noisy_grn_config(args.noisy_config)
+        feedback_config = load_feedback_config(args.feedback_config)
+        matrix = ClosedLoopExperimentRunner(
+            loop_config,
+            runner_config=runner_config,
+            layer_models=_load_layer_models(args),
+            feedback_config=feedback_config,
+            noisy_grn_config=grn_config,
+            noise_sigma=noise_sigma,
+        ).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_closed_loop_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "neural-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        neural_config = load_neural_comparison_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        baseline_models = _load_layer_models(args)
+        neural_models = dict(baseline_models)
+        if args.layer == "l0":
+            neural_models["genome_model"] = NeuralGrnModel(
+                load_neural_grn_config(args.neural_l0_config)
+            )
+            changed_layer = "L0"
+        else:
+            neural_models["tissue_model"] = GnnTissueModel(
+                load_gnn_tissue_config(args.neural_l3_config)
+            )
+            changed_layer = "L3"
+        matrix = NeuralComparisonRunner(
+            neural_config,
+            baseline_runner=MultirateCrossScaleRunner(
+                runner_config, **baseline_models
+            ),
+            neural_runner=MultirateCrossScaleRunner(
+                runner_config, **neural_models
+            ),
+            changed_layer=changed_layer,
+        ).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_neural_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
     else:
         if args.ticks is not None and args.ticks < 1:
             raise SystemExit("--ticks must be positive")

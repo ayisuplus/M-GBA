@@ -449,3 +449,52 @@ L4 模型依据见 [ADR-0006：L4 第一版宏观表型](../决策记录/ADR-000
 - 项目所有者已于 2026-08-19 接受 E0–E2 发布范围，并授权首次 commit、`v0.1.0` tag 与 GitHub 推送。
 
 交付协议见 [ADR-0010：WP10 MVP 交付冻结](../决策记录/ADR-0010-WP10-交付冻结.md)，空环境流程见 [MVP 0.1.0 复现说明](../复现/MVP-0.1.0-复现说明.md)。
+
+### E4 反馈闭环更新（2026-08-20）
+
+- 可选 L4→L3 `FeedbackPolicy` 参考控制器已由 ADR-0012 冻结：离散 PI（死区 + back-calculation 反饱和）经济通道输出资源上限，无记忆安全屏障输出压力地板；只消费正式 `OrganismState`，只输出 `FeedbackConstraint`。
+- `ConstraintAwareTissueModel` 在无约束时与参考 L3 动力学逐字段等价；有约束时约束进入 L3 source digest 哈希链留痕。
+- Runner 可选注入 `feedback_policy`；checkpoint 恢复通过重放 `l4_observations` 重建控制器状态，checkpoint schema 不变。13+17 tick 分段恢复与 30 tick 连续运行完全一致。
+- `mgba feedback-experiment` 运行 E4 三条件（无反馈/固定反馈/状态反馈）×3 seed ×60 tick；`tests/test_frozen_identity.py` 证明无反馈条件与 0.2.0 基线位级一致。
+- `scripts/synthetic_feedback_benchmark.py` 生成 4 压力档 ×12 Cell 的确定性仿真场景集并运行 E4 基准；所有合成场景当前均为 `FAILED` 负面基线，保留不调参。
+- 测试总数增至 109 项（原 83 + 反馈 23 + 冻结身份 3）。
+
+### L2 主动推理策略更新（2026-08-20）
+
+- 可选 L2 `CellModel` 实现 `ActiveInferenceCellModel` 已由 ADR-0013 冻结：离散五相生成模型（A 似然、B 转移、C 偏好、D 先验），状态推断取内感受四元驱动的高斯后验，行动选择取预期自由能 $G(a)=\text{risk}+\text{ambiguity}$ 的确定性 argmin（$\gamma\to\infty$ 极限，无采样、无随机源）。
+- AIF 与规则状态机共享驱动语义与状态簿记（活力、压力、吸收态同族方程），E2 式策略替换只隔离"决策规则"一个变量；对照矩阵构造器强制两 runner 仅 L2 版本不同。
+- `mgba policy-experiment` 运行规则 vs 主动推理 ×3 seed ×30 tick；默认演示场景上 L0/L1 效应为零（L1 仅经相邻 L2→L1 `local_signal` 反馈出现 <1e-6 差异），L2→L3→L4 传播成立。
+- `scripts/synthetic_policy_benchmark.py` 复用反馈基准仿真数据集运行策略对照；AIF 在 calm/injury 档稳态略高、炎症略低，但两策略全部合成场景均 `FAILED`，保留为负面基线，不调参。
+- 测试总数增至 127 项（109 + 主动推理 18）。
+
+### E5 动态拓扑更新（2026-08-20）
+
+- 可选 L3 `TissueModel` 实现 `DynamicTopologyTissueModel` 已由 ADR-0014 冻结：每节点按局部应激/分泌信息提出至多一个 T1 式边交换（丢最高应激入边、加最高分泌候选），系统侧授权（无自环/重复边/死亡端点、出度上限 $\Delta_{\max}$、边际增益 $\ge\theta$），每 tick 全局预算 $B$，cell id 字典序确定性处理。
+- 拓扑状态寄宿在 `TissueState.edges`：`step` 的 `edges` 参数仅为首 tick 种子拓扑，后续以 `previous_state.edges` 为准；checkpoint 精确恢复，schema 不变。`_validated_inputs` 新增 `dynamic_topology=False` 旗标，默认静态门禁位级不变。
+- `mgba topology-experiment` 运行静态 vs 动态 ×3 seed ×30 tick，构造器强制两 runner 仅 L3 版本不同；`TopologyStability` 记录提交交换数、交换 tick 数与边数差。
+- `scripts/synthetic_topology_benchmark.py` 复用共享仿真数据集运行 E5 对照：冻结阈值下默认场景零提交、合成 calm 档每 seed 恰好 1 次确定性交换；所有场景两条件均 `FAILED`，保留为负面基线，不调参。
+- 测试总数增至 142 项（127 + 拓扑 15）。
+
+### E3 群体统计与转录噪声更新（2026-08-20）
+
+- 可选 L0 `GenomeModel` 实现 `NoisyDiscreteGrnModel` 已由 ADR-0015 冻结：确定性泄漏更新右端与参考 GRN 逐位相同，扰动前对每个基因值叠加有界乘性噪声 $x_i'=\mathrm{clamp}(x_i(1+\sigma_\eta u_i),0,1)$，$u_i\sim\mathcal{U}[-1,1]$；噪声流由 $\mathrm{sha256}(\text{seed}\|c\|t)$ 派生，无状态、checkpoint 精确恢复、逐 tick 哈希链留痕。`noise_sigma=0` 时基因值与确定性基线逐位一致。
+- `mgba.e3_statistics` 实现 W14/M9 预注册判据：变异系数稳定性、微观驱动 OLS 解耦（$1-R^2$）、持续性；分级阶梯 insufficient_seeds / no_pattern / emergence_candidate / group_dynamics / aggregation，阈值全部在配置中预注册。
+- `mgba e3-experiment` 运行 5 seed ×30 tick 噪声集合；默认演示场景打破简并（5 个不同实验 ID），分级结果为 no_pattern（死亡吸收态）与 group_dynamics（与微观驱动耦合）——诚实的 reference-model 诊断。
+- `scripts/synthetic_e3_benchmark.py` 复用共享仿真数据集运行 E3 基准：calm 档 tissue_damage 与 inflammation 命中预注册 emergence_candidate 判据（$\mathrm{CV}\le0.05$、解耦 $\ge0.5$、持续性 $\ge0.6$）；按 AGENTS §4，这只达到 emergence candidate 级别，validated result 仍需冻结协议、统计检验与层级消融。
+- 测试总数增至 158 项（142 + 噪声/E3 16）。
+
+### E4×E3 随机闭环更新（2026-08-20）
+
+- 随机闭环矩阵已由 ADR-0016 冻结：三条件（噪声开环 / 噪声闭环 / 确定性闭环）配对运行，闭环两条件仅差 L0 噪声；复用 ADR-0012 控制器与 ADR-0015 噪声模型，复用 WP8 配对比较指标。
+- 预注册稳定性分级（每 run 的慢时钟 homeostasis 观测序列 $h_1..h_K$）：一阶差分变号数 $\phi$、振幅 $s=\mathrm{std}(h)$、趋势 $\Delta=h_K-h_1$；阶梯为 insufficient_observations / oscillation / lock / recovery / deterioration / indeterminate，阈值冻结在 `configs/experiments/closed_loop_stochastic.json`。
+- `mgba closed-loop-experiment` 与 `scripts/synthetic_closed_loop_benchmark.py` 可执行；默认演示场景 5 seed 全部判为 `deterioration`（噪声开环 1 次变号 vs 闭环 0 次），合成基准 48 行全部分布在 deterioration/indeterminate/lock——E4 问题在噪声下得到诚实的负面测量，未调参。
+- 测试总数增至 169 项（158 + 闭环 11）。
+
+### 分层异构神经网络更新（2026-08-20）
+
+- 冻结权重契约演示器已由 ADR-0017 冻结：`mgba.neural` 纯标准库基元（$\mathrm{sha256}(seed\|salt\|i\|j)$ 逐元素派生的 Xavier 式 `seeded_matrix`、溢出安全的 `mlp_forward`（hidden tanh / 输出 sigmoid）、入邻均值 `message_passing_step`），无全局随机状态、无训练循环。
+- 可选 L0 `GenomeModel` 实现 `NeuralGrnModel`：输入 $u=(x(t-1),g,d)\in[0,1]^{13}$，目标 $y=\sigma(W_2\tanh(W_1u))$，自然更新沿用参考族 $x_i(t)=(1-\lambda)x_i(t-1)+\lambda y_i$；扰动硬钳制仍在 MLP 之后精确生效，config 进入 L0 source digest 哈希链。
+- 可选 L3 `TissueModel` 实现 `GnnTissueModel`：节点特征为上一步节点 3 字段 + 当前动作 3 字段，$h_i=\sigma(W_{self}x_i+W_{neigh}m_i+b)$ 写回 $(stress, resource\_level, signal)$；聚合复用冻结公式，`tissue_damage` 沿用 ADR-0005 的 0.6/0.4 权重；非空约束显式抛错（不进入 E4 闭环），拓扑从不被修改。
+- `mgba neural-experiment --layer l0|l3` 与 `mgba.neural_experiments` 实现 E2 式单层替换配对对照，构造器强制两 runner 仅在 swapped 层不同；`scripts/synthetic_neural_benchmark.py` 复用共享数据集生成器运行两组矩阵（合成基准 48 行：4 场景 × 2 层 × 2 条件 × 3 seed）。
+- 科学边界：两个变体是 `contract demonstrator`（AGENTS §4 第 1 级），权重由显式种子派生而非训练，不宣称神经真实拟合或算力收益；CNN 用于 L1 被否决（无空间/序列轴，归纳偏置不符）。
+- 测试总数增至 191 项（169 + 神经 22）。
