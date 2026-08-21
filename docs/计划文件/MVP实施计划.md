@@ -498,3 +498,11 @@ L4 模型依据见 [ADR-0006：L4 第一版宏观表型](../决策记录/ADR-000
 - `mgba neural-experiment --layer l0|l3` 与 `mgba.neural_experiments` 实现 E2 式单层替换配对对照，构造器强制两 runner 仅在 swapped 层不同；`scripts/synthetic_neural_benchmark.py` 复用共享数据集生成器运行两组矩阵（合成基准 48 行：4 场景 × 2 层 × 2 条件 × 3 seed）。
 - 科学边界：两个变体是 `contract demonstrator`（AGENTS §4 第 1 级），权重由显式种子派生而非训练，不宣称神经真实拟合或算力收益；CNN 用于 L1 被否决（无空间/序列轴，归纳偏置不符）。
 - 测试总数增至 191 项（169 + 神经 22）。
+
+### L2 规则参数标定更新（2026-08-21）
+
+- 预注册确定性标定已由 ADR-0018 冻结：`mgba.calibration` 纯搜索核心（不 import runner；目标函数注入式），采样 $\mathrm{Random}(\mathrm{sha256}(seed\|\text{candidate}\|k)[:8])$ 逐候选均匀抽取 $[0,1)^{19}$，坐标细化（声明序 × 步长 0.1/0.05 × 双向，接受阈值 $10^{-12}$，重复点去重）；参考向量恒为首个评估点并进入细化种子，训练结果不可能差于参考。
+- 协议：搜索空间为 `CellConfig` 19 个标量（`model_version` 与分泌乘子冻结）；目标为演示场景 60-tick 的 `mean_homeostasis`；预算 512 候选 + top-3 细化；holdout 为 `data/synthetic-feedback` 四档压力场景；判定规则先验固定（四档差值全正 `generalized` / 全非正 `not-generalized` / 其余 `mixed`）。
+- 首次运行（search_digest `99ce6e355b8e0afa…`，1003 次评估，178 s）：训练 0.2076→0.5927（+0.385）；holdout 平均 +0.2207，判定 `generalized`——calm/injury 结局 `failed → stable`，severe/collapse 仍 `failed` 但终末活力脱离 0。多个坐标顶到 $[0,1]$ 盒边（`repair_recovery_rate`=1.0、`signal_activation_weight`=0.0 等），提示类内最优点可能在盒外；扩盒需新一轮预注册协议。
+- 边界：reference model 类内诊断，非生物拟合；标定配置只写入 artifact（带溯源），不进入任何冻结实验协议；冻结基线位级不变（测试门禁固定）。
+- 测试总数增至 204 项（191 + 标定 13）。

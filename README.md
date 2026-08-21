@@ -51,6 +51,7 @@ L0 基因/转录调控
 - 默认确定性链的多 seed 轨迹仍然相同；可选噪声 L0（ADR-0015）已使不同 seed 形成可统计的分布，E3 预注册判据可执行，但尚未达到 validated result 所需的冻结协议、统计检验与层级消融。
 - E4×E3 组合已实现为随机闭环实验（ADR-0016）：`mgba closed-loop-experiment` 组合反馈控制器与噪声 L0，按预注册稳定性判据（震荡/锁死/恢复/恶化/不定）分级每 run 的慢时钟稳态序列；`scripts/synthetic_closed_loop_benchmark.py` 运行仿真基准。
 - 分层异构神经网络已作为冻结权重契约演示器接入（ADR-0017）：纯标准库神经基元 + 可选 L0 MLP GRN 与 L3 消息传递 GNN 变体，权重由显式种子确定性派生（非训练模型）；`mgba neural-experiment --layer l0|l3` 运行单层替换配对对照，`scripts/synthetic_neural_benchmark.py` 运行仿真基准。
+- L2 规则参数标定已作为预注册实验接入（ADR-0018）：`mgba.calibration` 纯搜索核心（sha256 种子扫描 + 坐标细化，参考向量恒为首个评估点）+ `scripts/calibrate_l2_cell.py`；首次运行训练 +0.385、四档 holdout 全部提升（calm/injury 结局 `failed → stable`，severe/collapse 仍 `failed`），判定 `generalized`；冻结参考配置不被修改，标定结果不进入任何冻结协议。
 
 关键文档：
 
@@ -79,6 +80,7 @@ L0 基因/转录调控
 - [ADR-0015：L0 转录噪声与 E3 群体统计](docs/决策记录/ADR-0015-L0-转录噪声与E3群体统计.md)
 - [ADR-0016：噪声闭环与稳定性判据](docs/决策记录/ADR-0016-噪声闭环与稳定性判据.md)
 - [ADR-0017：分层异构神经网络契约演示器](docs/决策记录/ADR-0017-分层异构神经网络契约演示器.md)
+- [ADR-0018：L2 规则参数标定](docs/决策记录/ADR-0018-L2规则参数标定.md)
 - [CAR-M v0.2 实验记录](docs/实验记录/CAR-M-vertical-slice-2026-08-19.md)
 - [0.1.0 中文设计报告](docs/报告/M-GBA-MVP-中文设计报告.md)
 - [0.1.0 English technical report](docs/报告/M-GBA-MVP-English-Technical-Report.md)
@@ -115,6 +117,7 @@ python -m venv .venv
 .\.venv\Scripts\python scripts/synthetic_closed_loop_benchmark.py run
 .\.venv\Scripts\mgba neural-experiment --layer l3 --artifact-root artifacts/neural
 .\.venv\Scripts\python scripts/synthetic_neural_benchmark.py run
+.\.venv\Scripts\python scripts/calibrate_l2_cell.py
 .\.venv\Scripts\mgba sten-smoke --config configs/demo.json
 .\.venv\Scripts\python -m unittest discover -s tests -v
 .\.venv\Scripts\python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
@@ -163,7 +166,8 @@ M-GBA/
 │   ├── synthetic_topology_benchmark.py # E5 静态 vs 动态拓扑基准
 │   ├── synthetic_e3_benchmark.py # E3 多种子噪声集合基准
 │   ├── synthetic_closed_loop_benchmark.py # E4×E3 噪声闭环稳定性基准
-│   └── synthetic_neural_benchmark.py # L0/L3 神经变体替换基准
+│   ├── synthetic_neural_benchmark.py # L0/L3 神经变体替换基准
+│   └── calibrate_l2_cell.py     # L2 规则参数标定（预注册搜索 + holdout）
 ├── src/mgba/
 │   ├── layers/              # 五层 DTO 与模型 Protocol
 │   │   ├── contracts.py     # 五层 DTO 与 Protocol
@@ -191,6 +195,7 @@ M-GBA/
 │   ├── layers/l0_neural.py  # 冻结权重 MLP L0 GRN 变体
 │   ├── layers/l3_gnn.py     # 冻结权重消息传递 L3 GNN 变体
 │   ├── neural_experiments.py # 参考 vs 神经单层替换对照矩阵与 artifact
+│   ├── calibration.py       # 预注册确定性参数搜索核心（扫描+坐标细化）
 │   ├── scenarios/carm/      # 数据导入、场景编译、L2/L3 适配器与工作流
 │   ├── models.py            # Genome、消息与拓扑协议
 │   ├── sten.py              # L3 路由、拓扑、约束和事件

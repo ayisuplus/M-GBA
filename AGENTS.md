@@ -218,3 +218,7 @@ AI Agent 可以帮助实现、测试、调研、重构和生成实验脚本，�
 - `src/mgba/neural_experiments.py` 与 `mgba neural-experiment`（`--layer l0|l3`）已实现参考 vs 神经单层替换配对对照，复用 WP8 配对比较指标；矩阵构造器强制两 runner 仅在 swapped 层不同。
 - `scripts/synthetic_neural_benchmark.py` 复用共享数据集生成器运行 L0/L3 两组替换基准（4 场景 × 2 层 × 2 条件 × 3 seed）；神经变体是契约演示器，不宣称神经真实拟合或算力收益。
 - 当前 191 项测试包含原有 169 项和 22 项神经基元/L0/L3 变体/配对矩阵/冻结基线门禁测试。
+- `src/mgba/calibration.py` 已实现预注册确定性参数搜索核心（ADR-0018）：sha256 逐候选种子扫描 + top-k 坐标细化（重复点去重、参考向量恒为首评点，训练结果不可能差于参考）；核心不 import runner，目标函数注入式。
+- `scripts/calibrate_l2_cell.py` 已实现 L2 `CellConfig` 19 标量的标定协议：目标为演示场景 60-tick `mean_homeostasis`，holdout 为四档合成压力场景，判定规则先验固定；冻结参考配置不被修改，标定向量只写入 artifact 并带完整溯源。
+- 首次标定（search_digest `99ce6e355b8e0afa…`）：训练 0.2076→0.5927，四档 holdout 全部提升（判定 `generalized`；calm/injury `failed → stable`，severe/collapse 仍 `failed` 保留为负面结果）；多坐标顶到盒边，扩盒属下一轮预注册协议；这是 reference model 类内诊断，不得宣称生物拟合。
+- 当前 204 项测试包含原有 191 项和 13 项标定协议/采样/搜索核心/artifact/冻结配置门禁测试。

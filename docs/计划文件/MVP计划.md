@@ -166,3 +166,5 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 提供随机闭环仿真基准脚本 `scripts/synthetic_closed_loop_benchmark.py`（复用共享数据集生成器）。
 - [x] 实现分层异构神经网络契约演示器（ADR-0017）：纯标准库神经基元 + 可选冻结权重 L0 MLP（`NeuralGrnModel`）与 L3 消息传递 GNN（`GnnTissueModel`）层内变体；确定性参考模型保留为默认与永久基线。
 - [x] 冻结并执行参考 vs 神经单层替换配对对照（`mgba neural-experiment --layer l0|l3`），复用 WP8 配对比较指标；提供仿真基准脚本 `scripts/synthetic_neural_benchmark.py`（复用共享数据集生成器）。
+- [x] 实现预注册 L2 规则参数标定（ADR-0018）：`mgba.calibration` 纯搜索核心 + `scripts/calibrate_l2_cell.py`；目标函数、搜索空间、预算与 holdout 判定规则在任何评估前冻结，参考配置不被修改。
+- [x] 执行首次标定：训练 mean homeostasis 0.2076→0.5927（+0.385），四档 holdout 全部提升（判定 `generalized`；calm/injury 结局 `failed → stable`，severe/collapse 仍 `failed` 保留为负面结果）；多坐标顶到盒子边缘，扩盒属下一轮预注册协议。
