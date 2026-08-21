@@ -222,3 +222,14 @@ AI Agent 可以帮助实现、测试、调研、重构和生成实验脚本，�
 - `scripts/calibrate_l2_cell.py` 已实现 L2 `CellConfig` 19 标量的标定协议：目标为演示场景 60-tick `mean_homeostasis`，holdout 为四档合成压力场景，判定规则先验固定；冻结参考配置不被修改，标定向量只写入 artifact 并带完整溯源。
 - 首次标定（search_digest `99ce6e355b8e0afa…`）：训练 0.2076→0.5927，四档 holdout 全部提升（判定 `generalized`；calm/injury `failed → stable`，severe/collapse 仍 `failed` 保留为负面结果）；多坐标顶到盒边，扩盒属下一轮预注册协议；这是 reference model 类内诊断，不得宣称生物拟合。
 - 当前 204 项测试包含原有 191 项和 13 项标定协议/采样/搜索核心/artifact/冻结配置门禁测试。
+- `src/mgba/layers/l2_latent.py` 已实现可选连续潜状态"虚拟细胞"L2 策略（ADR-0019）：AIVC 架构类（连续潜状态 + 泄漏 tanh 递推 + 非死亡四相读出）的纯标准库层内实例化；权重由显式 seed 派生而非训练；潜状态每 tick 从正式 `CellState` 确定性重建（无隐藏记忆，checkpoint 不变量不变）；死亡仅由同族硬护栏产生；规则状态机未修改且仍是默认。
+- `src/mgba/latent_experiments.py` 与 `mgba latent-experiment` 已实现规则 vs 潜状态 L2 策略配对对照，复用 WP8 配对比较指标；矩阵构造器强制两 runner 仅 L2 不同。
+- `scripts/synthetic_latent_benchmark.py` 复用共享数据集生成器运行潜状态对照基准；默认场景跨层效应 ≤1e-12、结局一致，合成基准 24 行全部 `FAILED`——零/负面基线，不得为展示效果静默调参；不宣称虚拟细胞级真实或优于规则基线。
+- 当前 221 项测试包含原有 204 项和 17 项潜状态数值极端/防崩溃/契约/无隐藏记忆/配对矩阵测试。
+- `src/mgba/autolab.py` 已实现自动实验调度器元层（ADR-0020）：预注册假设注册表 + 冻结"筛选→确认"策略的确定性闭环；核心不 import runner、不进 tick 循环，唯一执行通道是既有正式边界（WP8 式层内静态替换）；预算护栏 + 逐轮决策留痕 + append-only artifact。
+- `mgba autolab` 首次会话 4 次评估内自主复现 WP8 结论（L2 最大杠杆点，30→100 tick 稳健）；`mgba autolab-propose` 提供 fail-closed 提案验证通道，提案永不自动执行、跳层提案直接拒绝——这是未来 LLM 假设提出器的唯一入口（Phase 2 需 API 授权，未实施）。元层结论只挂 reference-model 级，不得宣称自主科学发现。
+- 当前 239 项测试包含原有 221 项和 18 项 autolab 注册表/策略/预算/提案门禁/真实复现基准测试。
+- `data/aivc/` 已建立 AIVC 真实数据/模型对接的分级下载清单（纯调查，全部待授权未下载）：含六抽象节点 ↔ MSigDB Hallmark 语义桥与 Stage 1–3 资源表（scPerturb、Norman 2019、Tahoe-100M 子集、Geneformer、STATE）；本机不训练，下载须逐条满足 §6（用途、磁盘预算、授权）并走 CAR-M 式去标识聚合适配器，只锚定 L0/L1。
+- ADR-0021 已固化多数据集存放与多细胞类型约定：原始外部数据永不入库（`data/raw/`）、入库聚合/合成数据必须登记 `data/registry.json`（来源/日期/SHA-256/许可/去标识/代理告知）、计划中资源清单先行；`mgba data-check` 为 fail-closed 门禁（当前 3 条目）。细胞类型只是 L0 层概念（`Genome` 模板 ± 群体 L0 钳制），禁止向 L1–L4 DTO 加类型标签；跨类型交互只经 L3 固定有向边与环境场两通道，L3 不得把类型标签注入 L2。
+- `configs/multiscale_coculture_demo.json` 为纯配置两种群共培养场景（信号型 ×6 + 修复型 ×6，零契约变更）；实测类型差异经 L0→L1→L2 链涌现、跨类型影响经 L3 边介导（去跨群边改变 rep 群 L3 signal 轨迹）；stress 0.35 下两种群 tick 4 前全部死亡，与 100 tick `FAILED` 负面基线一致，不得为展示效果静默调参。
+- 当前 252 项测试包含原有 239 项和 13 项注册表/共培养契约测试。

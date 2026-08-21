@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import replace
+from pathlib import Path
 
+from .data_registry import (
+    REGISTRY_SCHEMA_VERSION,
+    load_data_registry,
+    validate_data_registry,
+)
 from .feedback import load_feedback_config
 from .feedback_experiments import (
     FeedbackExperimentRunner,
@@ -15,9 +22,23 @@ from .policy_experiments import (
     load_policy_experiment_config,
     save_policy_artifacts,
 )
+from .latent_experiments import (
+    LatentExperimentRunner,
+    load_latent_experiment_config,
+    save_latent_artifacts,
+)
 from .layers.l2_active_inference import (
     ActiveInferenceCellModel,
     load_active_inference_config,
+)
+from .layers.l2_latent import LatentCellModel, load_latent_cell_config
+from .autolab import (
+    AutolabSession,
+    EvaluatorResult,
+    load_autolab_config,
+    load_proposal_file,
+    save_autolab_artifacts,
+    validate_proposals,
 )
 from .layers.l3_adaptive import (
     DynamicTopologyTissueModel,
@@ -49,6 +70,9 @@ from .neural_experiments import (
 from .demo import export_carm_demo
 from .experiments import (
     CausalExperimentRunner,
+    CausalRunRecord,
+    ConditionKind,
+    _compare_runs,
     load_causal_config,
     save_causal_artifacts,
 )
@@ -374,6 +398,76 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional root for the complete raw and derived policy artifacts",
     )
 
+    latent_experiment = commands.add_parser(
+        "latent-experiment",
+        help="run the L2 rule-vs-latent-cell policy comparison matrix",
+    )
+    _add_layered_arguments(latent_experiment)
+    latent_experiment.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    latent_experiment.add_argument(
+        "--matrix-config",
+        default="configs/experiments/latent_comparison.json",
+        help="L2 latent policy comparison JSON",
+    )
+    latent_experiment.add_argument(
+        "--latent-config",
+        default="configs/layers/l2_latent_cell.json",
+        help="latent virtual-cell L2 policy JSON",
+    )
+    latent_experiment.add_argument(
+        "--artifact-root",
+        help="optional root for the complete raw and derived latent artifacts",
+    )
+
+    autolab = commands.add_parser(
+        "autolab",
+        help="run the deterministic screen-then-confirm autonomous experiment loop",
+    )
+    _add_layered_arguments(autolab)
+    autolab.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    autolab.add_argument(
+        "--autolab-config",
+        default="configs/experiments/autolab_screen.json",
+        help="autolab hypothesis registry and protocol JSON",
+    )
+    autolab.add_argument(
+        "--artifact-root",
+        help="optional root for the autolab session artifacts",
+    )
+
+    autolab_propose = commands.add_parser(
+        "autolab-propose",
+        help="validate hypothesis proposals against the registry schema (never executes)",
+    )
+    autolab_propose.add_argument(
+        "--autolab-config",
+        default="configs/experiments/autolab_screen.json",
+        help="autolab hypothesis registry and protocol JSON",
+    )
+    autolab_propose.add_argument(
+        "--proposals",
+        required=True,
+        help="proposal JSON file to validate (proposed_by human or llm)",
+    )
+
+    data_check = commands.add_parser(
+        "data-check",
+        help="verify every dataset registered in data/registry.json (fail-closed)",
+    )
+    data_check.add_argument(
+        "--registry",
+        default="data/registry.json",
+        help="dataset registry JSON",
+    )
+
     topology_experiment = commands.add_parser(
         "topology-experiment",
         help="run the E5 static-vs-adaptive L3 topology comparison matrix",
@@ -646,6 +740,117 @@ def main() -> None:
             result["artifact_root"] = str(paths["root"])
             result["artifact_manifest"] = str(paths["manifest"])
             result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "latent-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        latent_config = load_latent_experiment_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        rule_models = _load_layer_models(args)
+        latent_models = dict(rule_models)
+        latent_models["cell_model"] = LatentCellModel(
+            load_latent_cell_config(args.latent_config)
+        )
+        runners = {
+            "rule_policy": MultirateCrossScaleRunner(runner_config, **rule_models),
+            "latent_cell_policy": MultirateCrossScaleRunner(
+                runner_config, **latent_models
+            ),
+        }
+        matrix = LatentExperimentRunner(latent_config, runners=runners).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_latent_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "autolab":
+        scenario = load_multiscale_scenario(args.config)
+        autolab_config = load_autolab_config(args.autolab_config)
+        runner_config = load_runner_config(args.runner_config)
+        if (
+            max(autolab_config.probe_ticks, autolab_config.confirm_ticks)
+            > runner_config.max_total_ticks
+        ):
+            raise SystemExit("autolab ticks exceed the runner budget")
+        variant_by_layer = {"L1": "l1_static", "L2": "l2_static", "L3": "l3_static"}
+        baseline_runner = _load_multirate_runner(args)
+        baseline_cache: dict[tuple[int, int], object] = {}
+
+        def evaluate(hypothesis, ticks, seeds):
+            condition_runner = _load_multirate_runner(
+                args, variant=variant_by_layer[hypothesis.layer]
+            )
+            per_seed = []
+            digests = []
+            for seed in seeds:
+                seeded = replace(scenario, seed=seed)
+                cache_key = (seed, ticks)
+                if cache_key not in baseline_cache:
+                    baseline_cache[cache_key] = baseline_runner.run(
+                        seeded, ticks=ticks
+                    )
+                baseline_run = baseline_cache[cache_key]
+                condition_run = condition_runner.run(seeded, ticks=ticks)
+                comparison = _compare_runs(
+                    CausalRunRecord(
+                        condition_id="baseline",
+                        condition_kind=ConditionKind.BASELINE,
+                        seed=seed,
+                        run=baseline_run,
+                    ),
+                    CausalRunRecord(
+                        condition_id=hypothesis.hypothesis_id,
+                        condition_kind=ConditionKind.PERTURBATION,
+                        seed=seed,
+                        run=condition_run,
+                    ),
+                )
+                per_seed.append((seed, comparison.final_metric_effects))
+                digests.append((seed, condition_run.history_digest))
+            return EvaluatorResult(
+                per_seed_metric_effects=tuple(per_seed),
+                history_digests=tuple(digests),
+            )
+
+        session = AutolabSession(autolab_config, evaluate=evaluate).run()
+        result = session.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            paths = save_autolab_artifacts(args.artifact_root, session)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "autolab-propose":
+        registry = load_autolab_config(args.autolab_config)
+        proposals = load_proposal_file(args.proposals)
+        result = validate_proposals(
+            proposals,
+            registry_ids=[item.hypothesis_id for item in registry.hypotheses],
+        ).summary_dict()
+    elif args.command == "data-check":
+        registry_path = Path(args.registry)
+        entries = load_data_registry(registry_path)
+        status_by_id = {entry.dataset_id: entry.status for entry in entries}
+        verdicts = validate_data_registry(
+            entries, data_root=registry_path.resolve().parent.parent
+        )
+        ok = all(verdict.ok for verdict in verdicts)
+        result = {
+            "schema_version": REGISTRY_SCHEMA_VERSION,
+            "ok": ok,
+            "entries": [
+                {
+                    "dataset_id": verdict.dataset_id,
+                    "status": status_by_id[verdict.dataset_id],
+                    "ok": verdict.ok,
+                    "detail": verdict.detail,
+                }
+                for verdict in verdicts
+            ],
+        }
+        if not ok:
+            print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+            raise SystemExit(1)
     elif args.command == "topology-experiment":
         scenario = load_multiscale_scenario(args.config)
         topology_config = load_topology_experiment_config(args.matrix_config)

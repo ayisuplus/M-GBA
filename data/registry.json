@@ -1,0 +1,50 @@
+{
+  "schema_version": "mgba-data-registry-0.1",
+  "datasets": [
+    {
+      "dataset_id": "carm-tcga-brca-high-immune",
+      "kind": "aggregated_profile",
+      "status": "materialized",
+      "path": "data/carm/tcga_brca_high_immune.json",
+      "sha256": "ecdf51d43d21afae7ea35d3826d0e2f523d6945aa6387a150389e0928d5da716",
+      "provenance": {
+        "source": "legacy CAR-M TCGA-BRCA GAT 预测聚合（752 例，无样本 ID）",
+        "date": "2026-08-19",
+        "license": "TCGA 公共数据；GAT 预测为旧项目派生产物",
+        "deidentified": true,
+        "proxy_notice": "TCGA-BRCA immune values are legacy GAT predictions trained against gene-signature-derived proxy labels; they are not clinical ground truth."
+      },
+      "notes": "旧患者级 GAT 不在生成热路径；入库物仅为去标识聚合 profile（high/low/normal = 323/273/156 中的 high_immune 切片）。"
+    },
+    {
+      "dataset_id": "synthetic-feedback",
+      "kind": "synthetic",
+      "status": "generated",
+      "path": "data/synthetic-feedback/manifest.json",
+      "sha256": "c624aab708d99cd0485ac922a1fc936efa5246251258b87653c609efcc50f2b1",
+      "provenance": {
+        "source": "M-GBA 合成场景生成器（seed 2026；benchmark_spec.json + scenarios/）",
+        "date": "2026-08-21",
+        "license": "项目内部合成数据",
+        "deidentified": true,
+        "proxy_notice": ""
+      },
+      "notes": "登记对象为 manifest；逐场景文件 sha256 见 manifest 内部条目。"
+    },
+    {
+      "dataset_id": "aivc-planned",
+      "kind": "external_planned",
+      "status": "planned",
+      "path": "data/aivc/",
+      "sha256": null,
+      "provenance": {
+        "source": "AIVC 外部资源对接清单（待授权，未下载任何数据）",
+        "date": "2026-08-21",
+        "license": "逐条见 data/aivc/README.md 清单",
+        "deidentified": true,
+        "proxy_notice": ""
+      },
+      "notes": "清单先行先例：data/aivc/README.md 为唯一事实源；每条资源须满足 AGENTS.md §6 三条件（用途/磁盘预算/授权）后下载并实测登记 sha256。"
+    }
+  ]
+}

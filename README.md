@@ -52,6 +52,10 @@ L0 基因/转录调控
 - E4×E3 组合已实现为随机闭环实验（ADR-0016）：`mgba closed-loop-experiment` 组合反馈控制器与噪声 L0，按预注册稳定性判据（震荡/锁死/恢复/恶化/不定）分级每 run 的慢时钟稳态序列；`scripts/synthetic_closed_loop_benchmark.py` 运行仿真基准。
 - 分层异构神经网络已作为冻结权重契约演示器接入（ADR-0017）：纯标准库神经基元 + 可选 L0 MLP GRN 与 L3 消息传递 GNN 变体，权重由显式种子确定性派生（非训练模型）；`mgba neural-experiment --layer l0|l3` 运行单层替换配对对照，`scripts/synthetic_neural_benchmark.py` 运行仿真基准。
 - L2 规则参数标定已作为预注册实验接入（ADR-0018）：`mgba.calibration` 纯搜索核心（sha256 种子扫描 + 坐标细化，参考向量恒为首个评估点）+ `scripts/calibrate_l2_cell.py`；首次运行训练 +0.385、四档 holdout 全部提升（calm/injury 结局 `failed → stable`，severe/collapse 仍 `failed`），判定 `generalized`；冻结参考配置不被修改，标定结果不进入任何冻结协议。
+- L2 已增加可选连续潜状态"虚拟细胞"策略（ADR-0019）：AIVC 架构类的层内实例化——冻结种子派生权重（非训练）的嵌入 + 泄漏 tanh 递推 + 非死亡四相读出，潜状态每 tick 从正式 `CellState` 确定性重建（无隐藏记忆）；规则状态机原样保留为默认与永久基线，替换仅隔离"状态表示→相位映射"一个变量。`mgba latent-experiment` 配对对照与 `scripts/synthetic_latent_benchmark.py` 仿真基准可执行；默认场景跨层效应 ≤1e-12、结局一致（`FAILED`），保留为零结果基线。
+- AIVC 真实数据/模型对接的分级下载清单在 **`data/aivc/`**（纯调查，全部待授权未下载；含六抽象节点 ↔ Hallmark 基因集语义桥与 Stage 1–3 资源表）。
+- 自动实验调度器元层已接入（ADR-0020）：`mgba autolab` 在预注册假设注册表上运行冻结"筛选→确认"确定性闭环（元层，不进 tick 循环），首次会话 4 次评估内自主复现 WP8 结论（L2 最大杠杆点，30→100 tick 稳健）；`mgba autolab-propose` 提供 fail-closed 提案验证通道（永不自动执行），为未来 LLM 假设提出器预留唯一入口。
+- 多数据集存放与多细胞类型约定已固化（ADR-0021）：入库数据集统一登记 **`data/registry.json`**，`mgba data-check` 为 fail-closed 校验门禁；细胞类型只由 L0 `Genome` 模板表达，跨类型交互只经 L3 边与环境场——`configs/multiscale_coculture_demo.json` 用纯配置两种群共培养场景证明了这一点（零契约变更）。
 
 关键文档：
 
@@ -118,6 +122,11 @@ python -m venv .venv
 .\.venv\Scripts\mgba neural-experiment --layer l3 --artifact-root artifacts/neural
 .\.venv\Scripts\python scripts/synthetic_neural_benchmark.py run
 .\.venv\Scripts\python scripts/calibrate_l2_cell.py
+.\.venv\Scripts\mgba latent-experiment --artifact-root artifacts/latent
+.\.venv\Scripts\python scripts/synthetic_latent_benchmark.py run
+.\.venv\Scripts\mgba autolab --artifact-root artifacts/autolab
+.\.venv\Scripts\mgba autolab-propose --proposals <提案文件.json>
+.\.venv\Scripts\mgba data-check
 .\.venv\Scripts\mgba sten-smoke --config configs/demo.json
 .\.venv\Scripts\python -m unittest discover -s tests -v
 .\.venv\Scripts\python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
@@ -139,30 +148,36 @@ python -m venv .venv
 .venv/bin/mgba feedback-experiment --artifact-root artifacts/e4
 .venv/bin/python scripts/synthetic_feedback_benchmark.py generate
 .venv/bin/python scripts/synthetic_feedback_benchmark.py run
+.venv/bin/mgba data-check
 .venv/bin/mgba sten-smoke --config configs/demo.json
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
 ```
 
-`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba demo-export` 在内存中回放冻结 CAR-M 矩阵（去掉消融、取 seed 42），向 `artifacts/demo/` 写出自包含单文件 HTML 演示（4 个剂量条件的组织动画、L4 曲线与 L0→L4 细胞检查器）、playbook JSON 和 SHA-256 manifest；内容为冻结配置的字节级确定函数，保留负面基线表述，不写任何 raw artifact。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
+`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba demo-export` 在内存中回放冻结 CAR-M 矩阵（去掉消融、取 seed 42），向 `artifacts/demo/` 写出自包含单文件 HTML 演示（4 个剂量条件的组织动画、L4 曲线与 L0→L4 细胞检查器）、playbook JSON 和 SHA-256 manifest；内容为冻结配置的字节级确定函数，保留负面基线表述，不写任何 raw artifact。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。`mgba data-check` 按 `data/registry.json` 逐条校验入库数据集（materialized/generated 实测 SHA-256，planned 免文件），任一条目失败即打印报告并以非零码退出（fail-closed）。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
 
 ## 当前目录
 
 ```text
 M-GBA/
 ├── data/carm/                # 去标识化 TCGA 代理聚合 profile
+├── data/synthetic-feedback/  # 合成压力档场景集（manifest 内逐场景 sha256）
+├── data/aivc/                # 外部资源清单先行区（全部待授权，未下载）
+├── data/registry.json        # 入库数据集登记表；mgba data-check 门禁（ADR-0021）
 ├── configs/
 │   ├── layers/              # 版本化层模型配置
 │   ├── experiments/         # 冻结批量实验矩阵
 │   ├── scenarios/carm/      # CAR-M 场景、角色、环境与模型参数
 │   ├── runner_reference.json # 多速率时钟与预算
 │   ├── multiscale_demo.json # 默认五层纵向契约场景
+│   ├── multiscale_coculture_demo.json # 两种群共培养契约场景（ADR-0021）
 │   └── demo.json            # L3 STEN 子系统场景
 ├── docs/
 ├── scripts/
 │   ├── mvp_demo.py          # 冻结 full/fallback 演示
 │   ├── synthetic_feedback_benchmark.py # 仿真场景生成与 E4 基准
 │   ├── synthetic_policy_benchmark.py # 规则 vs 主动推理 L2 策略基准
+│   ├── synthetic_latent_benchmark.py # 规则 vs 潜状态 L2 策略基准
 │   ├── synthetic_topology_benchmark.py # E5 静态 vs 动态拓扑基准
 │   ├── synthetic_e3_benchmark.py # E3 多种子噪声集合基准
 │   ├── synthetic_closed_loop_benchmark.py # E4×E3 噪声闭环稳定性基准
@@ -186,6 +201,10 @@ M-GBA/
 │   ├── feedback_experiments.py # E4 三条件对照矩阵与 artifact
 │   ├── policy_experiments.py # 规则 vs 主动推理 L2 策略对照矩阵与 artifact
 │   ├── layers/l2_active_inference.py # 主动推理（EFE）L2 策略与配置
+│   ├── latent_experiments.py # 规则 vs 潜状态 L2 策略对照矩阵与 artifact
+│   ├── layers/l2_latent.py    # 连续潜状态"虚拟细胞"L2 策略与配置
+│   ├── autolab.py           # 元层自动实验调度（注册表 + 筛选→确认 + 提案门禁）
+│   ├── data_registry.py     # 数据集注册表加载与 sha256 校验（ADR-0021）
 │   ├── topology_experiments.py # E5 静态 vs 动态拓扑对照矩阵与稳定性指标
 │   ├── layers/l3_adaptive.py  # 受治理的动态拓扑 L3 模型
 │   ├── e3_statistics.py      # E3 预注册判据与分级阶梯

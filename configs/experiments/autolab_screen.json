@@ -1,0 +1,28 @@
+{
+  "model_version": "autolab-screen-0.1",
+  "seeds": [41, 42, 43],
+  "probe_ticks": 30,
+  "confirm_ticks": 100,
+  "confirm_top_k": 1,
+  "budget": 8,
+  "hypotheses": [
+    {
+      "hypothesis_id": "l1-static",
+      "kind": "layer_static_swap",
+      "layer": "L1",
+      "priority": 1.0
+    },
+    {
+      "hypothesis_id": "l2-static",
+      "kind": "layer_static_swap",
+      "layer": "L2",
+      "priority": 1.0
+    },
+    {
+      "hypothesis_id": "l3-static",
+      "kind": "layer_static_swap",
+      "layer": "L3",
+      "priority": 1.0
+    }
+  ]
+}

@@ -168,3 +168,7 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 冻结并执行参考 vs 神经单层替换配对对照（`mgba neural-experiment --layer l0|l3`），复用 WP8 配对比较指标；提供仿真基准脚本 `scripts/synthetic_neural_benchmark.py`（复用共享数据集生成器）。
 - [x] 实现预注册 L2 规则参数标定（ADR-0018）：`mgba.calibration` 纯搜索核心 + `scripts/calibrate_l2_cell.py`；目标函数、搜索空间、预算与 holdout 判定规则在任何评估前冻结，参考配置不被修改。
 - [x] 执行首次标定：训练 mean homeostasis 0.2076→0.5927（+0.385），四档 holdout 全部提升（判定 `generalized`；calm/injury 结局 `failed → stable`，severe/collapse 仍 `failed` 保留为负面结果）；多坐标顶到盒子边缘，扩盒属下一轮预注册协议。
+- [x] 实现可选 L2 连续潜状态"虚拟细胞"策略（ADR-0019）：AIVC 架构类（连续潜状态 + 结构化转移算子 + 相位读出）的纯标准库层内实例化；冻结种子派生权重（非训练），潜状态每 tick 从正式 `CellState` 确定性重建（无隐藏记忆）；死亡仅由同族硬护栏产生；规则状态机保留为默认与永久基线。
+- [x] 冻结并执行规则 vs 潜状态 L2 策略配对对照（`mgba latent-experiment`），复用 WP8 配对比较指标；提供仿真基准脚本 `scripts/synthetic_latent_benchmark.py`；默认场景两条件均 `FAILED` 且跨层效应 ≤1e-12（零结果基线），合成基准 24 行全部 `FAILED`，不调参。
+- [x] 实现自动实验调度器元层（ADR-0020，Phase 1）：预注册假设注册表 + 冻结"筛选→确认"策略的确定性闭环（`mgba autolab`），核心不 import runner、评估器注入式；首次会话 4 次评估内自主复现 WP8 结论（L2 最大杠杆点，30→100 tick 稳健）。
+- [x] 提供 fail-closed 提案验证通道（`mgba autolab-propose`）：提案须符合注册表 schema 且永不自动执行，跳层提案直接拒绝；这是未来 LLM 假设提出器的唯一入口，人审后生效。

@@ -1,0 +1,29 @@
+{
+  "model_version": "latent-l2-cell-policy-0.1",
+  "latent_dim": 8,
+  "leak_rate": 0.6,
+  "weight_seed": 19001,
+  "stress_environment_weight": 0.7,
+  "resource_deficit_weight": 0.3,
+  "death_stress_weight": 0.2,
+  "metabolic_buffer_weight": 0.2,
+  "signal_activation_weight": 0.7,
+  "incoming_signal_weight": 0.3,
+  "death_effector_weight": 0.6,
+  "stress_mortality_weight": 0.4,
+  "repair_recovery_rate": 0.2,
+  "stress_damage_rate": 0.25,
+  "death_damage_rate": 0.3,
+  "basal_consumption": 0.05,
+  "activation_consumption_rate": 0.2,
+  "repair_consumption_rate": 0.3,
+  "death_viability_threshold": 0.05,
+  "death_drive_threshold": 0.65,
+  "secretion_multipliers": {
+    "quiescent": 0.05,
+    "activated": 1.0,
+    "repairing": 0.25,
+    "stressed": 0.5,
+    "dead": 0.0
+  }
+}

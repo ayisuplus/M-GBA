@@ -506,3 +506,23 @@ L4 模型依据见 [ADR-0006：L4 第一版宏观表型](../决策记录/ADR-000
 - 首次运行（search_digest `99ce6e355b8e0afa…`，1003 次评估，178 s）：训练 0.2076→0.5927（+0.385）；holdout 平均 +0.2207，判定 `generalized`——calm/injury 结局 `failed → stable`，severe/collapse 仍 `failed` 但终末活力脱离 0。多个坐标顶到 $[0,1]$ 盒边（`repair_recovery_rate`=1.0、`signal_activation_weight`=0.0 等），提示类内最优点可能在盒外；扩盒需新一轮预注册协议。
 - 边界：reference model 类内诊断，非生物拟合；标定配置只写入 artifact（带溯源），不进入任何冻结实验协议；冻结基线位级不变（测试门禁固定）。
 - 测试总数增至 204 项（191 + 标定 13）。
+
+### L2 连续潜状态虚拟细胞策略更新（2026-08-21）
+
+- 可选 L2 `CellModel` 实现 `LatentCellModel` 已由 ADR-0019 冻结：AIVC 架构类（连续潜状态 + 结构化转移算子 + 相位读出）的纯标准库层内实例化；12 维输入（6 分子种属 + 3 环境场 + 3 上一状态标量），泄漏 tanh 递推 $z_t=(1-\lambda)z^{prev}+\lambda\tanh(W_{in}u_t+W_{rec}z^{prev}+b)$，$W_{rec}$ 行 L1 范数缩放至 $\le1$ 保证收缩；权重由 `weight_seed` 经 `seeded_matrix` 冻结派生，非训练、无外部文件。
+- 协议约束推导：checkpoint 只序列化正式 DTO 且恢复时重建模型实例 ⇒ 潜状态每 tick 从正式 `CellState` 确定性重建，禁止隐藏记忆；专项测试证明同一正式状态的续跑与长轨迹逐字段一致。
+- 死亡只由与规则/AIF 同族的硬护栏产生（viability/死亡驱动阈值），吸收态保持；读出仅覆盖非死亡四相，argmax 平局按冻结顺序。簿记与动作方程与规则族逐式一致，E2 式替换只隔离"状态表示→相位映射"一个变量；矩阵构造器强制两 runner 仅 L2 不同。
+- `mgba latent-experiment` ×3 seed ×30 tick：默认演示场景 L0/L2/L4 效应恰为 0，L1≤2.8e-12、L3≤1.3e-22，逐 tick 相位分歧 4/120 cell-tick，两条件均 `FAILED`；135 组合输入探针证明读出对输入敏感（非退化），近零效应来自场景轨迹访问区域的相位一致性。
+- `scripts/synthetic_latent_benchmark.py` 复用共享仿真数据集运行对照：calm 档差异 ~5e-4（稳态 0.156617 vs 0.157123），injury 位级一致，severe/collapse 饱和一致；24 次运行全部 `FAILED`，保留为零/负面基线，不调参。
+- 科学边界：contract demonstrator（第 1 级），不宣称虚拟细胞级真实或优于规则基线；AIVC 真实数据/模型对接（扰动图谱锚定 L0/L1）属后续工作，需独立下载授权与 ADR。
+- 测试总数增至 221 项（204 + 潜状态 17）。
+
+### 自动实验调度器（元层）更新（2026-08-21）
+
+- 元层自动实验调度器已由 ADR-0020 冻结：`mgba/autolab.py` 的 `AutolabSession` 坐在 L0–L4 之外，不 import runner、不进入 tick 循环；唯一执行通道是经既有正式边界提交实验配置（本阶段为 WP8 式 L1/L2/L3 静态替换）。
+- 闭环结构：预注册假设注册表（`configs/experiments/autolab_screen.json`）+ 冻结 `screen_then_confirm` 策略——筛选轮按冻结优先级序在 30 tick 探针地平线评估，按冻结效应标量（WP8 有向终末 L4 五指标的平均绝对值，跨 seed 均值）排名，确认轮把 top-k 在 100 tick 复评；第二轮选择由第一轮测量驱动，但规则先验固定，同配置位级可复现。
+- 预算护栏与决策留痕：`budget` 总评估次数上限，耗尽时未评估者记 `pending`（已筛选未确认者不混入）；每轮写 `DecisionEntry`（轮次/阶段/假设/理由/效应）；artifact append-only，raw run 不落盘（位级可复现，`history_digest` 锚定）。
+- LLM 预留接口 `mgba autolab-propose`：提案 = 注册表 schema + `proposed_by` 溯源，fail-closed 验证、**永不执行**、人审后才进注册表；跳层提案（`skip_l1`、`layer: "L0"`）schema 层直接拒绝。实测：合法提案接受、跳层提案带理由拒绝、`executed: false`。
+- 首次会话 `autolab-71df3a1d06a63ce3`：探针效应 l1 0.010458 / **l2 0.498391** / l3 0.216474，确认轮 100 tick l2 0.4912——**4 次评估内自主复现 WP8 结论（L2 最大杠杆点）且地平线稳健**；预注册复现基准通过。
+- 科学边界：方法论工具，不宣称"自主科学发现"；循环结论全部 reference-model 级；循环自证与指标投机风险由冻结协议 + holdout 场景 + 远期真实数据锚定（`data/aivc/`）缓解。Phase 2（LLM 提出器，需 API 授权）与 Phase 3（真实数据）未实施。
+- 测试总数增至 239 项（221 + autolab 18）。
