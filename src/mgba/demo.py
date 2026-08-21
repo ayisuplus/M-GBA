@@ -37,10 +37,10 @@ from .scenarios.carm import (
 )
 from .experiments import CausalMatrixResult
 
-DEMO_PLAYBOOK_SCHEMA = "mgba-demo-playbook-0.1"
+DEMO_PLAYBOOK_SCHEMA = "mgba-demo-playbook-0.2"
 _DEMO_FILES_SCHEMA = "mgba-demo-files-0.1"
 _DEMO_SEED = 42
-_DEMO_TITLE = "CAR-M 虚拟细胞治疗跨尺度演示"
+_DEMO_TITLE = "M-GBA CAR-M 跨尺度研究观察台"
 
 # Fixed scientific boundary statement shown verbatim in the player footer.
 # The negative baseline wording is load-bearing and must not be softened.
@@ -118,7 +118,16 @@ def _condition_ticks(run: MultirateRun) -> list[dict[str, Any]]:
         ticks.append(
             {
                 "t": tick.logical_time,
+                "l0_updated": tick.l0_updated,
                 "l4_observed": tick.l4_observed,
+                "audit": {
+                    "transition_count": len(tick.transitions),
+                    "l0_perturbation_count": len(tick.l0_perturbation_events),
+                    "layer_paths": [
+                        f"{event.source_layer.value}->{event.target_layer.value}"
+                        for event in tick.transitions
+                    ],
+                },
                 "cells": cells,
                 "l3": {
                     field: _round4(getattr(tick.l3, field)) for field in _L3_FIELDS
@@ -168,6 +177,7 @@ def build_demo_playbook(
                     field: _round4(getattr(run.terminal_observation, field))
                     for field in _L4_FIELDS
                 },
+                "outcome": run.phenotype_window.outcome.value,
                 "ticks": _condition_ticks(run),
             }
         )
@@ -179,6 +189,19 @@ def build_demo_playbook(
         "roles": role_map,
         "layout": _build_layout(role_map),
         "edges": [[source, target] for source, target in compiled.scenario.edges],
+        "observer": {
+            "reference_condition": "baseline",
+            "default_comparison_condition": "car_affinity_070",
+            "field_layers": ["stress", "signal", "resource_level"],
+            "spatial_semantics": (
+                "deterministic role-ring observation layout; positions and heatmaps "
+                "are derived display projections, not simulated physical coordinates"
+            ),
+            "legacy_reference": (
+                "CAR-M Virtual Cell canvas, cytokine-field overlay, and experiment "
+                "comparison interaction patterns"
+            ),
+        },
         "conditions": conditions,
     }
     playbook["playbook_digest"] = digest_payload(playbook)
@@ -190,262 +213,223 @@ _HTML_TEMPLATE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>M-GBA CAR-M 跨尺度演示</title>
+<title>M-GBA CAR-M 跨尺度研究观察台</title>
 <style>
-:root { color-scheme: light; font-family: system-ui, "Microsoft YaHei", sans-serif; }
+:root { color-scheme: dark; font-family: Inter, system-ui, "Microsoft YaHei", sans-serif; }
 * { box-sizing: border-box; }
-body { margin: 0; background: #f8fafc; color: #0f172a; }
-header { padding: 10px 16px; background: #0f172a; color: #f8fafc; }
-header h1 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
-#tabs { display: flex; gap: 8px; flex-wrap: wrap; }
-#tabs button { border: 1px solid #475569; background: #1e293b; color: #e2e8f0; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
-#tabs button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
-main { display: flex; gap: 16px; padding: 12px 16px; align-items: flex-start; flex-wrap: wrap; }
-.panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; }
-.panel h2 { margin: 0 0 8px; font-size: 14px; font-weight: 600; }
-#tissue { display: block; }
-#side { display: flex; flex-direction: column; gap: 12px; width: 460px; }
-#l4charts { display: flex; flex-wrap: wrap; gap: 8px; }
-#l4charts figure { margin: 0; }
-#l4charts figcaption { font-size: 12px; color: #475569; }
-.bar-row { display: flex; align-items: center; gap: 8px; margin: 2px 0; font-size: 12px; }
-.bar-row .name { width: 118px; text-align: right; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar-row .track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
-.bar-row .fill { height: 100%; background: #2563eb; }
-.bar-row .val { width: 48px; font-variant-numeric: tabular-nums; }
-#controls { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #fff; border-top: 1px solid #e2e8f0; position: sticky; bottom: 0; }
-#controls button { border: 1px solid #cbd5e1; background: #f1f5f9; border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
-#controls button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
-#tickslider { flex: 1; }
-#ticklabel { font-variant-numeric: tabular-nums; font-size: 14px; min-width: 72px; }
-footer { padding: 10px 16px 18px; font-size: 12px; color: #475569; line-height: 1.6; }
-footer code { font-family: ui-monospace, monospace; }
-.boundary { border-left: 4px solid #ca8a04; padding-left: 10px; margin-top: 6px; }
-.hint { color: #94a3b8; font-size: 12px; }
-.group-title { font-size: 12px; font-weight: 600; color: #334155; margin: 8px 0 2px; }
+body { margin: 0; background: #06111f; color: #dbeafe; }
+header { padding: 16px 20px 13px; background: linear-gradient(135deg, #071525, #0d2239); border-bottom: 1px solid #1e3a5f; }
+header h1 { margin: 0; font-size: 22px; letter-spacing: .02em; }
+header p { margin: 5px 0 11px; color: #93c5fd; font-size: 12px; }
+#tabs, #field-controls { display: flex; gap: 7px; flex-wrap: wrap; }
+button { border: 1px solid #315172; background: #10263d; color: #bfdbfe; border-radius: 7px; padding: 6px 11px; cursor: pointer; }
+button:hover { border-color: #60a5fa; }
+button.active { background: #2563eb; border-color: #60a5fa; color: white; }
+main { padding: 14px 18px 88px; max-width: 1720px; margin: 0 auto; }
+.panel { background: #0a1a2b; border: 1px solid #1d3854; border-radius: 11px; padding: 12px; box-shadow: 0 10px 25px rgba(0,0,0,.16); }
+.panel h2 { margin: 0 0 7px; font-size: 14px; }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.canvas-grid { display: grid; grid-template-columns: repeat(2, minmax(320px, 1fr)); gap: 12px; }
+.canvas-wrap canvas { display: block; width: 100%; max-width: 660px; height: auto; margin: 8px auto 0; background: #071321; border-radius: 8px; }
+.condition-name { color: #7dd3fc; font-size: 12px; font-family: ui-monospace, monospace; }
+.analysis-grid { display: grid; grid-template-columns: minmax(520px, 1.4fr) minmax(360px, 1fr); gap: 12px; margin-top: 12px; align-items: start; }
+.stack { display: grid; gap: 12px; }
+#l4charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: 7px; }
+#l4charts figure { margin: 0; padding: 7px; background: #071626; border: 1px solid #16334e; border-radius: 8px; }
+#l4charts canvas { width: 100%; height: auto; }
+#l4charts figcaption { font-size: 11px; color: #93c5fd; }
+.legend { display: flex; gap: 14px; color: #9fb9d4; font-size: 11px; margin-bottom: 5px; }
+.swatch { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 4px; }
+.hint { color: #7895b3; font-size: 11px; line-height: 1.5; }
+.group-title { margin: 10px 0 4px; font-size: 12px; font-weight: 700; color: #bae6fd; }
+.table-scroll { max-height: 410px; overflow: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th, td { padding: 4px 6px; border-bottom: 1px solid #18334e; text-align: right; font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; color: #a8c3df; }
+th { color: #7dd3fc; position: sticky; top: 0; background: #0a1a2b; }
+.delta-pos { color: #67e8f9; } .delta-neg { color: #fca5a5; } .delta-zero { color: #94a3b8; }
+.audit-line { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid #17324b; font-size: 11px; }
+.audit-line span:first-child { color: #8aa7c4; }
+.role-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 7px; font-size: 10px; color: #8eabc8; }
+.role-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+#controls { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 9px; padding: 9px 18px; background: rgba(6,17,31,.96); border-top: 1px solid #27445f; backdrop-filter: blur(8px); }
+#tickslider { flex: 1; min-width: 160px; }
+#ticklabel { min-width: 86px; font-size: 12px; font-family: ui-monospace, monospace; }
+footer { padding: 10px 18px 86px; max-width: 1720px; margin: 0 auto; color: #7895b3; font-size: 11px; line-height: 1.55; }
+footer code { color: #bae6fd; }
+.boundary { border-left: 4px solid #f59e0b; padding-left: 10px; margin-top: 7px; color: #fcd34d; }
+@media (max-width: 980px) { .canvas-grid, .analysis-grid { grid-template-columns: 1fr; } #controls { flex-wrap: wrap; } }
 </style>
 </head>
 <body>
 <header>
 <h1 id="title"></h1>
+<p>双轨同步对照：左侧冻结 baseline，右侧选择干预；所有画面均来自同一 seed、同一 tick 的正式 raw trajectory。</p>
 <div id="tabs"></div>
 </header>
 <main>
-<div class="panel">
-<h2>L3 组织画布（点击细胞查看 L0→L2 级联）</h2>
-<canvas id="tissue" width="640" height="640"></canvas>
-</div>
-<div id="side">
-<div class="panel">
-<h2>L4 宏观表型（慢时钟观测，随 tick 推进）</h2>
-<p class="hint">观测点：tick 1/11/21，末点为 tick 30 终末观测（冻结矩阵的最终指标比较点）。</p>
-<div id="l4charts"></div>
-</div>
-<div class="panel">
-<h2>L3 组织场均值（当前 tick）</h2>
-<div id="l3bars"></div>
-</div>
-<div class="panel">
-<h2>细胞检查器（L0 基因 → L1 分子 → L2 状态）</h2>
-<div id="inspector"><p class="hint">点击左侧画布中的细胞圆点，查看该细胞当前 tick 的 L0 六基因、L1 六分子与 L2 三项状态。</p></div>
-</div>
-</div>
+<section class="canvas-grid">
+  <div class="panel canvas-wrap">
+    <div class="panel-head"><div><h2>参考轨迹</h2><div class="condition-name" id="reference-label"></div></div><span class="hint">冻结对照</span></div>
+    <canvas id="tissue-reference" width="620" height="620"></canvas>
+  </div>
+  <div class="panel canvas-wrap">
+    <div class="panel-head"><div><h2>干预轨迹</h2><div class="condition-name" id="comparison-label"></div></div><span class="hint">同 tick 对齐</span></div>
+    <canvas id="tissue-comparison" width="620" height="620"></canvas>
+  </div>
+</section>
+<div class="role-legend" id="role-legend"></div>
+<section class="analysis-grid">
+  <div class="stack">
+    <div class="panel">
+      <div class="panel-head"><div><h2>L4 宏观表型双轨曲线</h2><div class="legend"><span><i class="swatch" style="background:#64748b"></i>baseline</span><span><i class="swatch" style="background:#38bdf8"></i>当前干预</span></div></div><span class="hint">慢时钟观测 + tick 30 终末观察</span></div>
+      <div id="l4charts"></div>
+    </div>
+    <div class="panel">
+      <h2>细胞跨层差异检查器</h2>
+      <div id="inspector"><p class="hint">点击任一组织画布中的细胞，查看同一 cell 在 baseline 与干预下的 L0→L1→L2→局部 L3 差异。</p></div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="panel"><h2>L3 组织状态对照（当前 tick）</h2><div id="l3-compare"></div></div>
+    <div class="panel"><h2>L4 终末结果对照</h2><div id="endpoint-compare"></div></div>
+    <div class="panel"><h2>当前 tick 审计</h2><div id="audit"></div></div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>L3 显示场</h2><p class="hint">由固定布局上的节点值做径向投影，仅用于观察；不是连续物理场求解。</p></div></div>
+      <div id="field-controls">
+        <button class="field active" data-field="stress">压力</button>
+        <button class="field" data-field="signal">信号</button>
+        <button class="field" data-field="resource_level">资源</button>
+        <button class="field" data-field="none">关闭</button>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
 <div id="controls">
 <button id="playbtn">播放</button>
-<button class="speed" data-speed="1">1×</button>
+<button class="speed active" data-speed="1">1×</button>
 <button class="speed" data-speed="2">2×</button>
 <button class="speed" data-speed="4">4×</button>
 <input id="tickslider" type="range" min="1" max="1" step="1" value="1">
 <span id="ticklabel"></span>
 </div>
-<footer>
-<div id="provenance"></div>
-<div class="boundary" id="boundary"></div>
-</footer>
-<script>
-window.MGBA_PLAYBOOK = __MGBA_PLAYBOOK_JSON__;
-</script>
+<footer><div id="provenance"></div><div class="boundary" id="boundary"></div></footer>
+<script>window.MGBA_PLAYBOOK = __MGBA_PLAYBOOK_JSON__;</script>
 <script>
 "use strict";
 const PB = window.MGBA_PLAYBOOK;
 const TICKS = PB.conditions[0].ticks.length;
-const ROLE_COLORS = {tumor: "#dc2626", engineered_macrophage: "#2563eb", wild_type_macrophage: "#0891b2", cd8_t_cell: "#7c3aed"};
-const ROLE_NAMES = {tumor: "肿瘤细胞", engineered_macrophage: "工程巨噬细胞", wild_type_macrophage: "野生巨噬细胞", cd8_t_cell: "CD8 T 细胞"};
-const PHASE_NAMES = {quiescent: "静息", activated: "激活", repairing: "修复", stressed: "应激", dead: "死亡"};
-const COND_LABELS = {baseline: "baseline 无治疗", car_off_000: "car_off_000 工程细胞无信号", car_affinity_070: "car_affinity_070 标准剂量", car_max_100: "car_max_100 最大剂量"};
-const L0_NAMES = {damage_response: "损伤响应", signal_expression: "信号表达", repair_expression: "修复表达", metabolic_expression: "代谢表达", death_expression: "死亡表达", negative_feedback_expression: "负反馈表达"};
-const L1_NAMES = {damage_receptor: "损伤受体", signal_protein: "信号蛋白", repair_protein: "修复蛋白", metabolic_capacity: "代谢能力", death_effector: "死亡效应子", feedback_inhibitor: "反馈抑制子"};
-const L2_NAMES = {viability: "活力", activation: "激活", stress_load: "应激负荷"};
-const L3_NAMES = {mean_resource: "平均资源", tissue_damage: "组织损伤", repair_activity: "修复活性", mean_activation: "平均激活", mean_signal: "平均信号", dead_fraction: "死亡比例"};
-const L4_NAMES = {vitality: "活力", damage_burden: "损伤负担", inflammation: "炎症", homeostasis: "稳态", recovery_capacity: "恢复能力"};
-const L4_KEYS = Object.keys(L4_NAMES);
-const state = {cond: 0, tick: 1, playing: false, speed: 1, selected: null, timer: null};
-const canvas = document.getElementById("tissue");
-const ctx = canvas.getContext("2d");
-const W = canvas.width, H = canvas.height;
+const ROLE_COLORS = {tumor:"#ef4444", engineered_macrophage:"#3b82f6", wild_type_macrophage:"#06b6d4", cd8_t_cell:"#a855f7"};
+const ROLE_NAMES = {tumor:"肿瘤细胞", engineered_macrophage:"工程巨噬细胞", wild_type_macrophage:"野生巨噬细胞", cd8_t_cell:"CD8 T 细胞"};
+const PHASE_NAMES = {quiescent:"静息", activated:"激活", repairing:"修复", stressed:"应激", dead:"死亡"};
+const COND_LABELS = {baseline:"baseline 无治疗", car_off_000:"CAR 信号关闭", car_affinity_070:"CAR 标准剂量 0.7", car_max_100:"CAR 最大剂量 1.0"};
+const L0_NAMES = {damage_response:"损伤响应",signal_expression:"信号表达",repair_expression:"修复表达",metabolic_expression:"代谢表达",death_expression:"死亡表达",negative_feedback_expression:"负反馈表达"};
+const L1_NAMES = {damage_receptor:"损伤受体",signal_protein:"信号蛋白",repair_protein:"修复蛋白",metabolic_capacity:"代谢能力",death_effector:"死亡效应子",feedback_inhibitor:"反馈抑制子"};
+const L2_NAMES = {viability:"活力",activation:"激活",stress_load:"应激负荷"};
+const NODE_NAMES = {resource_level:"局部资源",signal:"局部信号",stress:"局部压力"};
+const L3_NAMES = {mean_resource:"平均资源",tissue_damage:"组织损伤",repair_activity:"修复活性",mean_activation:"平均激活",mean_signal:"平均信号",dead_fraction:"死亡比例"};
+const L4_NAMES = {vitality:"活力",damage_burden:"损伤负担",inflammation:"炎症",homeostasis:"稳态",recovery_capacity:"恢复能力"};
+const refIndex = Math.max(0, PB.conditions.findIndex(c => c.condition_id === PB.observer.reference_condition));
+const defaultIndex = Math.max(0, PB.conditions.findIndex(c => c.condition_id === PB.observer.default_comparison_condition));
+const state = {cond:defaultIndex,tick:1,playing:false,speed:1,selected:null,timer:null,field:"stress"};
+const canvases = [document.getElementById("tissue-reference"), document.getElementById("tissue-comparison")];
 
-function cond() { return PB.conditions[state.cond]; }
-function tickData() { return cond().ticks[state.tick - 1]; }
-function px(x) { return x * W; }
-function py(y) { return y * H; }
+function condition(i){ return PB.conditions[i]; }
+function tickData(i){ return condition(i).ticks[state.tick-1]; }
+function clamp(v){ return Math.min(1,Math.max(0,v)); }
+function signed(v){ return (v>0?"+":"")+v.toFixed(4); }
+function deltaClass(v){ return Math.abs(v)<.00005?"delta-zero":(v>0?"delta-pos":"delta-neg"); }
+function esc(v){ return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-function drawTissue() {
-  const data = tickData();
-  ctx.clearRect(0, 0, W, H);
-  ctx.strokeStyle = "rgba(100,116,139,0.08)";
-  ctx.lineWidth = 1;
-  for (const [a, b] of PB.edges) {
-    const pa = PB.layout[a], pb = PB.layout[b];
-    ctx.beginPath(); ctx.moveTo(px(pa[0]), py(pa[1])); ctx.lineTo(px(pb[0]), py(pb[1])); ctx.stroke();
-  }
-  for (const id of Object.keys(PB.layout)) {
-    const cell = data.cells[id];
-    const [x, y] = PB.layout[id];
-    const dead = cell.phase === "dead";
-    const r = dead ? 3.5 : 4 + 8 * cell.viability;
-    ctx.beginPath();
-    ctx.arc(px(x), py(y), r, 0, 2 * Math.PI);
-    ctx.fillStyle = dead ? "#9ca3af" : ROLE_COLORS[PB.roles[id]];
-    ctx.fill();
-    if (cell.phase === "stressed") { ctx.strokeStyle = "#ea580c"; ctx.lineWidth = 2.5; ctx.stroke(); }
-    if (state.selected === id) { ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2; ctx.stroke(); }
+function fieldColor(key){ return key==="stress"?[239,68,68]:key==="signal"?[14,165,233]:[34,197,94]; }
+function drawField(g,canvas,data){
+  if(state.field==="none") return;
+  const rgb=fieldColor(state.field);
+  for(const id of Object.keys(PB.layout)){
+    const value=data.cells[id].node[state.field];
+    const [nx,ny]=PB.layout[id], x=nx*canvas.width, y=ny*canvas.height, radius=55+45*value;
+    const grad=g.createRadialGradient(x,y,0,x,y,radius);
+    grad.addColorStop(0,`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(.34*value).toFixed(3)})`);
+    grad.addColorStop(1,`rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
+    g.fillStyle=grad; g.fillRect(x-radius,y-radius,radius*2,radius*2);
   }
 }
-
-function drawL4() {
-  const data = cond();
-  for (const key of L4_KEYS) {
-    const c = document.getElementById("l4-" + key);
-    const g = c.getContext("2d");
-    const w = c.width, h = c.height, padL = 26, padB = 14, padT = 6, padR = 4;
-    g.clearRect(0, 0, w, h);
-    g.strokeStyle = "#cbd5e1"; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(padL, padT); g.lineTo(padL, h - padB); g.lineTo(w - padR, h - padB); g.stroke();
-    g.fillStyle = "#94a3b8"; g.font = "9px sans-serif";
-    g.fillText("1", 8, padT + 6); g.fillText("0", 8, h - padB);
-    const obs = data.ticks.filter(t => t.l4 !== null && t.t <= state.tick).map(t => ({t: t.t, v: t.l4[key]}));
-    if (state.tick >= TICKS && data.terminal_l4) obs.push({t: TICKS, v: data.terminal_l4[key]});
-    const x = t => padL + (t - 1) / (TICKS - 1) * (w - padL - padR);
-    const y = v => padT + (1 - Math.min(1, Math.max(0, v))) * (h - padT - padB);
-    if (obs.length > 0) {
-      g.strokeStyle = "#2563eb"; g.lineWidth = 2; g.beginPath();
-      obs.forEach((p, i) => { const vx = x(p.t), vy = y(p.v); if (i === 0) g.moveTo(vx, vy); else g.lineTo(vx, vy); });
-      g.stroke();
-      const last = obs[obs.length - 1];
-      g.fillStyle = "#2563eb"; g.beginPath(); g.arc(x(last.t), y(last.v), 3, 0, 2 * Math.PI); g.fill();
-      g.fillStyle = "#0f172a"; g.font = "11px sans-serif";
-      g.fillText(last.v.toFixed(3), Math.min(x(last.t) + 5, w - 34), y(last.v) - 4);
-    } else {
-      g.fillStyle = "#94a3b8"; g.font = "10px sans-serif"; g.fillText("尚无观测", padL + 6, padT + 12);
-    }
+function drawTissue(canvas,index){
+  const g=canvas.getContext("2d"), data=tickData(index), w=canvas.width, h=canvas.height;
+  g.clearRect(0,0,w,h); g.fillStyle="#071321"; g.fillRect(0,0,w,h); drawField(g,canvas,data);
+  g.strokeStyle="rgba(148,163,184,.11)"; g.lineWidth=1;
+  for(const [a,b] of PB.edges){ const pa=PB.layout[a],pb=PB.layout[b]; g.beginPath();g.moveTo(pa[0]*w,pa[1]*h);g.lineTo(pb[0]*w,pb[1]*h);g.stroke(); }
+  for(const id of Object.keys(PB.layout)){
+    const cell=data.cells[id],[x,y]=PB.layout[id],dead=cell.phase==="dead",r=dead?3.4:4.5+8*cell.viability;
+    g.beginPath();g.arc(x*w,y*h,r,0,Math.PI*2);g.fillStyle=dead?"#64748b":ROLE_COLORS[PB.roles[id]];g.fill();
+    if(cell.phase==="stressed"){g.strokeStyle="#fb923c";g.lineWidth=2.4;g.stroke();}
+    if(state.selected===id){g.strokeStyle="#f8fafc";g.lineWidth=2.2;g.stroke();}
   }
 }
-
-function barRow(name, value, color) {
-  const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
-  return '<div class="bar-row"><span class="name">' + name + '</span>' +
-    '<span class="track"><span class="fill" style="width:' + pct + '%;background:' + color + '"></span></span>' +
-    '<span class="val">' + value.toFixed(3) + "</span></div>";
+function observations(c,key){
+  const points=c.ticks.filter(t=>t.l4!==null&&t.t<=state.tick).map(t=>({t:t.t,v:t.l4[key]}));
+  if(state.tick>=TICKS) points.push({t:TICKS,v:c.terminal_l4[key]});
+  return points;
 }
-
-function drawL3() {
-  const l3 = tickData().l3;
-  document.getElementById("l3bars").innerHTML =
-    Object.keys(L3_NAMES).map(k => barRow(L3_NAMES[k], l3[k], "#0891b2")).join("");
+function drawSeries(g,points,color,x,y){
+  if(!points.length)return;g.strokeStyle=color;g.lineWidth=2;g.beginPath();
+  points.forEach((p,i)=>{if(i===0)g.moveTo(x(p.t),y(p.v));else g.lineTo(x(p.t),y(p.v));});g.stroke();
+  const p=points[points.length-1];g.fillStyle=color;g.beginPath();g.arc(x(p.t),y(p.v),2.8,0,Math.PI*2);g.fill();
 }
-
-function drawInspector() {
-  const box = document.getElementById("inspector");
-  if (!state.selected) {
-    box.innerHTML = '<p class="hint">点击左侧画布中的细胞圆点，查看该细胞当前 tick 的 L0 六基因、L1 六分子与 L2 三项状态。</p>';
-    return;
+function drawL4(){
+  for(const key of Object.keys(L4_NAMES)){
+    const c=document.getElementById("l4-"+key),g=c.getContext("2d"),w=c.width,h=c.height,pL=24,pB=14,pT=6,pR=4;
+    g.clearRect(0,0,w,h);g.strokeStyle="#28445f";g.beginPath();g.moveTo(pL,pT);g.lineTo(pL,h-pB);g.lineTo(w-pR,h-pB);g.stroke();
+    const x=t=>pL+(t-1)/(TICKS-1)*(w-pL-pR), y=v=>pT+(1-clamp(v))*(h-pT-pB);
+    drawSeries(g,observations(condition(refIndex),key),"#64748b",x,y);drawSeries(g,observations(condition(state.cond),key),"#38bdf8",x,y);
   }
-  const id = state.selected;
-  const cell = tickData().cells[id];
-  let htmlText = '<div class="group-title">' + id + " · " + ROLE_NAMES[PB.roles[id]] + " · 相位：" + PHASE_NAMES[cell.phase] + "</div>";
-  htmlText += '<div class="group-title">L2 细胞状态</div>';
-  for (const k of Object.keys(L2_NAMES)) htmlText += barRow(L2_NAMES[k], cell[k], "#16a34a");
-  htmlText += '<div class="group-title">L0 抽象基因表达</div>';
-  for (const k of Object.keys(L0_NAMES)) htmlText += barRow(L0_NAMES[k], cell.l0[k], "#7c3aed");
-  htmlText += '<div class="group-title">L1 分子状态</div>';
-  for (const k of Object.keys(L1_NAMES)) htmlText += barRow(L1_NAMES[k], cell.l1[k], "#ca8a04");
-  box.innerHTML = htmlText;
 }
-
-function drawFooter() {
-  const c = cond();
-  document.getElementById("provenance").innerHTML =
-    "条件 <code>" + c.condition_id + "</code> · experiment <code>" + c.experiment_id +
-    "</code> · history <code>" + c.history_digest.slice(0, 16) + "…</code> · 展示种子 " + PB.seed +
-    " · playbook <code>" + PB.playbook_digest.slice(0, 16) + "…</code>";
+function comparisonTable(names,left,right){
+  let h="<table><thead><tr><th>指标</th><th>baseline</th><th>干预</th><th>Δ</th></tr></thead><tbody>";
+  for(const k of Object.keys(names)){const d=right[k]-left[k];h+=`<tr><td>${names[k]}</td><td>${left[k].toFixed(4)}</td><td>${right[k].toFixed(4)}</td><td class="${deltaClass(d)}">${signed(d)}</td></tr>`;}
+  return h+"</tbody></table>";
 }
-
-function render() {
-  drawTissue(); drawL4(); drawL3(); drawInspector(); drawFooter();
-  document.getElementById("tickslider").value = state.tick;
-  document.getElementById("ticklabel").textContent = "tick " + state.tick + " / " + TICKS;
-  document.querySelectorAll("#tabs button").forEach((b, i) => b.classList.toggle("active", i === state.cond));
+function drawL3(){document.getElementById("l3-compare").innerHTML=comparisonTable(L3_NAMES,tickData(refIndex).l3,tickData(state.cond).l3);}
+function drawEndpoint(){
+  const a=condition(refIndex),b=condition(state.cond);
+  document.getElementById("endpoint-compare").innerHTML=comparisonTable(L4_NAMES,a.terminal_l4,b.terminal_l4)+`<p class="hint">结局：baseline <b>${esc(a.outcome)}</b> · 干预 <b>${esc(b.outcome)}</b>。Δ 只表示有向差，不自动等于改善。</p>`;
 }
-
-function stopPlayback() {
-  state.playing = false;
-  if (state.timer !== null) { clearInterval(state.timer); state.timer = null; }
-  document.getElementById("playbtn").textContent = "播放";
+function sectionRows(title,names,left,right){return `<div class="group-title">${title}</div>`+comparisonTable(names,left,right);}
+function drawInspector(){
+  const box=document.getElementById("inspector");if(!state.selected){box.innerHTML='<p class="hint">点击任一画布中的细胞，查看同一 cell 的跨条件差异。</p>';return;}
+  const id=state.selected,a=tickData(refIndex).cells[id],b=tickData(state.cond).cells[id];
+  box.innerHTML=`<div class="group-title">${esc(id)} · ${ROLE_NAMES[PB.roles[id]]} · 相位 ${PHASE_NAMES[a.phase]} → ${PHASE_NAMES[b.phase]}</div><div class="table-scroll">`+
+    sectionRows("L2 细胞状态",L2_NAMES,a,b)+sectionRows("局部 L3 节点",NODE_NAMES,a.node,b.node)+sectionRows("L0 抽象表达",L0_NAMES,a.l0,b.l0)+sectionRows("L1 分子状态",L1_NAMES,a.l1,b.l1)+"</div>";
 }
-
-function startPlayback() {
-  if (state.tick >= TICKS) state.tick = 1;
-  state.playing = true;
-  document.getElementById("playbtn").textContent = "暂停";
-  state.timer = setInterval(() => {
-    if (state.tick >= TICKS) { stopPlayback(); return; }
-    state.tick += 1;
-    render();
-  }, Math.round(700 / state.speed));
-  render();
+function drawAudit(){
+  const t=tickData(state.cond),a=t.audit;
+  const lines=[["逻辑时间",t.t],["L0 更新",t.l0_updated?"是":"保持"],["L4 观测",t.l4_observed?"是":"否"],["相邻转换事件",a.transition_count],["L0 扰动事件",a.l0_perturbation_count],["层路径",a.layer_paths.join(" · ")||"无"]];
+  document.getElementById("audit").innerHTML=lines.map(x=>`<div class="audit-line"><span>${x[0]}</span><b>${esc(x[1])}</b></div>`).join("");
 }
-
-function init() {
-  document.getElementById("title").textContent = PB.title;
-  const tabs = document.getElementById("tabs");
-  PB.conditions.forEach((c, i) => {
-    const b = document.createElement("button");
-    b.textContent = COND_LABELS[c.condition_id] || c.condition_id;
-    b.addEventListener("click", () => { state.cond = i; render(); });
-    tabs.appendChild(b);
-  });
-  const l4box = document.getElementById("l4charts");
-  for (const key of L4_KEYS) {
-    const fig = document.createElement("figure");
-    fig.innerHTML = '<canvas id="l4-' + key + '" width="200" height="90"></canvas><figcaption>' + L4_NAMES[key] + " (" + key + ")</figcaption>";
-    l4box.appendChild(fig);
-  }
-  const slider = document.getElementById("tickslider");
-  slider.max = TICKS;
-  slider.addEventListener("input", () => { stopPlayback(); state.tick = Number(slider.value); render(); });
-  document.getElementById("playbtn").addEventListener("click", () => { state.playing ? stopPlayback() : startPlayback(); });
-  document.querySelectorAll(".speed").forEach(b => b.addEventListener("click", () => {
-    state.speed = Number(b.dataset.speed);
-    document.querySelectorAll(".speed").forEach(x => x.classList.toggle("active", x === b));
-    if (state.playing) { stopPlayback(); startPlayback(); }
-  }));
-  document.querySelector('.speed[data-speed="1"]').classList.add("active");
-  canvas.addEventListener("click", ev => {
-    const rect = canvas.getBoundingClientRect();
-    const cx = (ev.clientX - rect.left) * (canvas.width / rect.width);
-    const cy = (ev.clientY - rect.top) * (canvas.height / rect.height);
-    let best = null, bestDist = 12;
-    for (const id of Object.keys(PB.layout)) {
-      const [x, y] = PB.layout[id];
-      const d = Math.hypot(px(x) - cx, py(y) - cy);
-      if (d < bestDist) { best = id; bestDist = d; }
-    }
-    state.selected = best;
-    render();
-  });
-  document.getElementById("boundary").textContent = PB.boundary_note;
-  render();
+function drawFooter(){
+  const c=condition(state.cond);document.getElementById("provenance").innerHTML=`干预 <code>${esc(c.condition_id)}</code> · experiment <code>${esc(c.experiment_id)}</code> · history <code>${c.history_digest.slice(0,16)}…</code> · seed ${PB.seed} · playbook <code>${PB.playbook_digest.slice(0,16)}…</code><br>显示语义：${esc(PB.observer.spatial_semantics)}。交互参考：${esc(PB.observer.legacy_reference)}。`;
+}
+function render(){
+  drawTissue(canvases[0],refIndex);drawTissue(canvases[1],state.cond);drawL4();drawL3();drawEndpoint();drawInspector();drawAudit();drawFooter();
+  document.getElementById("reference-label").textContent=COND_LABELS[condition(refIndex).condition_id]||condition(refIndex).condition_id;
+  document.getElementById("comparison-label").textContent=COND_LABELS[condition(state.cond).condition_id]||condition(state.cond).condition_id;
+  document.getElementById("tickslider").value=state.tick;document.getElementById("ticklabel").textContent=`tick ${state.tick} / ${TICKS}`;
+  document.querySelectorAll("#tabs button").forEach((b,i)=>b.classList.toggle("active",i===state.cond));
+}
+function stopPlayback(){state.playing=false;if(state.timer!==null){clearInterval(state.timer);state.timer=null;}document.getElementById("playbtn").textContent="播放";}
+function startPlayback(){if(state.tick>=TICKS)state.tick=1;state.playing=true;document.getElementById("playbtn").textContent="暂停";state.timer=setInterval(()=>{if(state.tick>=TICKS){stopPlayback();return;}state.tick++;render();},Math.round(650/state.speed));render();}
+function bindCanvas(canvas){canvas.addEventListener("click",ev=>{const rect=canvas.getBoundingClientRect(),cx=(ev.clientX-rect.left)*canvas.width/rect.width,cy=(ev.clientY-rect.top)*canvas.height/rect.height;let best=null,bestDist=15;for(const id of Object.keys(PB.layout)){const p=PB.layout[id],d=Math.hypot(p[0]*canvas.width-cx,p[1]*canvas.height-cy);if(d<bestDist){best=id;bestDist=d;}}state.selected=best;render();});}
+function init(){
+  document.getElementById("title").textContent=PB.title;
+  PB.conditions.forEach((c,i)=>{const b=document.createElement("button");b.textContent=COND_LABELS[c.condition_id]||c.condition_id;b.addEventListener("click",()=>{state.cond=i;render();});document.getElementById("tabs").appendChild(b);});
+  for(const key of Object.keys(L4_NAMES)){const f=document.createElement("figure");f.innerHTML=`<canvas id="l4-${key}" width="230" height="100"></canvas><figcaption>${L4_NAMES[key]} (${key})</figcaption>`;document.getElementById("l4charts").appendChild(f);}
+  document.getElementById("role-legend").innerHTML=Object.keys(ROLE_NAMES).map(k=>`<span><i class="role-dot" style="background:${ROLE_COLORS[k]}"></i>${ROLE_NAMES[k]}</span>`).join("");
+  const slider=document.getElementById("tickslider");slider.max=TICKS;slider.addEventListener("input",()=>{stopPlayback();state.tick=Number(slider.value);render();});
+  document.getElementById("playbtn").addEventListener("click",()=>state.playing?stopPlayback():startPlayback());
+  document.querySelectorAll(".speed").forEach(b=>b.addEventListener("click",()=>{state.speed=Number(b.dataset.speed);document.querySelectorAll(".speed").forEach(x=>x.classList.toggle("active",x===b));if(state.playing){stopPlayback();startPlayback();}}));
+  document.querySelectorAll(".field").forEach(b=>b.addEventListener("click",()=>{state.field=b.dataset.field;document.querySelectorAll(".field").forEach(x=>x.classList.toggle("active",x===b));render();}));
+  canvases.forEach(bindCanvas);document.getElementById("boundary").textContent=PB.boundary_note;render();
 }
 init();
 </script>

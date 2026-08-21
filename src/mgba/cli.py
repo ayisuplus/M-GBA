@@ -68,6 +68,40 @@ from .neural_experiments import (
     save_neural_artifacts,
 )
 from .demo import export_carm_demo
+from .carm_spatial_experiments import (
+    CarmSpatialExperimentRunner,
+    build_carm_spatial_runners,
+    load_carm_spatial_experiment_config,
+    save_carm_spatial_artifacts,
+)
+from .carm_spatial_ablation import (
+    CarmSpatialAblationRunner,
+    build_carm_spatial_ablation_runners,
+    load_carm_spatial_ablation_config,
+    save_carm_spatial_ablation_artifacts,
+)
+from .spatial_anchors import (
+    build_spatial_anchor_profile,
+    load_spatial_anchor_protocol,
+    load_spatial_observation_bundle,
+    save_spatial_anchor_profile,
+    verify_spatial_anchor_target,
+)
+from .spatial_source_adapters import (
+    adapt_jackson_imc_source,
+    adapt_wu_visium_source,
+)
+from .intervention_experiments import (
+    StateConditionedInterventionRunner,
+    build_carm_intervention_runner,
+    load_state_conditioned_intervention_config,
+    save_state_conditioned_intervention_artifacts,
+)
+from .spatial_anchor_evaluation import (
+    SpatialAnchorEvaluator,
+    load_spatial_anchor_evaluation_config,
+    save_spatial_anchor_evaluation_artifacts,
+)
 from .experiments import (
     CausalExperimentRunner,
     CausalRunRecord,
@@ -108,6 +142,7 @@ from .scenarios.carm import (
     build_carm_profile,
     build_carm_runners,
     compile_carm_scenario,
+    load_carm_spatial_config,
     load_carm_scenario_config,
     run_carm_matrix,
     save_carm_artifacts,
@@ -302,6 +337,256 @@ def build_parser() -> argparse.ArgumentParser:
     carm_experiment.add_argument(
         "--artifact-root",
         help="optional root for raw runs, provenance, summary, and report",
+    )
+
+    carm_spatial = commands.add_parser(
+        "carm-spatial-experiment",
+        help="compare the fixed CAR-M graph with the causal spatial L3 reference model",
+    )
+    carm_spatial.add_argument(
+        "--config",
+        default="configs/scenarios/carm/high_immune_her2.json",
+        help="CAR-M scenario JSON",
+    )
+    carm_spatial.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    carm_spatial.add_argument(
+        "--matrix-config",
+        default="configs/experiments/carm_spatial_comparison.json",
+        help="fixed-graph versus spatial L3 comparison JSON",
+    )
+    carm_spatial.add_argument(
+        "--spatial-config",
+        default="configs/layers/l3_carm_spatial.json",
+        help="dimensionless CAR-M spatial L3 JSON",
+    )
+    carm_spatial.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="L0 discrete GRN JSON",
+    )
+    carm_spatial.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    carm_spatial.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    carm_spatial.add_argument(
+        "--artifact-root",
+        help="optional root for append-only spatial comparison artifacts",
+    )
+
+    carm_spatial_ablation = commands.add_parser(
+        "carm-spatial-ablation",
+        help="audit movement, field coupling, and topology in a 2x2x2 CAR-M L3 design",
+    )
+    carm_spatial_ablation.add_argument(
+        "--config",
+        default="configs/scenarios/carm/high_immune_her2.json",
+        help="CAR-M scenario JSON",
+    )
+    carm_spatial_ablation.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    carm_spatial_ablation.add_argument(
+        "--audit-config",
+        default="configs/experiments/carm_spatial_ablation.json",
+        help="deterministic 2x2x2 mechanism-audit JSON",
+    )
+    carm_spatial_ablation.add_argument(
+        "--spatial-config",
+        default="configs/layers/l3_carm_spatial.json",
+        help="dimensionless CAR-M spatial L3 JSON",
+    )
+    carm_spatial_ablation.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="L0 discrete GRN JSON",
+    )
+    carm_spatial_ablation.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    carm_spatial_ablation.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    carm_spatial_ablation.add_argument(
+        "--artifact-root",
+        help="optional root for append-only mechanism-audit artifacts",
+    )
+
+    spatial_anchor_build = commands.add_parser(
+        "spatial-anchor-build",
+        help="build a de-identified L3 target from licensed field and neighborhood bundles",
+    )
+    spatial_anchor_build.add_argument(
+        "--protocol",
+        default="configs/experiments/carm_spatial_anchor_protocol.json",
+        help="pre-registered spatial-anchor protocol JSON",
+    )
+    spatial_anchor_build.add_argument(
+        "--field-bundle",
+        required=True,
+        help="normalized field observation bundle JSON (raw/intermediate; not committed)",
+    )
+    spatial_anchor_build.add_argument(
+        "--neighborhood-bundle",
+        required=True,
+        help="normalized cell-neighborhood observation bundle JSON (raw/intermediate; not committed)",
+    )
+    spatial_anchor_build.add_argument(
+        "--output",
+        required=True,
+        help="de-identified aggregate target JSON outside data/raw",
+    )
+
+    spatial_source_field = commands.add_parser(
+        "spatial-source-adapt-field",
+        help="adapt verified Wu Visium 10x files into a temporary field bundle",
+    )
+    spatial_source_field.add_argument(
+        "--manifest", required=True, help="local Wu source manifest JSON"
+    )
+    spatial_source_field.add_argument(
+        "--protocol",
+        default="configs/experiments/carm_spatial_source_protocol.json",
+        help="frozen source-adapter proxy and normalization protocol JSON",
+    )
+    spatial_source_field.add_argument(
+        "--output", required=True, help="temporary field observation bundle JSON"
+    )
+
+    spatial_source_neighborhood = commands.add_parser(
+        "spatial-source-adapt-neighborhood",
+        help="adapt verified Jackson IMC CSVs into a temporary neighborhood bundle",
+    )
+    spatial_source_neighborhood.add_argument(
+        "--manifest", required=True, help="local Jackson source manifest JSON"
+    )
+    spatial_source_neighborhood.add_argument(
+        "--protocol",
+        default="configs/experiments/carm_spatial_source_protocol.json",
+        help="frozen source-adapter proxy and normalization protocol JSON",
+    )
+    spatial_source_neighborhood.add_argument(
+        "--output",
+        required=True,
+        help="temporary neighborhood observation bundle JSON",
+    )
+
+    spatial_anchor_check = commands.add_parser(
+        "spatial-anchor-check",
+        help="verify the identity and de-identification boundary of an L3 spatial target",
+    )
+    spatial_anchor_check.add_argument(
+        "--target",
+        required=True,
+        help="aggregate spatial target JSON",
+    )
+
+    spatial_anchor_evaluate = commands.add_parser(
+        "carm-spatial-anchor-evaluate",
+        help="project the causal CAR-M spatial L3 into a verified external target space",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--target",
+        required=True,
+        help="verified de-identified aggregate spatial target JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--protocol",
+        default="configs/experiments/carm_spatial_anchor_protocol.json",
+        help="pre-registered spatial-anchor protocol JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--evaluation-config",
+        default="configs/experiments/carm_spatial_anchor_evaluation.json",
+        help="spatial target evaluation horizon and replay seed JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--config",
+        default="configs/scenarios/carm/high_immune_her2.json",
+        help="CAR-M scenario JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--spatial-config",
+        default="configs/layers/l3_carm_spatial.json",
+        help="dimensionless CAR-M spatial L3 JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="L0 discrete GRN JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    spatial_anchor_evaluate.add_argument(
+        "--artifact-root",
+        help="optional root for raw run, manifest, and derived target score",
+    )
+
+    carm_intervention = commands.add_parser(
+        "carm-intervention-experiment",
+        help="compare equal CAR-M L0 interventions applied in different trajectory states",
+    )
+    carm_intervention.add_argument(
+        "--config",
+        default="configs/scenarios/carm/high_immune_her2.json",
+        help="CAR-M scenario JSON",
+    )
+    carm_intervention.add_argument(
+        "--intervention-config",
+        default="configs/experiments/carm_state_conditioned_intervention.json",
+        help="frozen scheduled-intervention protocol JSON",
+    )
+    carm_intervention.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    carm_intervention.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="L0 discrete GRN JSON",
+    )
+    carm_intervention.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    carm_intervention.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    carm_intervention.add_argument(
+        "--artifact-root",
+        help="optional root for append-only scheduled-intervention artifacts",
     )
 
     demo_export = commands.add_parser(
@@ -675,6 +960,174 @@ def main() -> None:
             result["artifact_root"] = str(artifacts.causal.root)
             result["provenance"] = str(artifacts.provenance)
             result["report"] = str(report_paths.html)
+    elif args.command == "carm-spatial-experiment":
+        compiled = compile_carm_scenario(load_carm_scenario_config(args.config))
+        matrix_config = load_carm_spatial_experiment_config(args.matrix_config)
+        runners = build_carm_spatial_runners(
+            compiled,
+            runner_config=load_runner_config(args.runner_config),
+            spatial_config=load_carm_spatial_config(args.spatial_config),
+            l0_config=args.l0_config,
+            l1_config=args.l1_config,
+            l4_config=args.l4_config,
+        )
+        matrix = CarmSpatialExperimentRunner(
+            matrix_config, runners=runners
+        ).run(compiled)
+        result = matrix.summary_dict()
+        result["cohort_id"] = compiled.config.profile.cohort_id
+        result["profile_digest"] = compiled.profile_digest
+        if args.artifact_root:
+            paths = save_carm_spatial_artifacts(args.artifact_root, matrix)
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "carm-spatial-ablation":
+        compiled = compile_carm_scenario(load_carm_scenario_config(args.config))
+        audit_config = load_carm_spatial_ablation_config(args.audit_config)
+        runners = build_carm_spatial_ablation_runners(
+            compiled,
+            runner_config=load_runner_config(args.runner_config),
+            spatial_config=load_carm_spatial_config(args.spatial_config),
+            l0_config=args.l0_config,
+            l1_config=args.l1_config,
+            l4_config=args.l4_config,
+        )
+        audit = CarmSpatialAblationRunner(
+            audit_config, runners=runners
+        ).run(compiled)
+        result = audit.summary_dict()
+        result["cohort_id"] = compiled.config.profile.cohort_id
+        result["profile_digest"] = compiled.profile_digest
+        if args.artifact_root:
+            paths = save_carm_spatial_ablation_artifacts(
+                args.artifact_root, audit
+            )
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "spatial-source-adapt-field":
+        output = adapt_wu_visium_source(
+            args.manifest,
+            protocol_path=args.protocol,
+            output_path=args.output,
+        )
+        bundle = load_spatial_observation_bundle(output)
+        result = {
+            "schema_version": bundle.identity_dict()["schema_version"],
+            "dataset_id": bundle.dataset_id,
+            "modality": bundle.modality,
+            "input_digest": bundle.input_digest,
+            "samples": len(bundle.samples),
+            "observations": sum(len(item.field_observations) for item in bundle.samples),
+            "output": str(output),
+            "model_status": "source-adapter-output-not-runtime-or-clinical-data",
+        }
+    elif args.command == "spatial-source-adapt-neighborhood":
+        output = adapt_jackson_imc_source(
+            args.manifest,
+            protocol_path=args.protocol,
+            output_path=args.output,
+        )
+        bundle = load_spatial_observation_bundle(output)
+        result = {
+            "schema_version": bundle.identity_dict()["schema_version"],
+            "dataset_id": bundle.dataset_id,
+            "modality": bundle.modality,
+            "input_digest": bundle.input_digest,
+            "samples": len(bundle.samples),
+            "observations": sum(
+                len(item.neighborhood_observations) for item in bundle.samples
+            ),
+            "output": str(output),
+            "model_status": "source-adapter-output-not-runtime-or-clinical-data",
+        }
+    elif args.command == "spatial-anchor-build":
+        profile = build_spatial_anchor_profile(
+            load_spatial_anchor_protocol(args.protocol),
+            field_bundle=load_spatial_observation_bundle(args.field_bundle),
+            neighborhood_bundle=load_spatial_observation_bundle(
+                args.neighborhood_bundle
+            ),
+        )
+        output = save_spatial_anchor_profile(args.output, profile)
+        result = {
+            "schema_version": profile.as_dict()["schema_version"],
+            "target_id": profile.target_id,
+            "output": str(output),
+            "sources": [
+                {
+                    "dataset_id": item["dataset_id"],
+                    "modality": item["modality"],
+                    "sample_count": item["sample_count"],
+                    "input_digest": item["input_digest"],
+                }
+                for item in profile.sources
+            ],
+            "role_counts": {
+                role: sum(1 for item in profile.samples if item.role == role)
+                for role in ("calibration", "holdout", "external_validation")
+            },
+            "metric_distribution_count": len(profile.distributions),
+            "model_status": "de-identified-L3-aggregate-target-not-runtime-or-clinical-data",
+        }
+    elif args.command == "spatial-anchor-check":
+        target = verify_spatial_anchor_target(args.target)
+        result = {
+            "schema_version": target["schema_version"],
+            "target_id": target["target_id"],
+            "samples": len(target["samples"]),
+            "distributions": len(target["distributions"]),
+            "ok": True,
+        }
+    elif args.command == "carm-spatial-anchor-evaluate":
+        target = verify_spatial_anchor_target(args.target)
+        protocol = load_spatial_anchor_protocol(args.protocol)
+        compiled = compile_carm_scenario(load_carm_scenario_config(args.config))
+        runners = build_carm_spatial_runners(
+            compiled,
+            runner_config=load_runner_config(args.runner_config),
+            spatial_config=load_carm_spatial_config(args.spatial_config),
+            l0_config=args.l0_config,
+            l1_config=args.l1_config,
+            l4_config=args.l4_config,
+        )
+        evaluation = SpatialAnchorEvaluator(
+            load_spatial_anchor_evaluation_config(args.evaluation_config),
+            runner=runners["spatial_field"],
+            protocol=protocol,
+        ).evaluate(compiled, target=target)
+        result = evaluation.summary_dict()
+        if args.artifact_root:
+            paths = save_spatial_anchor_evaluation_artifacts(
+                args.artifact_root, evaluation
+            )
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "carm-intervention-experiment":
+        compiled = compile_carm_scenario(load_carm_scenario_config(args.config))
+        intervention_config = load_state_conditioned_intervention_config(
+            args.intervention_config
+        )
+        runner = build_carm_intervention_runner(
+            compiled,
+            runner_config=load_runner_config(args.runner_config),
+            l0_config=args.l0_config,
+            l1_config=args.l1_config,
+            l4_config=args.l4_config,
+        )
+        intervention = StateConditionedInterventionRunner(
+            intervention_config, runner=runner
+        ).run(compiled)
+        result = intervention.summary_dict()
+        if args.artifact_root:
+            paths = save_state_conditioned_intervention_artifacts(
+                args.artifact_root, intervention
+            )
+            result["artifact_root"] = str(paths["root"])
+            result["artifact_manifest"] = str(paths["manifest"])
+            result["artifact_summary"] = str(paths["summary"])
     elif args.command == "demo-export":
         paths = export_carm_demo(
             scenario_config=args.config,

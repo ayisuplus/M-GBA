@@ -1,0 +1,14 @@
+{
+  "model_version": "carm-spatial-l3-reference-0.1",
+  "seed": 20260821,
+  "grid_rows": 12,
+  "grid_columns": 12,
+  "neighbor_radius": 0.16,
+  "movement_rate": 0.012,
+  "field_retention": 0.82,
+  "field_diffusion": 0.28,
+  "stress_source_gain": 0.16,
+  "resource_sink_gain": 0.12,
+  "signal_source_gain": 0.18,
+  "node_field_coupling": 0.35
+}

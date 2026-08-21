@@ -1,0 +1,41 @@
+{
+  "schema_version": "mgba-spatial-source-protocol-0.1",
+  "model_version": "carm-spatial-source-adapter-0.1",
+  "field_dataset_id": "wu-swarbrick-brca-visium",
+  "neighborhood_dataset_id": "jackson-brca-imc",
+  "library_size_scale": 10000.0,
+  "feature_symbol_column": 1,
+  "min_genes_per_channel": 4,
+  "field_channels": {
+    "stress": [
+      "ATF3",
+      "BAX",
+      "BBC3",
+      "CDKN1A",
+      "DDIT3",
+      "GADD45A",
+      "MDM2",
+      "TP53"
+    ],
+    "resource": [
+      "ALDOA",
+      "ENO1",
+      "GAPDH",
+      "LDHA",
+      "NDUFS1",
+      "PGK1",
+      "PKM",
+      "SLC2A1"
+    ],
+    "signal": [
+      "CCL2",
+      "CXCL8",
+      "IL6ST",
+      "NFKB1",
+      "NFKBIA",
+      "RELA",
+      "SOCS3",
+      "STAT3"
+    ]
+  }
+}

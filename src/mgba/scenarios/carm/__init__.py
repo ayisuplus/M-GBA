@@ -7,6 +7,12 @@ from .data import (
     save_carm_profile,
 )
 from .models import CarmCellModel, CarmTissueModel
+from .spatial import (
+    CarmSpatialConfig,
+    CarmSpatialMechanisms,
+    SpatialCarmTissueModel,
+    load_carm_spatial_config,
+)
 from .scenario import (
     CarmScenarioConfig,
     CellRole,
@@ -26,14 +32,18 @@ __all__ = [
     "CarmCellModel",
     "CarmCohortProfile",
     "CarmScenarioConfig",
+    "CarmSpatialConfig",
+    "CarmSpatialMechanisms",
     "CarmTissueModel",
     "CellRole",
     "CompiledCarmScenario",
+    "SpatialCarmTissueModel",
     "build_carm_profile",
     "build_carm_runners",
     "compile_carm_scenario",
     "load_carm_profile",
     "load_carm_scenario_config",
+    "load_carm_spatial_config",
     "run_carm_matrix",
     "save_carm_artifacts",
     "save_carm_profile",

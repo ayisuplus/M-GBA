@@ -1,0 +1,65 @@
+{
+  "schema_version": "mgba-state-conditioned-intervention-0.1",
+  "model_version": "carm-state-conditioned-intervention-0.1",
+  "ticks": 60,
+  "seeds": [
+    41,
+    42,
+    43
+  ],
+  "target_role": "engineered_macrophage",
+  "gene": "signal_expression",
+  "value": 1.0,
+  "conditions": [
+    {
+      "condition_id": "early_short",
+      "l0_update_ticks": [
+        1,
+        6,
+        11
+      ]
+    },
+    {
+      "condition_id": "late_short",
+      "l0_update_ticks": [
+        31,
+        36,
+        41
+      ]
+    },
+    {
+      "condition_id": "early_long",
+      "l0_update_ticks": [
+        1,
+        6,
+        11,
+        16,
+        21,
+        26
+      ]
+    },
+    {
+      "condition_id": "late_long",
+      "l0_update_ticks": [
+        31,
+        36,
+        41,
+        46,
+        51,
+        56
+      ]
+    }
+  ],
+  "timing_contrasts": [
+    {
+      "contrast_id": "short_timing",
+      "early_condition_id": "early_short",
+      "late_condition_id": "late_short"
+    },
+    {
+      "contrast_id": "long_timing",
+      "early_condition_id": "early_long",
+      "late_condition_id": "late_long"
+    }
+  ]
+}

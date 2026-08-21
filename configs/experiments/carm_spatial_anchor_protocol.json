@@ -1,0 +1,11 @@
+{
+  "model_version": "carm-spatial-anchor-protocol-0.1",
+  "field_dataset_id": "wu-swarbrick-brca-visium",
+  "neighborhood_dataset_id": "jackson-brca-imc",
+  "expected_field_samples": 6,
+  "field_calibration_count": 4,
+  "field_knn_k": 4,
+  "neighborhood_radius_factor": 2.0,
+  "model_tumor_region_quantile": 0.5,
+  "split_salt": "mgba-carm-spatial-anchor-2026-08-21"
+}

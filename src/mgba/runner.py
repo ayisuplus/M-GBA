@@ -30,6 +30,9 @@ from .layers import (
     OrganismState,
     PhenotypeWindow,
     RegulatoryInput,
+    SpatialCoordinate,
+    SpatialFieldCell,
+    SpatialTissueState,
     StateMetadata,
     TissueModel,
     TissueNodeState,
@@ -359,6 +362,10 @@ class MultirateCrossScaleRunner:
         *,
         ticks: int,
         perturbations: Mapping[str, Mapping[str, float]] | None = None,
+        perturbation_schedule: Mapping[
+            int, Mapping[str, Mapping[str, float]]
+        ]
+        | None = None,
         checkpoint: RunnerCheckpoint | None = None,
     ) -> MultirateRun:
         """Advance the scenario with one explicit CellAgent per cell.
@@ -378,6 +385,10 @@ class MultirateCrossScaleRunner:
             raise ValueError("ticks must be a positive integer")
         if len(scenario.genomes) > self.config.max_cells:
             raise ValueError("scenario exceeds runner max_cells budget")
+        if perturbations and perturbation_schedule:
+            raise ValueError(
+                "constant perturbations and a perturbation schedule are mutually exclusive"
+            )
 
         normalized_perturbations = {
             str(cell_id): {
@@ -385,8 +396,36 @@ class MultirateCrossScaleRunner:
             }
             for cell_id, values in (perturbations or {}).items()
         }
+        normalized_schedule: dict[int, dict[str, dict[str, float]]] = {}
+        for logical_time, cell_values in (perturbation_schedule or {}).items():
+            if (
+                isinstance(logical_time, bool)
+                or not isinstance(logical_time, int)
+                or logical_time < 1
+                or logical_time > self.config.max_total_ticks
+            ):
+                raise ValueError(
+                    "perturbation schedule ticks must be positive integers within the runner budget"
+                )
+            if (logical_time - 1) % self.config.l0_interval != 0:
+                raise ValueError(
+                    "perturbation schedule ticks must align with the L0 update clock"
+                )
+            normalized_schedule[logical_time] = {
+                str(cell_id): {
+                    str(gene): float(value) for gene, value in values.items()
+                }
+                for cell_id, values in cell_values.items()
+            }
         known_cell_ids = {cell_id for cell_id, _ in scenario.genomes}
-        unknown_cell_ids = set(normalized_perturbations) - known_cell_ids
+        unknown_cell_ids = (
+            set(normalized_perturbations).union(
+                cell_id
+                for cell_values in normalized_schedule.values()
+                for cell_id in cell_values
+            )
+            - known_cell_ids
+        )
         if unknown_cell_ids:
             raise ValueError(
                 f"perturbations target unknown cells: {sorted(unknown_cell_ids)}"
@@ -396,6 +435,8 @@ class MultirateCrossScaleRunner:
             "perturbations": normalized_perturbations,
             "runner": self.config,
         }
+        if normalized_schedule:
+            manifest_config["perturbation_schedule"] = normalized_schedule
         if self.feedback_policy is not None:
             manifest_config["feedback"] = self.feedback_policy.model_version
         manifest = ExperimentManifest.create(
@@ -472,13 +513,18 @@ class MultirateCrossScaleRunner:
             )
             l0_updated = (logical_time - 1) % self.config.l0_interval == 0
             if l0_updated:
+                tick_perturbations = (
+                    normalized_schedule.get(logical_time, {})
+                    if normalized_schedule
+                    else normalized_perturbations
+                )
                 l0_results = tuple(
                     self.genome_model.step(
                         cell_id=agent.cell_id,
                         genome=agent.genome,
                         previous_state=agent.l0,
                         regulatory_input=regulatory_input,
-                        perturbations=normalized_perturbations.get(
+                        perturbations=tick_perturbations.get(
                             agent.cell_id, {}
                         ),
                         logical_time=logical_time,
@@ -832,8 +878,26 @@ def _tissue_node_from(raw: Mapping[str, Any]) -> TissueNodeState:
     )
 
 
+def _spatial_coordinate_from(raw: Mapping[str, Any]) -> SpatialCoordinate:
+    return SpatialCoordinate(
+        cell_id=str(raw["cell_id"]),
+        x=float(raw["x"]),
+        y=float(raw["y"]),
+    )
+
+
+def _spatial_field_cell_from(raw: Mapping[str, Any]) -> SpatialFieldCell:
+    return SpatialFieldCell(
+        row=int(raw["row"]),
+        column=int(raw["column"]),
+        stress=float(raw["stress"]),
+        resource_level=float(raw["resource_level"]),
+        signal=float(raw["signal"]),
+    )
+
+
 def _tissue_from(raw: Mapping[str, Any]) -> TissueState:
-    return TissueState(
+    common: dict[str, Any] = dict(
         metadata=_state_metadata_from(raw["metadata"]),
         cell_count=int(raw["cell_count"]),
         nodes=tuple(_tissue_node_from(item) for item in raw["nodes"]),
@@ -849,6 +913,28 @@ def _tissue_from(raw: Mapping[str, Any]) -> TissueState:
         repair_activity=float(raw["repair_activity"]),
         coordinated_signal=float(raw["coordinated_signal"]),
         tissue_damage=float(raw["tissue_damage"]),
+    )
+    spatial_fields = {
+        "coordinates",
+        "field_rows",
+        "field_columns",
+        "field_cells",
+    }
+    present_spatial_fields = spatial_fields.intersection(raw)
+    if not present_spatial_fields:
+        return TissueState(**common)
+    if present_spatial_fields != spatial_fields:
+        raise ValueError("checkpoint has an incomplete spatial L3 state")
+    return SpatialTissueState(
+        **common,
+        coordinates=tuple(
+            _spatial_coordinate_from(item) for item in raw["coordinates"]
+        ),
+        field_rows=int(raw["field_rows"]),
+        field_columns=int(raw["field_columns"]),
+        field_cells=tuple(
+            _spatial_field_cell_from(item) for item in raw["field_cells"]
+        ),
     )
 
 

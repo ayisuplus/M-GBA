@@ -314,6 +314,85 @@ class TissueState:
 
 
 @dataclass(frozen=True, slots=True)
+class SpatialCoordinate:
+    """Dimensionless 2-D L3 coordinate for one Cell.
+
+    Coordinates are normalized to the unit square.  They are an explicit
+    reference-model state, not a claim about physical tissue geometry.
+    """
+
+    cell_id: str
+    x: float
+    y: float
+
+    def __post_init__(self) -> None:
+        _require_text(self.cell_id, "cell_id")
+        _require_unit_interval(self.x, "x")
+        _require_unit_interval(self.y, "y")
+
+
+@dataclass(frozen=True, slots=True)
+class SpatialFieldCell:
+    """One row-major element of the dimensionless L3 field grid."""
+
+    row: int
+    column: int
+    stress: float
+    resource_level: float
+    signal: float
+
+    def __post_init__(self) -> None:
+        for name in ("row", "column"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{name} must be a non-negative integer")
+        _require_unit_interval(self.stress, "stress")
+        _require_unit_interval(self.resource_level, "resource_level")
+        _require_unit_interval(self.signal, "signal")
+
+
+@dataclass(frozen=True, slots=True)
+class SpatialTissueState(TissueState):
+    """Checkpoint-complete L3 state for the optional spatial reference model.
+
+    The base ``TissueState`` remains unchanged so frozen fixed-graph artifacts
+    retain their byte-level identity.  Spatial runs add normalized coordinates
+    and a complete row-major stress/resource/signal grid.
+    """
+
+    coordinates: tuple[SpatialCoordinate, ...]
+    field_rows: int
+    field_columns: int
+    field_cells: tuple[SpatialFieldCell, ...]
+
+    def __post_init__(self) -> None:
+        TissueState.__post_init__(self)
+        coordinate_ids = tuple(item.cell_id for item in self.coordinates)
+        node_ids = tuple(node.cell_id for node in self.nodes)
+        if coordinate_ids != node_ids:
+            raise ValueError(
+                "spatial coordinates must be complete, unique, sorted, and "
+                "aligned with tissue nodes"
+            )
+        for name in ("field_rows", "field_columns"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                raise ValueError(f"{name} must be a positive integer")
+        expected_indices = tuple(
+            (row, column)
+            for row in range(self.field_rows)
+            for column in range(self.field_columns)
+        )
+        observed_indices = tuple(
+            (item.row, item.column) for item in self.field_cells
+        )
+        if observed_indices != expected_indices:
+            raise ValueError(
+                "spatial field cells must form a complete row-major grid"
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class OrganismState:
     metadata: StateMetadata
     vitality: float

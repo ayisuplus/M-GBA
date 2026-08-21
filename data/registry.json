@@ -45,6 +45,21 @@
         "proxy_notice": ""
       },
       "notes": "清单先行先例：data/aivc/README.md 为唯一事实源；每条资源须满足 AGENTS.md §6 三条件（用途/磁盘预算/授权）后下载并实测登记 sha256。"
+    },
+    {
+      "dataset_id": "carm-spatial-anchor-planned",
+      "kind": "external_planned",
+      "status": "planned",
+      "path": "data/spatial-carm/",
+      "sha256": null,
+      "provenance": {
+        "source": "CAR-M L3 空间数据锚定预注册清单（Wu Visium + Jackson IMC；已授权，网络阻塞未下载）",
+        "date": "2026-08-21",
+        "license": "Wu CC BY 4.0；Jackson CC BY 1.0 Generic（2026-08-21 官方元数据已核验）",
+        "deidentified": true,
+        "proxy_notice": "Spatial transcriptomic spots and published imaging cell clusters are external proxy observations for L3 field/topology statistics; they are not cell identities, clinical truth, or treatment outcomes."
+      },
+      "notes": "只锚定 L3 局部场异质性与细胞邻域统计；ADR-0028 修正后的五文件共 241,284,013 bytes，本地总预算不超过 2 GB；用户已授权最小包，当前网络出口无法访问 Zenodo，仍无外部文件落盘。"
     }
   ]
 }

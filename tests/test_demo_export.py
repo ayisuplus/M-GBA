@@ -87,6 +87,15 @@ class DemoExportTests(unittest.TestCase):
         self.assertEqual(42, playbook["seed"])
         self.assertEqual(63, len(playbook["roles"]))
         self.assertEqual(set(playbook["roles"]), set(playbook["layout"]))
+        self.assertEqual("baseline", playbook["observer"]["reference_condition"])
+        self.assertEqual(
+            "car_affinity_070",
+            playbook["observer"]["default_comparison_condition"],
+        )
+        self.assertEqual(
+            ["stress", "signal", "resource_level"],
+            playbook["observer"]["field_layers"],
+        )
         for position in playbook["layout"].values():
             self.assertEqual(2, len(position))
             self.assertTrue(all(0.0 <= value <= 1.0 for value in position))
@@ -98,6 +107,10 @@ class DemoExportTests(unittest.TestCase):
         for condition in conditions:
             self.assertEqual(64, len(condition["history_digest"]))
             self.assertEqual(30, len(condition["ticks"]))
+            self.assertIn(
+                condition["outcome"],
+                {"stable", "recovered", "deteriorating", "failed"},
+            )
             observed = [
                 tick["t"] for tick in condition["ticks"] if tick["l4"] is not None
             ]
@@ -107,6 +120,10 @@ class DemoExportTests(unittest.TestCase):
                 self.assertEqual(63, len(tick["cells"]))
                 self.assertEqual(set(playbook["roles"]), set(tick["cells"]))
                 self.assertEqual(tick["l4_observed"], tick["l4"] is not None)
+                self.assertEqual(
+                    tick["audit"]["transition_count"],
+                    len(tick["audit"]["layer_paths"]),
+                )
         stripped = {
             key: value
             for key, value in playbook.items()
@@ -173,6 +190,18 @@ class DemoExportTests(unittest.TestCase):
         self.assertIn("负面基线", html)
         self.assertNotIn("http://", html)
         self.assertNotIn("https://", html)
+
+    def test_html_player_exposes_synchronized_comparison_and_observation_fields(
+        self,
+    ) -> None:
+        html = self.html
+        self.assertIn("双轨同步对照", html)
+        self.assertIn('id="tissue-reference"', html)
+        self.assertIn('id="tissue-comparison"', html)
+        self.assertIn('data-field="stress"', html)
+        self.assertIn("L4 终末结果对照", html)
+        self.assertIn("当前 tick 审计", html)
+        self.assertIn("不是连续物理场求解", html)
 
 
 if __name__ == "__main__":
