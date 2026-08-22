@@ -2,6 +2,8 @@
 
 M-GBA（Multi-scale Graph Biological Architecture）是一个跨尺度数字生命研究原型。项目的核心是用可运行模型表达生命状态从微观调控到宏观表型的逐层生成：
 
+比赛版网站：[M-GBA 跨尺度虚拟实验室](https://mgba-cross-scale-lab.zluo66977.chatgpt.site)
+
 ```text
 L0 基因/转录调控
   → L1 分子/蛋白状态
@@ -45,6 +47,7 @@ L0 基因/转录调控
 - 模型—Target 同指标评估已实现（ADR-0027）：`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影为同一 24 个指标，分别报告 calibration 15、holdout 15、external validation 9 共 39 个描述性距离，并保存完整 raw trace；合成 target 仅用于测试管线，没有正式外部评分或生物验证结论。
 - 空间源格式适配器已实现（ADR-0028）：`mgba spatial-source-adapt-field` 流式读取已登记的 10x MatrixMarket，按下载前冻结的三个透明八基因代理生成单位区间场观察；`mgba spatial-source-adapt-neighborhood` 精确连接 Jackson 位置/cluster 表，所有 cluster 必须显式映射到 `immune|tumor|other`。适配器逐文件复核路径、Rights、bytes 和 SHA-256，合成原始格式 fixture 已贯通现有 target checker；这仍是 contract demonstrator，不是外部验证结果。
 - AIDO 启发的状态条件序列干预已实现并完成首次实验（ADR-0029）：借鉴“初始状态 + perturbation/environment → 后续状态”的任务形状，不引入 AIDO 权重或中央跨层潜状态。`mgba carm-intervention-experiment` 对同一批 15 个 engineered macrophage 施加等剂量/等暴露次数的 early/late L0 signal pulse；晚期条件在 onset 前与 baseline 逐层零差异。60-tick 首次矩阵中 short/long timing contrast 的终末 L4 距离分别为 0.006580/0.020899；晚期干预减轻 vitality/damage 代价但增加 inflammation，所有条件仍为 `RECOVERED`。这是 reference-rule trade-off，不是疗效或真实 virtual cell 证据。
+- 比赛版“跨尺度虚拟实验室”已实现（ADR-0030）：`mgba lab-export` 把三套冻结实验转换为可字节重建的 catalog、按实验延迟加载 bundle 和 SHA-256 manifest；`web/` 提供首页、双轨实验工作台、30 天分享结果页、证据页和离线 Demo。第一版在线入口只接受 CAR-M 状态条件实验的严格枚举，请求与模型版本共同生成确定性 run ID；Cloudflare Worker 负责凭证隔离、R2 保存和显式离线回退，`services/lab-api/` 提供可容器化 Python 执行边界。网站与 API 均在生成链外，不修改 L0–L4 DTO/Protocol 或冻结结果；真实空间 Target 仍明确显示为“尚未生成”。
 - 主运行链已重构为 agent 中心：每细胞一个 `CellAgent` 持有 L0/L1/L2 状态并经 `CellModel` 协议决策；trace、checkpoint 与冻结矩阵行为与重构前逐字节一致。
 - 默认与三档 repair 钳制均为 `FAILED`；L2 静态替换产生最大差异并转为 `RECOVERED`，因此当前优先诊断五态 L2 累积规则。
 - 主运行链已增加可选 L4→L3 稳态反馈控制器（离散 PI + 反饱和 + 安全屏障，ADR-0012）：仅约束 L3 环境场、慢时钟触发、逐 tick 哈希链留痕；无反馈注入时所有冻结基线位级不变。
@@ -104,6 +107,7 @@ L0 基因/转录调控
 - [ADR-0027：CAR-M 空间 Target 同指标评估](docs/决策记录/ADR-0027-CAR-M空间Target同指标评估.md)
 - [ADR-0028：CAR-M 空间源格式适配器与三通道代理映射](docs/决策记录/ADR-0028-CAR-M空间源格式适配器.md)
 - [ADR-0029：AIDO 启发的状态条件序列干预协议](docs/决策记录/ADR-0029-AIDO启发的状态条件序列干预.md)
+- [ADR-0030：比赛版跨尺度虚拟实验室](docs/决策记录/ADR-0030-比赛版跨尺度虚拟实验室.md)
 - [CAR-M 状态条件序列干预首次实验记录](docs/实验记录/CAR-M-state-conditioned-intervention-2026-08-21.md)
 - [CAR-M v0.2 实验记录](docs/实验记录/CAR-M-vertical-slice-2026-08-19.md)
 - [0.1.0 中文设计报告](docs/报告/M-GBA-MVP-中文设计报告.md)
@@ -130,6 +134,7 @@ python -m venv .venv
 .\.venv\Scripts\mgba carm-spatial-experiment --artifact-root artifacts/carm-spatial
 .\.venv\Scripts\mgba carm-spatial-ablation --artifact-root artifacts/carm-spatial-ablation
 .\.venv\Scripts\mgba demo-export
+.\.venv\Scripts\mgba lab-export --dose-playbook artifacts\demo\carm-playbook.json --output-dir web\public\lab-data
 .\.venv\Scripts\mgba feedback-experiment --artifact-root artifacts/e4
 .\.venv\Scripts\python scripts/synthetic_feedback_benchmark.py generate
 .\.venv\Scripts\python scripts/synthetic_feedback_benchmark.py run
@@ -169,6 +174,7 @@ python -m venv .venv
 .venv/bin/mgba carm-spatial-experiment --artifact-root artifacts/carm-spatial
 .venv/bin/mgba carm-spatial-ablation --artifact-root artifacts/carm-spatial-ablation
 .venv/bin/mgba demo-export
+.venv/bin/mgba lab-export --dose-playbook artifacts/demo/carm-playbook.json --output-dir web/public/lab-data
 .venv/bin/mgba feedback-experiment --artifact-root artifacts/e4
 .venv/bin/python scripts/synthetic_feedback_benchmark.py generate
 .venv/bin/python scripts/synthetic_feedback_benchmark.py run
@@ -178,7 +184,7 @@ python -m venv .venv
 .venv/bin/python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
 ```
 
-`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 冻结矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba carm-intervention-experiment` 运行相同 L0 clamp 的 early/late 等暴露 schedule，审计 onset 前零差异、timing contrast 和完整 raw trace；它不导入 AIDO 权重。`mgba carm-spatial-experiment` 运行固定图与可检查点空间 L3 的 2 条件 × 3 seed 对照，单独保存 raw run、空间指标、manifest 和 derived summary；它不修改冻结 CAR-M 矩阵。`mgba carm-spatial-ablation` 运行固定图参考加八个 movement×field×topology 因子组合，以一个显式 seed 做确定性机制审计并保存九份 raw run；该命令不把重复确定性运行包装成统计证据。`mgba spatial-source-adapt-field/neighborhood` 从逐文件核验的 10x/CSV 源生成临时 observation bundle；`mgba spatial-anchor-build` 再从 bundle 构建去标识 L3 聚合 target，`spatial-anchor-check` 重算身份并检查 raw 标识泄漏；`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影到同一指标空间并按 calibration/holdout/external validation 分开评分，这五条命令都不进入生成热路径或自动调参。`mgba demo-export` 在内存中回放冻结 CAR-M 矩阵（去掉消融、取 seed 42），向 `artifacts/demo/` 写出自包含单文件研究观察台、playbook JSON 和 SHA-256 manifest；观察台将 baseline 与所选干预同 tick 并排，提供 L3 显示投影、配对 L4 曲线、终末差值、跨层细胞检查器和事件审计。内容仍是冻结配置的字节级确定函数，保留负面基线，不写 raw artifact，也不把显示投影反馈进模型。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。`mgba data-check` 按 `data/registry.json` 逐条校验入库数据集（materialized/generated 实测 SHA-256，planned 免文件），任一条目失败即打印报告并以非零码退出（fail-closed）。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
+`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 冻结矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba carm-intervention-experiment` 运行相同 L0 clamp 的 early/late 等暴露 schedule，审计 onset 前零差异、timing contrast 和完整 raw trace；它不导入 AIDO 权重。`mgba carm-spatial-experiment` 运行固定图与可检查点空间 L3 的 2 条件 × 3 seed 对照，单独保存 raw run、空间指标、manifest 和 derived summary；它不修改冻结 CAR-M 矩阵。`mgba carm-spatial-ablation` 运行固定图参考加八个 movement×field×topology 因子组合，以一个显式 seed 做确定性机制审计并保存九份 raw run；该命令不把重复确定性运行包装成统计证据。`mgba spatial-source-adapt-field/neighborhood` 从逐文件核验的 10x/CSV 源生成临时 observation bundle；`mgba spatial-anchor-build` 再从 bundle 构建去标识 L3 聚合 target，`spatial-anchor-check` 重算身份并检查 raw 标识泄漏；`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影到同一指标空间并按 calibration/holdout/external validation 分开评分，这五条命令都不进入生成热路径或自动调参。`mgba demo-export` 保留自包含单文件研究观察台与完全离线兜底。`mgba lab-export` 只读取已经存在的 raw/frozen artifact，将三套比赛实验转换为统一 `LabRunBundle`、小型 catalog 和文件 SHA-256 manifest；它不执行参数搜索、不修改 raw artifact，也不把显示状态反馈进模型。网站本地运行使用 `cd web; npm install; npm run dev`，验证使用 `npm test; npm run lint; npm run build`；在线功能默认关闭，只有配置 `LAB_LIVE_RUNS_ENABLED=true`、`MGBA_RUNNER_BASE_URL` 与 Worker 私有 `MGBA_RUNNER_TOKEN` 后才代理到容器服务。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。`mgba data-check` 按 `data/registry.json` 逐条校验入库数据集。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
 
 ## 当前目录
 
@@ -208,6 +214,8 @@ M-GBA/
 │   ├── synthetic_closed_loop_benchmark.py # E4×E3 噪声闭环稳定性基准
 │   ├── synthetic_neural_benchmark.py # L0/L3 神经变体替换基准
 │   └── calibrate_l2_cell.py     # L2 规则参数标定（预注册搜索 + holdout）
+├── services/lab-api/          # 受限配对实验 Python 服务与 Docker 镜像
+├── web/                       # Cloudflare/Sites React 实验室、Worker API 与 R2 分享缓存
 ├── src/mgba/
 │   ├── layers/              # 五层 DTO 与模型 Protocol
 │   │   ├── contracts.py     # 五层 DTO 与 Protocol
@@ -237,6 +245,8 @@ M-GBA/
 │   ├── spatial_anchor_evaluation.py # SpatialTissueState → target 同指标评分（ADR-0027）
 │   ├── spatial_source_adapters.py # 10x/IMC 源文件 → observation bundle（ADR-0028）
 │   ├── intervention_experiments.py # 状态条件 L0 schedule 与 timing contrast（ADR-0029）
+│   ├── lab.py              # Lab request/bundle/catalog 契约与确定性导出器（ADR-0030）
+│   ├── lab_server.py       # 受服务凭证保护的受限在线执行边界
 │   ├── layers/l3_adaptive.py  # 受治理的动态拓扑 L3 模型
 │   ├── e3_statistics.py      # E3 预注册判据与分级阶梯
 │   ├── e3_experiments.py     # E3 多种子集合运行与 artifact
@@ -270,6 +280,7 @@ M-GBA/
 12. 已完成：CAR-M 可检查点因果空间 L3 与固定图单层配对实验；不改冻结 CAR-M 矩阵。
 13. 已完成：移动×场×空间邻域的 L3 内部因子审计，定位当前 L4 差异主要来自场耦合与邻域而非移动。
 14. 已完成：CAR-M 局部场/细胞邻域锚点的资源、预算、指标、4/2 holdout 协议、去标识 target 管线和模型同指标评估器；外部数据仍待用户授权。
-15. 下一步经授权下载 Wu/Jackson 最小文件集，生成真实 target 并执行首次 reference score；只有 calibration 选择与一次性 holdout/external validation 结果均按冻结协议输出后，才决定是否允许 L3 参数锚定。
+15. 已完成：比赛版跨尺度虚拟实验室、三套延迟加载的预计算 bundle、受限 Worker/API/R2 分享链和 Docker 后端；默认关闭 live runner，保留离线 HTML。
+16. 下一步在网络可达后下载已授权的 Wu/Jackson 最小文件集，生成真实 target 并执行首次 reference score；只有 calibration 选择与一次性 holdout/external validation 结果均按冻结协议输出后，才决定是否允许 L3 参数锚定。
 
 每次只升级一层，当前标准库参考模型长期保留为可复现基线。

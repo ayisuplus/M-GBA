@@ -182,5 +182,8 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 实现 ADR-0027 模型—Target 同指标评估：正式 `SpatialTissueState` 投影 24 个同名指标，按 calibration 15 / holdout 15 / external validation 9 生成 39 个描述性对照；`carm-spatial-anchor-evaluate` 保存完整 raw trace、manifest 和 derived score。当前只用合成 fixture 验证管线，不产生生物结论。
 - [x] 实现 ADR-0028 源格式适配器：下载前冻结三个透明八基因场代理及确定性归一化；流式读取 Wu 10x MatrixMarket；Jackson 位置/cluster exact join 且未知标签 fail-closed；逐个归档/解压输入复核路径、Rights、bytes、SHA-256。七项合成原始格式测试已贯通 target checker。
 - [x] 实现并执行 ADR-0029 AIDO 启发的状态条件序列干预：runner 可选 schedule 只在 L0 慢时钟生效并进入 manifest/checkpoint；CAR-M 2×2 timing×exposure 设计强制 onset 前逐层零差异。首次 15-run 矩阵 short/long timing L4 距离为 0.006580/0.020899，晚期干预体现 vitality/damage 与 inflammation 的混合 trade-off；仍是 reference-model 证据。
+- [x] 实现 ADR-0030 比赛版跨尺度虚拟实验室：`mgba lab-export` 冻结 request/bundle/catalog schema，并从既有 artifact 确定性生成三套延迟加载实验与 SHA-256 manifest；`web/` 完成首页、工作台、分享页、证据页、移动端阅读、Open Graph 和离线 Demo。观察层不进入 tick、不修改 DTO/Protocol。
+- [x] 实现受限在线链：Worker 对唯一 CAR-M 状态条件协议做严格枚举校验、确定性 run ID、5 次/IP/小时门禁、45 秒代理超时与 R2 30 天结果读取；Python 服务以服务凭证保护、全局并发 2，并只执行单组 baseline/intervention。`LAB_LIVE_RUNS_ENABLED=false` 时明确回退预计算 bundle，不伪装在线结果。
+- [x] 完成比赛站门禁：309 项 Python 测试、6 项前端契约/交互测试、lint、生产构建、6 个本地路由响应与 npm 0 漏洞审计；`mgba run` 和 `sten-smoke` 保持通过。
 - [ ] 在网络可达后下载已授权的 S1/S2 五文件，冻结真实解压 inventory、region_map 和 cluster label_map，生成可字节重建的去标识 L3 聚合 target；先验证统计管线，再决定是否实施参数锚定。失败结果保留，不增加自由参数追逐数据。
 - [ ] 预注册一个 L0/L1 真实 Perturb-seq state-conditioned target（control state、perturbation、dose/time、train/holdout、centroid baseline）；先验证透明六节点桥，再单独决定是否授权 AIDO.Cell/STATE 权重和独立推理环境。

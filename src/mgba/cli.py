@@ -68,6 +68,7 @@ from .neural_experiments import (
     save_neural_artifacts,
 )
 from .demo import export_carm_demo
+from .lab import export_competition_lab_data
 from .carm_spatial_experiments import (
     CarmSpatialExperimentRunner,
     build_carm_spatial_runners,
@@ -629,6 +630,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="demo output directory (playbook, HTML player, manifest)",
     )
 
+    lab_export = commands.add_parser(
+        "lab-export",
+        help="export deterministic competition virtual-lab catalog and bundles",
+    )
+    lab_export.add_argument(
+        "--dose-playbook",
+        default="artifacts/demo/carm-playbook.json",
+        help="frozen CAR-M dose-response demo playbook JSON",
+    )
+    lab_export.add_argument(
+        "--intervention-root",
+        default=(
+            "artifacts/carm-state-conditioned-intervention/"
+            "state-intervention-0e92bb234ba3a840"
+        ),
+        help="saved state-conditioned intervention artifact directory",
+    )
+    lab_export.add_argument(
+        "--spatial-root",
+        default="artifacts/carm-spatial/carm-spatial-0f88408d1e44b25a",
+        help="saved CAR-M spatial comparison artifact directory",
+    )
+    lab_export.add_argument(
+        "--output-dir",
+        default="web/public/lab-data",
+        help="competition site lab-data output directory",
+    )
+
     sten = commands.add_parser("sten-smoke", help="run the L3 STEN subsystem smoke test")
     sten.add_argument("--config", default="configs/demo.json", help="STEN scenario JSON")
     sten.add_argument("--ticks", type=int, help="override scenario tick count")
@@ -1151,6 +1180,14 @@ def main() -> None:
             "cells": len(playbook["roles"]),
             "playbook_digest": manifest["playbook_digest"],
         }
+    elif args.command == "lab-export":
+        paths = export_competition_lab_data(
+            output_dir=args.output_dir,
+            dose_playbook=args.dose_playbook,
+            intervention_root=args.intervention_root,
+            spatial_root=args.spatial_root,
+        )
+        result = {name: str(path) for name, path in sorted(paths.items())}
     elif args.command == "feedback-experiment":
         scenario = load_multiscale_scenario(args.config)
         e4_config = load_feedback_experiment_config(args.matrix_config)

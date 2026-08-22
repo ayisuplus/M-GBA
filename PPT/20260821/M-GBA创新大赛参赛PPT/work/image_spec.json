@@ -1,0 +1,22 @@
+{
+  "cover_main": {
+    "query": "dark scientific illustration of cross-scale life generation: left side a glowing DNA double helix, middle a cluster of luminous living cells, right side coalescing into macroscopic tissue silhouette, faint warm amber light threads connecting the three scales, deep graphite slate background, layered depth of light, full-frame composition extending edge to edge, no text, no letters, no logo, no watermark",
+    "route": "aigc",
+    "ratio": "1600*900"
+  },
+  "bg_content": {
+    "query": "dark atmospheric background, deep slate black with subtle misty depth and one faint warm amber glow at a corner, calm minimal, very low luminance, no text, no letters, no logo, no watermark",
+    "route": "aigc",
+    "ratio": "1600*900"
+  },
+  "p10_carm": {
+    "query": "realistic 3D scientific render, engineered macrophage immune cells with warm golden membrane highlights approaching a tumor microenvironment of dim purple-grey cancer cell cluster, dark graphite background, cinematic laboratory lighting, rich depth, no text, no letters, no watermark",
+    "route": "aigc",
+    "ratio": "1024*1024"
+  },
+  "p16_screen": {
+    "query": "realistic 3D render of a dark in-silico simulation workstation, large screen showing parallel cell-therapy dose and timing response curves in warm amber on graphite interface, dim laboratory room, soft glow, no text, no letters, no watermark",
+    "route": "aigc",
+    "ratio": "1024*1024"
+  }
+}

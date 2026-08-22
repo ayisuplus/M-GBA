@@ -1,0 +1,7 @@
+# Public feature flag. Keep false until the Python runner is deployed.
+LAB_LIVE_RUNS_ENABLED=false
+
+# Worker-only secrets/configuration. Never prefix the token with NEXT_PUBLIC_.
+MGBA_RUNNER_BASE_URL=https://runner.example.org
+MGBA_RUNNER_TOKEN=replace-with-a-service-token
+NEXT_PUBLIC_SITE_URL=https://your-site.example

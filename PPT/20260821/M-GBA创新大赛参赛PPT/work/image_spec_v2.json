@@ -1,0 +1,22 @@
+{
+  "cover_main": {
+    "query": "基因双螺旋 暗色",
+    "route": "vcg",
+    "ratio": "1600*900"
+  },
+  "bg_content": {
+    "query": "黑金 纹理 背景",
+    "route": "vcg",
+    "ratio": "1600*900"
+  },
+  "p10_carm": {
+    "query": "癌细胞 3D 渲染",
+    "route": "vcg",
+    "ratio": "1024*1024"
+  },
+  "p16_screen": {
+    "query": "实验室 数据 屏幕",
+    "route": "vcg",
+    "ratio": "1024*1024"
+  }
+}

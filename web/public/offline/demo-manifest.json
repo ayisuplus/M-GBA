@@ -1,0 +1,8 @@
+{
+  "files": {
+    "carm-playbook.json": "3103492ea57bf0355161f402823fecbc5cf8c8d677feb308f3fbf33957bb2cb3",
+    "mgba-carm-demo.html": "f01ebe3b443da03eabd71d20af10f0c94b5b75ad17fbc889d98d04e928cd0007"
+  },
+  "playbook_digest": "cc11bd716f4490c14ea7217484698205feeb4391d364772c3b6984e7bf314d6e",
+  "schema_version": "mgba-demo-files-0.1"
+}

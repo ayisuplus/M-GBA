@@ -1,0 +1,68 @@
+{
+  "cover_main": {
+    "src": "../images/vcg_cover_main.jpg",
+    "w": 2500,
+    "h": 1406
+  },
+  "bg_content": {
+    "src": "../images/vcg_bg_content.jpg",
+    "w": 2500,
+    "h": 1406,
+    "candidates": [
+      {
+        "src": "../images/vcg_bg_content.jpg",
+        "w": 2500,
+        "h": 1406
+      },
+      {
+        "src": "../images/vcg_bg_content_2.jpg",
+        "w": 2500,
+        "h": 1423
+      }
+    ]
+  },
+  "p10_carm": {
+    "src": "../images/vcg_p10_carm.jpg",
+    "w": 2500,
+    "h": 2500,
+    "candidates": [
+      {
+        "src": "../images/vcg_p10_carm.jpg",
+        "w": 2500,
+        "h": 2500
+      },
+      {
+        "src": "../images/vcg_p10_carm_2.jpg",
+        "w": 2500,
+        "h": 2245
+      },
+      {
+        "src": "../images/vcg_p10_carm_3.jpg",
+        "w": 2500,
+        "h": 2461
+      }
+    ]
+  },
+  "p16_screen": {
+    "src": "../images/vcg_p16_screen.jpg",
+    "w": 2500,
+    "h": 1471,
+    "candidates": [
+      {
+        "src": "../images/vcg_p16_screen.jpg",
+        "w": 2500,
+        "h": 1471
+      },
+      {
+        "src": "../images/vcg_p16_screen_2.jpg",
+        "w": 2500,
+        "h": 1406
+      },
+      {
+        "src": "../images/vcg_p16_screen_3.jpg",
+        "w": 2500,
+        "h": 1406
+      }
+    ]
+  }
+}
