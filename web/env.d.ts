@@ -7,3 +7,8 @@ declare namespace Cloudflare {
     NEXT_PUBLIC_SITE_URL?: string;
   }
 }
+
+declare module '*?raw' {
+  const source: string;
+  export default source;
+}

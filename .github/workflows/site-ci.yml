@@ -1,0 +1,79 @@
+name: Site CI and delivery
+
+on:
+  pull_request:
+    paths:
+      - 'web/**'
+      - '.github/workflows/site-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'web/**'
+      - '.github/workflows/site-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-and-package:
+    name: Test, build, and package site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run component and API tests
+        run: npm test
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build production site
+        run: npm run build
+        env:
+          CI: 'true'
+          LAB_LIVE_RUNS_ENABLED: 'false'
+
+      - name: Validate Sites bundle
+        run: |
+          test -f dist/server/index.js
+          test -f dist/.openai/hosting.json
+          node -e "const fs=require('node:fs');const value=JSON.parse(fs.readFileSync('dist/.openai/hosting.json','utf8'));if(!value.project_id)process.exit(1)"
+
+      - name: Package deployable artifact
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: |
+          tar -czf "../mgba-site-${GITHUB_SHA}.tar.gz" dist
+          tar -tzf "../mgba-site-${GITHUB_SHA}.tar.gz" | grep -Fx 'dist/server/index.js'
+          tar -tzf "../mgba-site-${GITHUB_SHA}.tar.gz" | grep -Fx 'dist/.openai/hosting.json'
+
+      - name: Upload deployable artifact
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        uses: actions/upload-artifact@v7
+        with:
+          name: mgba-site-${{ github.sha }}
+          path: mgba-site-${{ github.sha }}.tar.gz
+          archive: false
+          if-no-files-found: error
+          retention-days: 14

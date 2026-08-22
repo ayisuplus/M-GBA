@@ -25,6 +25,39 @@ Precomputed data is generated from repository-root artifacts:
 The public directory also keeps `offline/mgba-carm-demo.html` as a self-contained
 fallback. Do not replace a missing real spatial Target with a synthetic fixture.
 
+## Event Horizon visual
+
+The landing page loads a versioned, same-origin Web Component as a presentation-
+only layer. It does not read experiment bundles, call the API, or participate in
+the L0–L4 model. The component remains optional and can be embedded elsewhere:
+
+```html
+<script defer src="/__event-horizon/assets/black-hole.v1.js"></script>
+<event-horizon-visual
+  scene="home"
+  depth="0"
+  intensity="0.68"
+  aria-label="事件视界视觉"
+></event-horizon-visual>
+```
+
+Set the host element's width, height, and border radius with ordinary CSS. The
+renderer uses Shadow DOM, performs no network requests, pauses in background
+tabs, draws a static frame for `prefers-reduced-motion`, and removes its
+listeners when detached. Without JavaScript, the landing page keeps its CSS
+fallback background and all scientific content remains readable.
+
+## CI and delivery
+
+`.github/workflows/site-ci.yml` runs for pull requests and relevant pushes to
+`main`. It installs from `package-lock.json`, runs the component/API tests and
+lint, builds the Vinext production bundle, and validates the required Sites
+files. A successful `main` build also publishes a 14-day, commit-addressed
+`mgba-site-<sha>.tar.gz` workflow artifact containing the complete `dist/`
+tree. Production publication still uses the existing Sites project and a saved
+version from the same Git commit; no long-lived production credential is stored
+in GitHub Actions.
+
 ## Runtime configuration
 
 - `LAB_LIVE_RUNS_ENABLED=false` is the safe release default.

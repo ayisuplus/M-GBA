@@ -1,4 +1,9 @@
 import Link from 'next/link';
+import Script from 'next/script';
+import {
+  EVENT_HORIZON_SCRIPT_SRC,
+  EventHorizonVisual,
+} from '@/components/EventHorizonVisual';
 import { SiteHeader } from '@/components/SiteHeader';
 
 const layers = [
@@ -12,6 +17,7 @@ const layers = [
 export default function Home() {
   return (
     <main className="site-page">
+      <Script src={EVENT_HORIZON_SCRIPT_SRC} strategy="afterInteractive" />
       <SiteHeader active="home" />
       <section className="hero">
         <div className="hero-copy">
@@ -28,10 +34,16 @@ export default function Home() {
             <div><b>L0→L4</b><span>相邻层传播</span></div>
           </div>
         </div>
-        <div className="hero-visual" aria-label="五层生命状态传播示意">
+        <div className="hero-visual">
+          <EventHorizonVisual
+            className="hero-black-hole"
+            scene="home"
+            depth={0}
+            intensity={0.68}
+            label="事件视界黑洞视觉；仅为展示层，不参与实验计算"
+          />
           <div className="hero-grid" />
-          <div className="orbit orbit-one" /><div className="orbit orbit-two" />
-          <div className="hero-core"><i /><b>CAR-M</b><span>paired run</span></div>
+          <div className="event-horizon-chip"><i /><span>EVENT HORIZON</span><small>observation-only visual</small></div>
           <div className="hero-gate gate-l0"><b>L0</b><span>signal_expression</span></div>
           <div className="hero-gate gate-l2"><b>L2</b><span>cell phase</span></div>
           <div className="hero-gate gate-l3"><b>L3</b><span>local field</span></div>
