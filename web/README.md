@@ -27,9 +27,10 @@ fallback. Do not replace a missing real spatial Target with a synthetic fixture.
 
 ## Event Horizon visual
 
-The landing page loads a versioned, same-origin Web Component as a presentation-
-only layer. It does not read experiment bundles, call the API, or participate in
-the L0–L4 model. The component remains optional and can be embedded elsewhere:
+Normal landing-page visits do not load or render the black-hole component. The
+versioned, same-origin Web Component is an opt-in presentation layer for an
+explicit host integration or a separate trap-themed page. It does not read
+experiment bundles, call the API, or participate in the L0–L4 model:
 
 ```html
 <script defer src="/__event-horizon/assets/black-hole.v1.js"></script>
@@ -44,8 +45,8 @@ the L0–L4 model. The component remains optional and can be embedded elsewhere:
 Set the host element's width, height, and border radius with ordinary CSS. The
 renderer uses Shadow DOM, performs no network requests, pauses in background
 tabs, draws a static frame for `prefers-reduced-motion`, and removes its
-listeners when detached. Without JavaScript, the landing page keeps its CSS
-fallback background and all scientific content remains readable.
+listeners when detached. Without JavaScript, the host page keeps its own
+content and layout.
 
 ## CI and delivery
 

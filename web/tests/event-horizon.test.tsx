@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import Home from '@/app/page';
 import { GET, HEAD } from '@/app/api/event-horizon/assets/[asset]/route';
 import {
   EVENT_HORIZON_SCRIPT_SRC,
@@ -14,6 +15,16 @@ const assetPath = resolve(
 );
 
 describe('event horizon visual', () => {
+  it('does not load or render the optional visual on the normal landing page', () => {
+    const { container } = render(<Home />);
+
+    expect(container.querySelector('event-horizon-visual')).toBeNull();
+    expect(
+      container.querySelector(`script[src="${EVENT_HORIZON_SCRIPT_SRC}"]`),
+    ).toBeNull();
+    expect(container.querySelector('.hero-flow')).not.toBeNull();
+  });
+
   it('renders the public Web Component contract without reading experiment state', () => {
     const { container } = render(
       <EventHorizonVisual
