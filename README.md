@@ -48,6 +48,10 @@ L0 基因/转录调控
 - 空间源格式适配器已实现（ADR-0028）：`mgba spatial-source-adapt-field` 流式读取已登记的 10x MatrixMarket，按下载前冻结的三个透明八基因代理生成单位区间场观察；`mgba spatial-source-adapt-neighborhood` 精确连接 Jackson 位置/cluster 表，所有 cluster 必须显式映射到 `immune|tumor|other`。适配器逐文件复核路径、Rights、bytes 和 SHA-256，合成原始格式 fixture 已贯通现有 target checker；这仍是 contract demonstrator，不是外部验证结果。
 - AIDO 启发的状态条件序列干预已实现并完成首次实验（ADR-0029）：借鉴“初始状态 + perturbation/environment → 后续状态”的任务形状，不引入 AIDO 权重或中央跨层潜状态。`mgba carm-intervention-experiment` 对同一批 15 个 engineered macrophage 施加等剂量/等暴露次数的 early/late L0 signal pulse；晚期条件在 onset 前与 baseline 逐层零差异。60-tick 首次矩阵中 short/long timing contrast 的终末 L4 距离分别为 0.006580/0.020899；晚期干预减轻 vitality/damage 代价但增加 inflammation，所有条件仍为 `RECOVERED`。这是 reference-rule trade-off，不是疗效或真实 virtual cell 证据。
 - 比赛版“跨尺度虚拟实验室”已实现（ADR-0030）：`mgba lab-export` 把三套冻结实验转换为可字节重建的 catalog、按实验延迟加载 bundle 和 SHA-256 manifest；`web/` 提供首页、双轨实验工作台、30 天分享结果页、证据页和离线 Demo。普通首页不加载或渲染黑洞；同源 `event-horizon-visual` Web Component 仅保留为站长显式嵌入或诱捕主题页使用的可选只读展示层，不读取实验数据、不发起网络请求，也不进入 L0–L4 生成链。GitHub Actions 对站点相关 PR/`main` 推送执行锁文件安装、测试、lint、生产构建和 Sites bundle 门禁，并为成功的 `main` 构建保存按 commit 标识的可部署产物；生产发布继续复用现有 Sites 项目，不在 GitHub 保存长期生产凭据。第一版在线入口只接受 CAR-M 状态条件实验的严格枚举，请求与模型版本共同生成确定性 run ID；Cloudflare Worker 负责凭证隔离、R2 保存和显式离线回退，`services/lab-api/` 提供可容器化 Python 执行边界。网站与 API 均在生成链外，不修改 L0–L4 DTO/Protocol 或冻结结果；真实空间 Target 仍明确显示为“尚未生成”。
+- 群体动力学观察层已实现（ADR-0031）：`CollectiveDynamicsObserver` 和 `mgba collective-analyze` 只从正式 raw trace 重算 activation-stress reference proxy 的 direction、intensity、polarization、edge alignment、冻结状态转换、外部 cohort、Cell archetype 及 L4 时间关联。三套比赛 bundle 与工作台已加入同步双轨相图；旧 bundle 仍可读取。该能力不进入 tick、不改变 E3 阶梯，也不宣称物理相变、涌现或临床预测。
+- OCellus 启发的 Autolab 计划控制面已实现（ADR-0032）：`AutolabPlan` 把冻结注册表编译为 closed-schema DAG，三层 Verifier 分别拒绝 schema/DAG、架构/预算和 manifest/history/科学表述违约；`mgba autolab-plan` 固定 `executed: false`，现有 `mgba autolab` 只有通过前后两道核验才执行和报告。默认计划继续复现原四次评估、`l2-static` leader 和全部 history digest。
+- EvenClock 启发的 `ClockSectorObserver` 已实现（ADR-0033）：它从正式 `SpatialTissueState` 与同 tick 可见 L0 状态生成六方向×三归一化距离环的 `mgba-clock-sector-observation-0.1` write-once artifact，不修改坐标、场、边、Cell、checkpoint 或 trace。Wu/Jackson 真实 Target 到位前不比较或宣称该表示优于半径/网格基线。
+- OCellus 离线扰动锚点契约已实现（ADR-0034）：`mgba-ocellus-perturbation-anchor-0.1` 严格分离 empirical/predicted gene-level log2FC，冻结 Hallmark 六节点桥、train-only centroid、holdout MAE/方向/Spearman 和许可/SHA-256 门禁；只有通过、精确人审且引用 holdout 的结果才能生成 `executed: false` 的 L0 schedule 候选。当前没有下载 OCellus 权重，也没有真实 OCellus 结果。
 - 主运行链已重构为 agent 中心：每细胞一个 `CellAgent` 持有 L0/L1/L2 状态并经 `CellModel` 协议决策；trace、checkpoint 与冻结矩阵行为与重构前逐字节一致。
 - 默认与三档 repair 钳制均为 `FAILED`；L2 静态替换产生最大差异并转为 `RECOVERED`，因此当前优先诊断五态 L2 累积规则。
 - 主运行链已增加可选 L4→L3 稳态反馈控制器（离散 PI + 反饱和 + 安全屏障，ADR-0012）：仅约束 L3 环境场、慢时钟触发、逐 tick 哈希链留痕；无反馈注入时所有冻结基线位级不变。
@@ -108,6 +112,10 @@ L0 基因/转录调控
 - [ADR-0028：CAR-M 空间源格式适配器与三通道代理映射](docs/决策记录/ADR-0028-CAR-M空间源格式适配器.md)
 - [ADR-0029：AIDO 启发的状态条件序列干预协议](docs/决策记录/ADR-0029-AIDO启发的状态条件序列干预.md)
 - [ADR-0030：比赛版跨尺度虚拟实验室](docs/决策记录/ADR-0030-比赛版跨尺度虚拟实验室.md)
+- [ADR-0031：群体动力学观察层](docs/决策记录/ADR-0031-群体动力学观察层.md)
+- [ADR-0032：OCellus 启发的 Autolab 计划控制面](docs/决策记录/ADR-0032-OCellus启发的Autolab计划控制面.md)
+- [ADR-0033：EvenClock 启发的 ClockSector 空间观察层](docs/决策记录/ADR-0033-EvenClock启发的ClockSector观察层.md)
+- [ADR-0034：OCellus 离线扰动锚点契约](docs/决策记录/ADR-0034-OCellus离线扰动锚点契约.md)
 - [CAR-M 状态条件序列干预首次实验记录](docs/实验记录/CAR-M-state-conditioned-intervention-2026-08-21.md)
 - [CAR-M v0.2 实验记录](docs/实验记录/CAR-M-vertical-slice-2026-08-19.md)
 - [0.1.0 中文设计报告](docs/报告/M-GBA-MVP-中文设计报告.md)
@@ -135,6 +143,7 @@ python -m venv .venv
 .\.venv\Scripts\mgba carm-spatial-ablation --artifact-root artifacts/carm-spatial-ablation
 .\.venv\Scripts\mgba demo-export
 .\.venv\Scripts\mgba lab-export --dose-playbook artifacts\demo\carm-playbook.json --output-dir web\public\lab-data
+.\.venv\Scripts\mgba collective-analyze --input artifacts\run.json --output artifacts\collective.json
 .\.venv\Scripts\mgba feedback-experiment --artifact-root artifacts/e4
 .\.venv\Scripts\python scripts/synthetic_feedback_benchmark.py generate
 .\.venv\Scripts\python scripts/synthetic_feedback_benchmark.py run
@@ -151,11 +160,14 @@ python -m venv .venv
 .\.venv\Scripts\python scripts/calibrate_l2_cell.py
 .\.venv\Scripts\mgba latent-experiment --artifact-root artifacts/latent
 .\.venv\Scripts\python scripts/synthetic_latent_benchmark.py run
+.\.venv\Scripts\mgba autolab-plan --artifact-root artifacts/autolab-plans
 .\.venv\Scripts\mgba autolab --artifact-root artifacts/autolab
 .\.venv\Scripts\mgba autolab-propose --proposals <提案文件.json>
 .\.venv\Scripts\mgba data-check
 .\.venv\Scripts\mgba sten-smoke --config configs/demo.json
 .\.venv\Scripts\python -m unittest discover -s tests -v
+.\.venv\Scripts\python -B -m coverage run -m unittest discover -s tests
+.\.venv\Scripts\python -B -m coverage report --fail-under=80
 .\.venv\Scripts\python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
 ```
 
@@ -175,16 +187,21 @@ python -m venv .venv
 .venv/bin/mgba carm-spatial-ablation --artifact-root artifacts/carm-spatial-ablation
 .venv/bin/mgba demo-export
 .venv/bin/mgba lab-export --dose-playbook artifacts/demo/carm-playbook.json --output-dir web/public/lab-data
+.venv/bin/mgba collective-analyze --input artifacts/run.json --output artifacts/collective.json
 .venv/bin/mgba feedback-experiment --artifact-root artifacts/e4
 .venv/bin/python scripts/synthetic_feedback_benchmark.py generate
 .venv/bin/python scripts/synthetic_feedback_benchmark.py run
+.venv/bin/mgba autolab-plan --artifact-root artifacts/autolab-plans
 .venv/bin/mgba data-check
 .venv/bin/mgba sten-smoke --config configs/demo.json
 .venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python -B -m coverage run -m unittest discover -s tests
+.venv/bin/python -B -m coverage report --fail-under=80
 .venv/bin/python scripts/mvp_demo.py --mode full --artifact-root artifacts/mvp-demo
 ```
 
-`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 冻结矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba carm-intervention-experiment` 运行相同 L0 clamp 的 early/late 等暴露 schedule，审计 onset 前零差异、timing contrast 和完整 raw trace；它不导入 AIDO 权重。`mgba carm-spatial-experiment` 运行固定图与可检查点空间 L3 的 2 条件 × 3 seed 对照，单独保存 raw run、空间指标、manifest 和 derived summary；它不修改冻结 CAR-M 矩阵。`mgba carm-spatial-ablation` 运行固定图参考加八个 movement×field×topology 因子组合，以一个显式 seed 做确定性机制审计并保存九份 raw run；该命令不把重复确定性运行包装成统计证据。`mgba spatial-source-adapt-field/neighborhood` 从逐文件核验的 10x/CSV 源生成临时 observation bundle；`mgba spatial-anchor-build` 再从 bundle 构建去标识 L3 聚合 target，`spatial-anchor-check` 重算身份并检查 raw 标识泄漏；`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影到同一指标空间并按 calibration/holdout/external validation 分开评分，这五条命令都不进入生成热路径或自动调参。`mgba demo-export` 保留自包含单文件研究观察台与完全离线兜底。`mgba lab-export` 只读取已经存在的 raw/frozen artifact，将三套比赛实验转换为统一 `LabRunBundle`、小型 catalog 和文件 SHA-256 manifest；它不执行参数搜索、不修改 raw artifact，也不把显示状态反馈进模型。网站本地运行使用 `cd web; npm install; npm run dev`，验证使用 `npm test; npm run lint; npm run build`；在线功能默认关闭，只有配置 `LAB_LIVE_RUNS_ENABLED=true`、`MGBA_RUNNER_BASE_URL` 与 Worker 私有 `MGBA_RUNNER_TOKEN` 后才代理到容器服务。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。`mgba data-check` 按 `data/registry.json` 逐条校验入库数据集。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
+覆盖率门禁只计量 `src/mgba` 核心包，`source` 与 `fail_under=80` 由 pyproject `[tool.coverage]` 提供；coverage 经 `pip install -e .[dev]` 装入开发环境（wheel 运行时零依赖不变）。coverage 追踪开销使全套测试约需 15–20 分钟，因此它是独立门禁，不替代上面的快速测试命令。
+`mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba collective-analyze` 对一个正式 raw run 做只读群体动力学分析，可选完整的 Cell→cohort JSON 映射，并把 `mgba-collective-dynamics-0.1` report 以 write-once 方式保存；它不拟合预测模型或修改 run。`mgba autolab-plan` 只编译或验证 closed-schema 计划并固定输出 `executed: false`；现有 `mgba autolab` 在真正调用 evaluator 前后分别执行计划 preflight 和 manifest/history 核验。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 冻结矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba carm-intervention-experiment` 运行相同 L0 clamp 的 early/late 等暴露 schedule，审计 onset 前零差异、timing contrast 和完整 raw trace；它不导入 AIDO 权重。`mgba carm-spatial-experiment` 运行固定图与可检查点空间 L3 的 2 条件 × 3 seed 对照，单独保存 raw run、空间指标、manifest 和 derived summary；它不修改冻结 CAR-M 矩阵。`mgba carm-spatial-ablation` 运行固定图参考加八个 movement×field×topology 因子组合，以一个显式 seed 做确定性机制审计并保存九份 raw run；该命令不把重复确定性运行包装成统计证据。`mgba spatial-source-adapt-field/neighborhood` 从逐文件核验的 10x/CSV 源生成临时 observation bundle；`mgba spatial-anchor-build` 再从 bundle 构建去标识 L3 聚合 target，`spatial-anchor-check` 重算身份并检查 raw 标识泄漏；`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影到同一指标空间并按 calibration/holdout/external validation 分开评分，这五条命令都不进入生成热路径或自动调参。`mgba demo-export` 保留自包含单文件研究观察台与完全离线兜底。`mgba lab-export` 只读取已经存在的 raw/frozen artifact，将三套比赛实验转换为统一 `LabRunBundle`、小型 catalog 和文件 SHA-256 manifest；它不执行参数搜索、不修改 raw artifact，也不把显示状态反馈进模型。网站本地运行使用 `cd web; npm install; npm run dev`，验证使用 `npm test; npm run lint; npm run build`；在线功能默认关闭，只有配置 `LAB_LIVE_RUNS_ENABLED=true`、`MGBA_RUNNER_BASE_URL` 与 Worker 私有 `MGBA_RUNNER_TOKEN` 后才代理到容器服务。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。`mgba data-check` 按 `data/registry.json` 逐条校验入库数据集。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
 
 ## 当前目录
 
@@ -237,6 +254,9 @@ M-GBA/
 │   ├── latent_experiments.py # 规则 vs 潜状态 L2 策略对照矩阵与 artifact
 │   ├── layers/l2_latent.py    # 连续潜状态"虚拟细胞"L2 策略与配置
 │   ├── autolab.py           # 元层自动实验调度（注册表 + 筛选→确认 + 提案门禁）
+│   ├── autolab_planning.py  # closed-schema Autolab 计划编译与三层验证（ADR-0032）
+│   ├── clock_sector.py      # 只读六方向×三距离环空间观察 artifact（ADR-0033）
+│   ├── ocellus_anchors.py   # 离线扰动预测/真实 Target 六节点锚点（ADR-0034）
 │   ├── data_registry.py     # 数据集注册表加载与 sha256 校验（ADR-0021）
 │   ├── topology_experiments.py # E5 静态 vs 动态拓扑对照矩阵与稳定性指标
 │   ├── carm_spatial_experiments.py # CAR-M 固定图 vs 因果空间 L3 配对实验
@@ -246,6 +266,7 @@ M-GBA/
 │   ├── spatial_source_adapters.py # 10x/IMC 源文件 → observation bundle（ADR-0028）
 │   ├── intervention_experiments.py # 状态条件 L0 schedule 与 timing contrast（ADR-0029）
 │   ├── lab.py              # Lab request/bundle/catalog 契约与确定性导出器（ADR-0030）
+│   ├── collective_dynamics.py # 只读群体相图、状态转换、cohort 与 L4 时间关联（ADR-0031）
 │   ├── lab_server.py       # 受服务凭证保护的受限在线执行边界
 │   ├── layers/l3_adaptive.py  # 受治理的动态拓扑 L3 模型
 │   ├── e3_statistics.py      # E3 预注册判据与分级阶梯
@@ -281,6 +302,9 @@ M-GBA/
 13. 已完成：移动×场×空间邻域的 L3 内部因子审计，定位当前 L4 差异主要来自场耦合与邻域而非移动。
 14. 已完成：CAR-M 局部场/细胞邻域锚点的资源、预算、指标、4/2 holdout 协议、去标识 target 管线和模型同指标评估器；外部数据仍待用户授权。
 15. 已完成：比赛版跨尺度虚拟实验室、三套延迟加载的预计算 bundle、受限 Worker/API/R2 分享链和 Docker 后端；默认关闭 live runner，保留离线 HTML。
-16. 下一步在网络可达后下载已授权的 Wu/Jackson 最小文件集，生成真实 target 并执行首次 reference score；只有 calibration 选择与一次性 holdout/external validation 结果均按冻结协议输出后，才决定是否允许 L3 参数锚定。
+16. 已完成：生成链外群体动力学观察层、冻结阈值分类、外部 cohort、L4 时间关联和网站双轨相图；不拟合 Ising/Glauber 模型，不改变 E3 分级。
+17. 已完成：OCellus 启发的 Autolab closed-schema 计划编译、固定 Router 清单和三层 Verifier；无在线 LLM、无自动改计划。
+18. 已完成：ClockSector 生成链外空间观察器及 OCellus 离线扰动锚点契约；当前都只有契约证据，不宣称表示或模型优越。
+19. 下一步在网络可达后下载已授权的 Wu/Jackson 最小文件集，生成真实 target 并执行首次 reference score；只有 calibration 选择与一次性 holdout/external validation 结果均按冻结协议输出后，才决定是否允许 L3 参数锚定。OCellus 权重仍须等待公开、许可、预算与单独授权。
 
 每次只升级一层，当前标准库参考模型长期保留为可复现基线。

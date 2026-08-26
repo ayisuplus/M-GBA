@@ -5,12 +5,17 @@ import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 from mgba.carm_spatial_experiments import (
     CarmSpatialExperimentRunner,
+    SpatialRunMetrics,
+    _spatial_metrics,
     build_carm_spatial_runners,
     load_carm_spatial_experiment_config,
+    save_carm_spatial_artifacts,
 )
+from mgba.experiments import CausalRunRecord, ConditionKind
 from mgba.layers import SpatialTissueState, TissueState
 from mgba.runner import load_checkpoint, load_runner_config, save_checkpoint
 from mgba.scenarios.carm import (
@@ -188,6 +193,163 @@ class CarmSpatialTests(unittest.TestCase):
             path.write_text(json.dumps(checkpoint), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_checkpoint(path)
+    def test_experiment_config_fields_fail_fast(self) -> None:
+        config = load_carm_spatial_experiment_config(
+            ROOT / "configs" / "experiments" / "carm_spatial_comparison.json"
+        )
+        cases = (
+            {"model_version": "   "},
+            {"ticks": 1},
+            {"ticks": True},
+            {"seeds": (1,)},
+            {"seeds": (2, 1)},
+            {"seeds": (1, 1)},
+            {"seeds": (-1, 2)},
+            {"seeds": (True, 2)},
+        )
+        for overrides in cases:
+            with self.assertRaises(ValueError, msg=str(overrides)):
+                replace(config, **overrides)
+
+    def test_experiment_config_loader_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid.json"
+            path.write_text("[1, 2, 3]", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_carm_spatial_experiment_config(path)
+            path.write_text("{not json", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_carm_spatial_experiment_config(path)
+
+    def test_spatial_run_metrics_fail_fast(self) -> None:
+        base = dict(
+            seed=1,
+            mean_displacement=0.1,
+            mean_edge_turnover=0.2,
+            terminal_field_heterogeneity=0.3,
+            terminal_field_gradient=0.4,
+        )
+        cases = (
+            {"seed": -1},
+            {"seed": True},
+            {"mean_displacement": -0.1},
+            {"mean_edge_turnover": float("nan")},
+            {"mean_displacement": 2.0},
+            {"mean_edge_turnover": 1.5},
+        )
+        for overrides in cases:
+            with self.assertRaises(ValueError, msg=str(overrides)):
+                SpatialRunMetrics(**(base | overrides))
+        self.assertEqual(base, SpatialRunMetrics(**base).as_dict())
+
+    def test_runner_construction_and_matrix_guards(self) -> None:
+        with self.assertRaises(TypeError):
+            build_carm_spatial_runners(
+                object(),
+                runner_config=self.runner_config,
+                spatial_config=self.spatial_config,
+                l0_config=ROOT / "configs" / "layers" / "l0_reference_grn.json",
+                l1_config=(
+                    ROOT / "configs" / "layers" / "l1_reference_molecular.json"
+                ),
+                l4_config=(
+                    ROOT / "configs" / "layers" / "l4_reference_phenotype.json"
+                ),
+            )
+        config = replace(
+            load_carm_spatial_experiment_config(
+                ROOT
+                / "configs"
+                / "experiments"
+                / "carm_spatial_comparison.json"
+            ),
+            ticks=3,
+            seeds=(1, 2),
+        )
+        with self.assertRaises(ValueError):
+            CarmSpatialExperimentRunner(
+                config, runners={"fixed_graph": self.runners["fixed_graph"]}
+            )
+
+        class _StubRunner:
+            def __init__(self, model_versions, max_total_ticks) -> None:
+                self.model_versions = model_versions
+                self.config = SimpleNamespace(
+                    max_total_ticks=max_total_ticks
+                )
+
+        fixed_versions = self.runners["fixed_graph"].model_versions
+        spatial_versions = self.runners["spatial_field"].model_versions
+        mismatched = tuple(
+            (layer, f"{version}-mismatch" if layer == "L2" else version)
+            for layer, version in fixed_versions
+        )
+        with self.assertRaises(ValueError):
+            CarmSpatialExperimentRunner(
+                config,
+                runners={
+                    "fixed_graph": _StubRunner(fixed_versions, 100),
+                    "spatial_field": _StubRunner(mismatched, 100),
+                },
+            )
+        with self.assertRaises(ValueError):
+            CarmSpatialExperimentRunner(
+                config,
+                runners={
+                    "fixed_graph": _StubRunner(fixed_versions, 1),
+                    "spatial_field": _StubRunner(spatial_versions, 100),
+                },
+            )
+        runner = CarmSpatialExperimentRunner(config, runners=self.runners)
+        with self.assertRaises(TypeError):
+            runner.run(object())
+
+    def test_spatial_metrics_reject_non_spatial_traces(self) -> None:
+        run = self.runners["fixed_graph"].run(self.compiled.scenario, ticks=2)
+        record = CausalRunRecord(
+            condition_id="fixed_graph",
+            condition_kind=ConditionKind.BASELINE,
+            seed=self.compiled.scenario.seed,
+            run=run,
+        )
+        with self.assertRaises(TypeError):
+            _spatial_metrics(record)
+
+    def test_artifacts_persist_and_refuse_conflicts(self) -> None:
+        config = replace(
+            load_carm_spatial_experiment_config(
+                ROOT
+                / "configs"
+                / "experiments"
+                / "carm_spatial_comparison.json"
+            ),
+            ticks=3,
+            seeds=(1, 2),
+        )
+        result = CarmSpatialExperimentRunner(
+            config, runners=self.runners
+        ).run(self.compiled)
+        with tempfile.TemporaryDirectory() as directory:
+            paths = save_carm_spatial_artifacts(directory, result)
+            manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+            summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+            raw_files = tuple((paths["root"] / "raw").rglob("seed-*.json"))
+
+            self.assertEqual(result.matrix_id, manifest["matrix_id"])
+            self.assertEqual(result.matrix_id, summary["matrix_id"])
+            self.assertEqual(
+                "mgba-carm-spatial-artifact-0.1", summary["schema_version"]
+            )
+            self.assertEqual(4, len(raw_files))
+            self.assertEqual(2, len(manifest["spatial_metrics"]))
+            self.assertEqual(2, len(summary["spatial_metrics"]))
+            save_carm_spatial_artifacts(directory, result)
+            with self.assertRaises(ValueError):
+                save_carm_spatial_artifacts(
+                    directory, replace(result, scenario_digest="different")
+                )
+        with self.assertRaises(ValueError):
+            replace(result, records=())
 
 
 if __name__ == "__main__":

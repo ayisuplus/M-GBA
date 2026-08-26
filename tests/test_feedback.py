@@ -7,10 +7,13 @@ wiring (checkpoint replay determinism, malformed policy rejection), and
 the frozen E4 matrix protocol.
 """
 
+import json
 import math
+import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 from mgba.feedback import (
     FeedbackControllerConfig,
@@ -21,8 +24,10 @@ from mgba.feedback import (
 from mgba.feedback_experiments import (
     FeedbackExperimentConfig,
     FeedbackExperimentRunner,
+    _dataclass_default,
     build_feedback_runners,
     load_feedback_experiment_config,
+    save_feedback_artifacts,
 )
 from mgba.layers import (
     CellAction,
@@ -85,6 +90,17 @@ def _config(**overrides) -> FeedbackControllerConfig:
     )
     base.update(overrides)
     return FeedbackControllerConfig(**base)
+
+
+class _TruncatedRunner:
+    """Runner double whose run() violates the E0 tick-completeness contract."""
+
+    def __init__(self, config, model_versions) -> None:
+        self.config = config
+        self.model_versions = model_versions
+
+    def run(self, scenario, ticks):
+        return SimpleNamespace(ticks=())
 
 
 class FeedbackControllerMathTests(unittest.TestCase):
@@ -710,6 +726,141 @@ class E4FeedbackMatrixTests(unittest.TestCase):
         config = replace(self.config, ticks=30)
         with self.assertRaises(ValueError):
             FeedbackExperimentRunner(config, runners=runners)
+
+    def _build_runners(self):
+        return build_feedback_runners(
+            layer_models=self.layer_models,
+            runner_config=load_runner_config(
+                self.root / "configs" / "runner_reference.json"
+            ),
+            feedback_config=self.feedback_config,
+            fixed_resource_ceiling=self.config.fixed_resource_ceiling,
+            fixed_stress_floor=self.config.fixed_stress_floor,
+        )
+
+    def test_runner_set_and_scenario_type_enforced(self) -> None:
+        runners = self._build_runners()
+        runners.pop("state_feedback")
+        with self.assertRaises(ValueError):
+            FeedbackExperimentRunner(self.config, runners=runners)
+        matrix = FeedbackExperimentRunner(self.config, runners=self._build_runners())
+        with self.assertRaises(TypeError):
+            matrix.run(object())
+
+    def test_truncated_trace_fails_closed(self) -> None:
+        runner_config = load_runner_config(
+            self.root / "configs" / "runner_reference.json"
+        )
+        versions = dict(self._build_runners()["no_feedback"].model_versions)
+        stubs = {
+            condition: _TruncatedRunner(runner_config, versions)
+            for condition in ("no_feedback", "fixed_feedback", "state_feedback")
+        }
+        matrix = FeedbackExperimentRunner(
+            replace(self.config, ticks=5), runners=stubs
+        )
+        with self.assertRaises(RuntimeError):
+            matrix.run(self.scenario)
+
+    def test_model_version_property_tracks_config_digest(self) -> None:
+        matrix = FeedbackExperimentRunner(self.config, runners=self._build_runners())
+        self.assertTrue(
+            matrix.model_version.startswith(f"{self.config.model_version}+")
+        )
+        other = FeedbackExperimentRunner(
+            replace(self.config, ticks=5), runners=self._build_runners()
+        )
+        self.assertNotEqual(matrix.model_version, other.model_version)
+
+    def test_dataclass_default_serializes_dataclasses_and_rejects_garbage(self) -> None:
+        payload = _dataclass_default(self.config)
+        self.assertEqual(self.config.ticks, payload["ticks"])
+        self.assertEqual(tuple(self.config.seeds), tuple(payload["seeds"]))
+        with self.assertRaises(TypeError):
+            _dataclass_default(object())
+
+    def test_experiment_config_guards_fail_closed(self) -> None:
+        cases = (
+            {"model_version": "  "},
+            {"ticks": 0},
+            {"ticks": True},
+            {"seeds": (42,)},
+            {"seeds": (2, 1)},
+            {"seeds": (1, 1)},
+            {"seeds": (-1, 2)},
+            {"fixed_resource_ceiling": 0.0},
+            {"fixed_resource_ceiling": 1.5},
+            {"fixed_stress_floor": -0.1},
+            {"fixed_stress_floor": 1.0},
+        )
+        for overrides in cases:
+            with self.subTest(overrides=overrides):
+                with self.assertRaises(ValueError):
+                    replace(self.config, **overrides)
+
+    def test_load_config_wraps_malformed_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad.json"
+            path.write_text("{not json", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_feedback_experiment_config(path)
+            path.write_text(json.dumps({"model_version": "x"}), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_feedback_experiment_config(path)
+
+    def test_build_runners_requires_all_five_layer_models(self) -> None:
+        models = dict(self.layer_models)
+        models.pop("genome_model")
+        with self.assertRaises(ValueError):
+            build_feedback_runners(
+                layer_models=models,
+                runner_config=load_runner_config(
+                    self.root / "configs" / "runner_reference.json"
+                ),
+                feedback_config=self.feedback_config,
+                fixed_resource_ceiling=0.7,
+                fixed_stress_floor=0.3,
+            )
+
+    def test_artifacts_persist_append_only_and_refuse_conflicts(self) -> None:
+        config = replace(self.config, seeds=(1, 2), ticks=3)
+        result = FeedbackExperimentRunner(
+            config, runners=self._build_runners()
+        ).run(self.scenario)
+        with tempfile.TemporaryDirectory() as directory:
+            paths = save_feedback_artifacts(directory, result)
+            manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+            summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+            raw_files = tuple(paths["raw"].rglob("seed-*.json"))
+
+            self.assertEqual("mgba-feedback-artifact-0.1", manifest["schema_version"])
+            self.assertEqual(result.matrix_id, manifest["matrix_id"])
+            self.assertEqual(result.scenario_digest, manifest["scenario_digest"])
+            self.assertEqual(result.matrix_id, summary["matrix_id"])
+            self.assertEqual(3 * len(config.seeds), len(manifest["records"]))
+            self.assertEqual(3 * len(config.seeds), len(raw_files))
+            self.assertEqual(2, len(summary["summaries"]))
+
+            with self.assertRaises(TypeError):
+                save_feedback_artifacts(directory, "not-a-result")
+
+            # Append-only: identical content is a no-op.
+            save_feedback_artifacts(directory, result)
+
+            # Result payload guard: empty records/comparisons are rejected.
+            with self.assertRaises(ValueError):
+                replace(result, records=())
+
+            # A tampered result targeting the same matrix_id is refused.
+            with self.assertRaises(ValueError):
+                save_feedback_artifacts(
+                    directory, replace(result, scenario_digest="0" * 64)
+                )
+
+            # A corrupt existing artifact is refused, not overwritten.
+            paths["manifest"].write_text("{corrupt", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                save_feedback_artifacts(directory, result)
 
 
 if __name__ == "__main__":

@@ -3,10 +3,13 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { MetricChart } from '@/components/MetricChart';
+import { CollectivePhasePlot } from '@/components/CollectivePhasePlot';
 import { SiteHeader } from '@/components/SiteHeader';
 import { TissueCanvas } from '@/components/TissueCanvas';
 import {
   LAB_REQUEST_SCHEMA,
+  cohortName,
+  collectiveDynamics,
   fetchJson,
   findCondition,
   formatMetric,
@@ -50,6 +53,9 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
   const [runState, setRunState] = useState<'idle' | 'running' | 'online' | 'fallback' | 'error'>('idle');
   const [runMessage, setRunMessage] = useState('三套冻结实验可离线回放；在线服务未启用时自动回退。');
   const [liveRunId, setLiveRunId] = useState<string | null>(null);
+  const [selectedCohort, setSelectedCohort] = useState(
+    initialBundle ? collectiveDynamics(initialBundle)?.default_cohort ?? 'all_cells' : 'engineered_macrophage',
+  );
 
   useEffect(() => {
     fetchJson<LabCatalog>('/lab-data/catalog.json')
@@ -62,13 +68,7 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
         return null;
       })
       .then((next) => {
-        if (next) {
-          setBundle(next);
-          setComparisonId(next.default_comparison_condition);
-          setTickIndex(0);
-          const preferred = Object.keys(next.roles).find((id) => next.roles[id] === 'engineered_macrophage');
-          setSelectedCell(preferred ?? Object.keys(next.roles)[0]);
-        }
+        if (next) applyBundle(next);
       })
       .catch(() => setRunState('error'));
   }, [initialBundle]);
@@ -101,6 +101,25 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
   const baseCell = baseTick.cells[selectedCell];
   const compareCell = compareTick.cells[selectedCell];
   const catalogEntry = catalog.experiments.find((item) => item.bundle_id === selectedBundleId);
+  const collective = collectiveDynamics(bundle);
+  const baselineCollective = collective?.conditions[baseline.condition_id];
+  const comparisonCollective = collective?.conditions[comparison.condition_id];
+  const availableCohorts = baselineCollective && comparisonCollective
+    ? Object.keys(baselineCollective.cohorts).filter((cohort) => cohort in comparisonCollective.cohorts)
+    : [];
+  const activeCohort = availableCohorts.includes(selectedCohort)
+    ? selectedCohort
+    : collective?.default_cohort ?? availableCohorts[0] ?? 'all_cells';
+  const collectiveComparison = collective?.comparisons[comparison.condition_id]?.cohorts[activeCohort];
+
+  function applyBundle(next: LabBundle) {
+    setBundle(next);
+    setComparisonId(next.default_comparison_condition);
+    setTickIndex(0);
+    const preferred = Object.keys(next.roles).find((id) => next.roles[id] === 'engineered_macrophage');
+    setSelectedCell(preferred ?? Object.keys(next.roles)[0]);
+    setSelectedCohort(collectiveDynamics(next)?.default_cohort ?? 'all_cells');
+  }
 
   async function loadExperiment(entry: LabCatalogEntry) {
     setPlaying(false);
@@ -108,11 +127,7 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
     setRunState('idle');
     setLiveRunId(null);
     const next = await fetchJson<LabBundle>(entry.path);
-    setBundle(next);
-    setComparisonId(next.default_comparison_condition);
-    setTickIndex(0);
-    const preferred = Object.keys(next.roles).find((id) => next.roles[id] === 'engineered_macrophage');
-    setSelectedCell(preferred ?? Object.keys(next.roles)[0]);
+    applyBundle(next);
   }
 
   async function runLivePair() {
@@ -135,12 +150,8 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
       });
       const payload = await response.json() as { run_id?: string; bundle?: LabBundle; error?: string };
       if (!response.ok || !payload.bundle || !payload.run_id) throw new Error(payload.error ?? `HTTP ${response.status}`);
-      setBundle(payload.bundle);
+      applyBundle(payload.bundle);
       setSelectedBundleId(payload.bundle.bundle_id);
-      setComparisonId(payload.bundle.default_comparison_condition);
-      setTickIndex(0);
-      const preferred = Object.keys(payload.bundle.roles).find((id) => payload.bundle!.roles[id] === 'engineered_macrophage');
-      setSelectedCell(preferred ?? Object.keys(payload.bundle.roles)[0]);
       setLiveRunId(payload.run_id);
       setRunState('online');
       setRunMessage('在线配对运行完成；结果已保存 30 天，并保留实验与 history digest。');
@@ -148,12 +159,8 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
       const fallback = catalog.experiments.find((item) => item.bundle_id === 'state-intervention');
       if (fallback) {
         const fallbackBundle = await fetchJson<LabBundle>(fallback.path);
-        setBundle(fallbackBundle);
+        applyBundle(fallbackBundle);
         setSelectedBundleId(fallback.bundle_id);
-        setComparisonId(fallbackBundle.default_comparison_condition);
-        setTickIndex(0);
-        const preferred = Object.keys(fallbackBundle.roles).find((id) => fallbackBundle.roles[id] === 'engineered_macrophage');
-        setSelectedCell(preferred ?? Object.keys(fallbackBundle.roles)[0]);
         setRunState('fallback');
         setRunMessage('在线后端当前不可用，现已明确切换到冻结预计算回放；这不是本次在线计算结果。');
       } else {
@@ -209,7 +216,7 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
           {baseCell && compareCell ? <div className="layer-stack">
             <LayerCard index={0} code="L0" name="基因调控" metric="signal_expression" left={baseCell.l0.signal_expression} right={compareCell.l0.signal_expression} />
             <LayerCard index={1} code="L1" name="分子状态" metric="signal_protein" left={baseCell.l1.signal_protein} right={compareCell.l1.signal_protein} />
-            <LayerCard index={2} code="L2" name="细胞行为" metric="phase" text={`${baseCell.phase} → ${compareCell.phase}`} />
+            <LayerCard index={2} code="L2" name="细胞行为" metric={`z ${formatMetric(baseCell.collective_response)} → ${formatMetric(compareCell.collective_response)}`} text={`${baseCell.phase} → ${compareCell.phase}`} />
             <LayerCard index={3} code="L3" name="局部微环境" metric={`local ${field}`} left={baseCell.node[field]} right={compareCell.node[field]} />
             <LayerCard index={4} code="L4" name="宏观表型" metric="homeostasis" left={baseline.terminal_l4.homeostasis} right={comparison.terminal_l4.homeostasis} />
           </div> : <p className="empty-note">两个条件中没有同名 Cell。</p>}
@@ -217,10 +224,46 @@ export function LabWorkbench({ initialBundle }: { initialBundle?: LabBundle }) {
         </aside>
       </section>
 
+      <section className="panel collective-panel">
+        <div className="collective-head">
+          <div><span className="panel-kicker">04 · COLLECTIVE DYNAMICS</span><h2>群体状态相图</h2><p>同一播放器 tick 下，比较 baseline 与干预的 direction–intensity 轨迹。</p></div>
+          {availableCohorts.length > 0 && <label>观察 cohort
+            <select value={activeCohort} onChange={(event) => { setSelectedCohort(event.target.value); setTickIndex(0); }}>
+              {availableCohorts.map((cohort) => <option key={cohort} value={cohort}>{cohortName(cohort)}</option>)}
+            </select>
+          </label>}
+        </div>
+        {collective && baselineCollective && comparisonCollective && baselineCollective.cohorts[activeCohort] && comparisonCollective.cohorts[activeCohort]
+          ? <CollectivePhasePlot
+              key={`${bundle.bundle_id}-${comparison.condition_id}-${activeCohort}`}
+              baseline={baseline}
+              comparison={comparison}
+              baselineReport={baselineCollective}
+              comparisonReport={comparisonCollective}
+              comparisonSummary={collectiveComparison}
+              cohortId={activeCohort}
+              tickIndex={safeTick}
+              onTickIndex={(index) => { setPlaying(false); setTickIndex(index); }}
+            />
+          : <div className="collective-unavailable"><b>该结果尚无群体动力学分析</b><span>旧分享链接仍可继续查看原始 L0–L4 轨迹与 L4 对照。</span></div>}
+        <div className="collective-method">
+          <div><b>参考轴</b><code>zᵢ(t) = activationᵢ(t) − stress_loadᵢ(t)</code><span>m = mean(zᵢ) · c = mean((activation² + stress²) / 2) · p = var(zᵢ)</span></div>
+          <div><b>冻结阈值</b><span>Cell / group direction ±0.15 · low/high intensity 0.04 / 0.16 · split polarization 0.09 · dwell 3 ticks</span></div>
+          <div className="collective-boundary"><b>科学边界</b><span>{collective?.scientific_boundary ?? '群体动力学字段缺失；不从旧轨迹临时推断。'} 该图不是物理相变或临床预测。</span></div>
+        </div>
+        {collective && <div className="collective-audit"><span>observer <code>{collective.observer_version}</code></span><span>config <code>{collective.config_digest.slice(0, 16)}…</code></span><span>cohort <code>{activeCohort}</code></span></div>}
+      </section>
+
       <section className="panel timeline-panel">
         <div className="timeline-head"><div><b>跨尺度传播时间轴</b><small>tick {baseTick.t} · L0 更新和 L4 观测均显式标记</small></div><button className="play-button" onClick={() => setPlaying((value) => !value)}>{playing ? '暂停' : '播放'}</button><span>TICK {safeTick + 1} / {maximumTick + 1}</span></div>
         <input className="tick-range" type="range" min={0} max={maximumTick} value={safeTick} onChange={(event) => { setPlaying(false); setTickIndex(Number(event.target.value)); }} aria-label="实验 tick" />
-        <div className="tick-flags"><span className={compareTick.l0_updated ? 'on' : ''}>L0 {compareTick.l0_updated ? 'UPDATED' : 'HELD'}</span><span className={compareTick.l4_observed ? 'on' : ''}>L4 {compareTick.l4_observed ? 'OBSERVED' : 'WAITING'}</span><span>perturbation events <b>{compareTick.audit.l0_perturbation_count}</b></span><span>transitions <b>{compareTick.audit.transition_count}</b></span></div>
+        <div className="tick-flags">{compareTick.l0_updated === undefined
+            ? <span>L0 更新标记在此回放缺失</span>
+            : <span className={compareTick.l0_updated ? 'on' : ''}>L0 {compareTick.l0_updated ? 'UPDATED' : 'HELD'}</span>}
+          <span className={compareTick.l4_observed ? 'on' : ''}>L4 {compareTick.l4_observed ? 'OBSERVED' : 'WAITING'}</span>
+          {compareTick.audit === undefined
+            ? <span>事件审计字段缺失</span>
+            : <><span>perturbation events <b>{compareTick.audit.l0_perturbation_count}</b></span><span>transitions <b>{compareTick.audit.transition_count}</b></span></>}</div>
         <div className="charts-grid">{l4Metrics.map(([metric, label]) => <MetricChart key={metric} baseline={baseline} comparison={comparison} metric={metric} label={label} />)}</div>
         <div className="endpoint-grid">{l4Metrics.map(([metric, label]) => <div key={metric}><span>{label}</span><b>{formatMetric(comparison.terminal_l4[metric])}</b><small className={(comparison.terminal_l4[metric] - baseline.terminal_l4[metric]) >= 0 ? 'positive' : 'negative'}>{delta(baseline.terminal_l4[metric], comparison.terminal_l4[metric])}</small></div>)}</div>
         <div className="audit-row"><span>experiment <code>{comparison.experiment_id}</code></span><span>history <code>{comparison.history_digest.slice(0, 16)}…</code></span><span>bundle <code>{bundle.bundle_digest.slice(0, 16)}…</code></span><span className="honest-result">Δ 只表示方向，不自动等于改善</span></div>

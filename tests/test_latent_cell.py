@@ -6,10 +6,13 @@ no-hidden-memory reconstruction invariant, determinism, identity/time
 contract violations, and rule-vs-latent paired-matrix determinism.
 """
 
+import json
 import math
+import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 from mgba.experiment import digest_payload
 from mgba.layers import (
@@ -39,6 +42,7 @@ from mgba.multiscale import load_multiscale_scenario
 from mgba.latent_experiments import (
     LatentExperimentRunner,
     load_latent_experiment_config,
+    save_latent_artifacts,
 )
 from mgba.runner import MultirateCrossScaleRunner, load_runner_config
 
@@ -110,6 +114,17 @@ def _config(**overrides) -> LatentCellConfig:
 
 def _model(**overrides) -> LatentCellModel:
     return LatentCellModel(_config(**overrides))
+
+
+class _TruncatedRunner:
+    """Runner double whose run() violates the E0 tick-completeness contract."""
+
+    def __init__(self, config, model_versions) -> None:
+        self.config = config
+        self.model_versions = model_versions
+
+    def run(self, scenario, ticks):
+        return SimpleNamespace(ticks=())
 
 
 class LatentConfigCrashPreventionTests(unittest.TestCase):
@@ -436,6 +451,104 @@ class LatentMatrixTests(unittest.TestCase):
         config = replace(self.latent_config, ticks=999999)
         with self.assertRaises(ValueError):
             LatentExperimentRunner(config, runners=runners)
+
+    def test_runner_set_and_scenario_type_enforced(self) -> None:
+        runners = self._runners()
+        runners.pop("latent_cell_policy")
+        with self.assertRaises(ValueError):
+            LatentExperimentRunner(self.latent_config, runners=runners)
+        matrix = LatentExperimentRunner(self.latent_config, runners=self._runners())
+        with self.assertRaises(TypeError):
+            matrix.run(object())
+
+    def test_truncated_trace_fails_closed(self) -> None:
+        base_versions = {"L0": "v", "L1": "v", "L2": "rule", "L3": "v", "L4": "v"}
+        latent_versions = dict(base_versions, L2="latent")
+        stubs = {
+            "rule_policy": _TruncatedRunner(self.runner_config, base_versions),
+            "latent_cell_policy": _TruncatedRunner(
+                self.runner_config, latent_versions
+            ),
+        }
+        matrix = LatentExperimentRunner(
+            replace(self.latent_config, ticks=5), runners=stubs
+        )
+        with self.assertRaises(RuntimeError):
+            matrix.run(self.scenario)
+
+    def test_model_version_property_tracks_config_digest(self) -> None:
+        matrix = LatentExperimentRunner(self.latent_config, runners=self._runners())
+        self.assertTrue(
+            matrix.model_version.startswith(f"{self.latent_config.model_version}+")
+        )
+        other = LatentExperimentRunner(
+            replace(self.latent_config, ticks=5), runners=self._runners()
+        )
+        self.assertNotEqual(matrix.model_version, other.model_version)
+
+    def test_experiment_config_guards_fail_closed(self) -> None:
+        cases = (
+            {"model_version": "  "},
+            {"ticks": 0},
+            {"ticks": True},
+            {"seeds": (42,)},
+            {"seeds": (2, 1)},
+            {"seeds": (1, 1)},
+            {"seeds": (-1, 2)},
+        )
+        for overrides in cases:
+            with self.subTest(overrides=overrides):
+                with self.assertRaises(ValueError):
+                    replace(self.latent_config, **overrides)
+
+    def test_load_config_wraps_malformed_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad.json"
+            path.write_text("{not json", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_latent_experiment_config(path)
+            path.write_text(json.dumps({"model_version": "x"}), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_latent_experiment_config(path)
+
+    def test_artifacts_persist_append_only_and_refuse_conflicts(self) -> None:
+        config = replace(self.latent_config, seeds=(1, 2), ticks=3)
+        result = LatentExperimentRunner(config, runners=self._runners()).run(
+            self.scenario
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            paths = save_latent_artifacts(directory, result)
+            manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+            summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+            raw_files = tuple(paths["raw"].rglob("seed-*.json"))
+
+            self.assertEqual("mgba-latent-artifact-0.1", manifest["schema_version"])
+            self.assertEqual(result.matrix_id, manifest["matrix_id"])
+            self.assertEqual(result.scenario_digest, summary["scenario_digest"])
+            self.assertEqual(2 * len(config.seeds), len(manifest["records"]))
+            self.assertEqual(2 * len(config.seeds), len(raw_files))
+            self.assertEqual(1, len(summary["summaries"]))
+
+            with self.assertRaises(TypeError):
+                save_latent_artifacts(directory, "not-a-result")
+
+            # Append-only: identical content is a no-op.
+            save_latent_artifacts(directory, result)
+
+            # Result payload guard: empty records/comparisons are rejected.
+            with self.assertRaises(ValueError):
+                replace(result, records=())
+
+            # A tampered result targeting the same matrix_id is refused.
+            with self.assertRaises(ValueError):
+                save_latent_artifacts(
+                    directory, replace(result, scenario_digest="0" * 64)
+                )
+
+            # A corrupt existing artifact is refused, not overwritten.
+            paths["manifest"].write_text("{corrupt", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                save_latent_artifacts(directory, result)
 
 
 if __name__ == "__main__":

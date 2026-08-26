@@ -184,6 +184,12 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 实现并执行 ADR-0029 AIDO 启发的状态条件序列干预：runner 可选 schedule 只在 L0 慢时钟生效并进入 manifest/checkpoint；CAR-M 2×2 timing×exposure 设计强制 onset 前逐层零差异。首次 15-run 矩阵 short/long timing L4 距离为 0.006580/0.020899，晚期干预体现 vitality/damage 与 inflammation 的混合 trade-off；仍是 reference-model 证据。
 - [x] 实现 ADR-0030 比赛版跨尺度虚拟实验室：`mgba lab-export` 冻结 request/bundle/catalog schema，并从既有 artifact 确定性生成三套延迟加载实验与 SHA-256 manifest；`web/` 完成首页、工作台、分享页、证据页、移动端阅读、Open Graph 和离线 Demo。观察层不进入 tick、不修改 DTO/Protocol。
 - [x] 实现受限在线链：Worker 对唯一 CAR-M 状态条件协议做严格枚举校验、确定性 run ID、5 次/IP/小时门禁、45 秒代理超时与 R2 30 天结果读取；Python 服务以服务凭证保护、全局并发 2，并只执行单组 baseline/intervention。`LAB_LIVE_RUNS_ENABLED=false` 时明确回退预计算 bundle，不伪装在线结果。
-- [x] 完成比赛站门禁：309 项 Python 测试、6 项前端契约/交互测试、lint、生产构建、6 个本地路由响应与 npm 0 漏洞审计；`mgba run` 和 `sten-smoke` 保持通过。
+- [x] 完成比赛站门禁并扩展 ADR-0031 回归：319 项 Python 测试、13 项前端契约/交互测试、lint、生产构建与主要路由 smoke 通过；`mgba run` 和 `sten-smoke` 保持通过。
+- [x] 实现 ADR-0031 群体动力学观察层：生成链外 `CollectiveDynamicsObserver` 从正式逐 Cell trace 重算 direction/intensity/polarization、冻结状态与转换、外部 cohort、个体 archetype 和 L4 时间关联；不改变 L0–L4、tick、checkpoint、history digest 或 E3 阶梯。
+- [x] 将群体相图接入三套比赛 bundle 与工作台：baseline/intervention 双轨路径与主播放器同步，支持全组织/四角色切换、转换点事件审计、旧 bundle 降级和移动端阅读；新增序列体积增长均低于 15%，live runner revision 升级到 `carm-state-conditioned-paired-0.2` 且继续默认关闭。
+- [x] 实现 ADR-0032 OCellus 启发的 Autolab 计划控制面：冻结注册表→closed-schema DAG、固定工具 Router、schema/DAG→架构/预算→manifest/history/科学表述三层 Verifier；`mgba autolab-plan` 永不执行，现有 `mgba autolab` 通过前后核验后仍复现原顺序、L2 leader 和 history digest。
+- [x] 实现 ADR-0033 `ClockSectorObserver`：从正式空间 L3 与同 tick 可见 L0 生成六方向×三归一化距离环的独立 write-once artifact；顺序、尺度和 checkpoint 重建稳定，观察前后 trace/checkpoint/history digest 不变。半径/网格/ClockSector 真实 holdout 比较仍等待 Wu/Jackson Target。
+- [x] 实现 ADR-0034 OCellus 离线扰动锚点契约：许可/模型/SHA-256、empirical/predicted 分栏、冻结 Hallmark 六节点桥、train-only centroid、holdout MAE/方向/Spearman、负面结果和精确人审 schedule 候选均 fail-closed；当前无权重下载、无真实 OCellus 结果、无生成热路径接入。
+- [x] 完成 OCellus 三阶段回归门禁：Python 总测试增至 356 项；`mgba autolab-plan` 零执行、真实 `mgba autolab` 原身份/顺序/leader、冻结 identity、L0 扰动传播、完整测试与 AGENTS.md 三条最低命令均通过。
 - [ ] 在网络可达后下载已授权的 S1/S2 五文件，冻结真实解压 inventory、region_map 和 cluster label_map，生成可字节重建的去标识 L3 聚合 target；先验证统计管线，再决定是否实施参数锚定。失败结果保留，不增加自由参数追逐数据。
 - [ ] 预注册一个 L0/L1 真实 Perturb-seq state-conditioned target（control state、perturbation、dose/time、train/holdout、centroid baseline）；先验证透明六节点桥，再单独决定是否授权 AIDO.Cell/STATE 权重和独立推理环境。

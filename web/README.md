@@ -4,6 +4,12 @@ Competition website and observation-only experiment workspace for M-GBA. The
 site never imports the L0–L4 model implementation into the browser and does not
 mutate frozen experiment artifacts.
 
+The workbench also renders the ADR-0031 collective-dynamics observer output:
+a synchronized direction–intensity phase plot, frozen state transitions,
+external cohort summaries, Cell archetype counts, and temporally associated L4
+observations. These are reference proxies, not physical phase transitions or
+clinical predictions. Bundles created before ADR-0031 remain readable.
+
 ## Local development
 
 ```powershell
@@ -20,6 +26,14 @@ Precomputed data is generated from repository-root artifacts:
 .\.venv\Scripts\mgba.exe lab-export `
   --dose-playbook artifacts\demo\carm-playbook.json `
   --output-dir web\public\lab-data
+```
+
+A single saved formal run can be analyzed independently:
+
+```powershell
+.\.venv\Scripts\mgba.exe collective-analyze `
+  --input artifacts\run.json `
+  --output artifacts\collective.json
 ```
 
 The public directory also keeps `offline/mgba-carm-demo.html` as a self-contained

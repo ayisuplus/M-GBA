@@ -336,7 +336,7 @@ function bulletRuns(s, items, x, y, w, h, extra = {}) {
   header(s, `CHAPTER 03 · CONTROLLED EXPERIMENTS`, `对照替换与参数标定实验`);
   const cards = [
     [`0.2076→0.5927`, `L2 标定训练得分`, `四档 holdout 全部提升，判定 generalized`, true],
-    [`298`, `自动化测试项`, `覆盖五层契约、冻结矩阵与实验协议`, false],
+    [`356`, `自动化测试项`, `覆盖五层契约、冻结矩阵与实验协议`, false],
     [`21`, `CAR-M 冻结矩阵 run`, `7 条件 × 3 seed，raw trace 全保存`, false],
     [`752`, `TCGA-BRCA 聚合样本`, `去标识化聚合 profile，非患者级记录`, false],
   ];
@@ -386,7 +386,7 @@ function bulletRuns(s, items, x, y, w, h, extra = {}) {
     [`负面基线保留：`, `默认 100 tick 结局 FAILED，不为展示调参`],
     [`预注册冻结：`, `判据与 holdout 在协议中先行固定`],
     [`五级表述分级：`, `contract demonstrator → validated result 逐级晋升`],
-    [`ADR 留痕：`, `29 份架构决策记录“为什么做、如何回退”`],
+    [`ADR 留痕：`, `34 份架构决策记录“为什么做、如何回退”`],
     [`fail-closed 门禁：`, `数据登记任一条目校验失败即非零退出`],
   ]), 7.4, 2.8, 4.8, 3.4, { fontSize: 13, lineSpacingMultiple: 1.45, paraSpaceAfter: 10 });
   s.addShape("rect", { x: 6.63, y: 2.2, w: 0.012, h: 3.9, fill: { color: C.accent, transparency: 55 }, line: { type: "none" } });

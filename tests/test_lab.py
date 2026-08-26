@@ -1,5 +1,6 @@
 import hashlib
 import json
+import copy
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,9 +9,11 @@ from mgba.experiment import digest_payload
 from mgba.lab import (
     LAB_BUNDLE_SCHEMA,
     LAB_CATALOG_SCHEMA,
+    LAB_EXECUTION_REVISION,
     LAB_FILES_SCHEMA,
     LAB_REQUEST_SCHEMA,
     LabExperimentRequest,
+    export_competition_lab_data,
     run_lab_experiment,
     verify_lab_bundle,
     write_lab_bundle_set,
@@ -132,6 +135,51 @@ class LabBundleTests(unittest.TestCase):
                 actual = hashlib.sha256((first["catalog"].parent / name).read_bytes()).hexdigest()
                 self.assertEqual(digest, actual)
 
+    def test_full_lab_export_is_rebuildable_and_collective_growth_is_bounded(self) -> None:
+        root = Path(__file__).parents[1]
+        sources = {
+            "dose_playbook": root / "artifacts" / "demo" / "carm-playbook.json",
+            "intervention_root": root
+            / "artifacts"
+            / "carm-state-conditioned-intervention"
+            / "state-intervention-0e92bb234ba3a840",
+            "spatial_root": root
+            / "artifacts"
+            / "carm-spatial"
+            / "carm-spatial-0f88408d1e44b25a",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = Path(temporary)
+            first = export_competition_lab_data(
+                output_dir=temporary_root / "first", **sources
+            )
+            second = export_competition_lab_data(
+                output_dir=temporary_root / "second", **sources
+            )
+            self.assertEqual(set(first), set(second))
+            for key in first:
+                self.assertEqual(first[key].read_bytes(), second[key].read_bytes())
+            for bundle_id in ("dose-response", "state-intervention", "spatial-l3"):
+                bundle = json.loads(first[bundle_id].read_text(encoding="utf-8"))
+                self.assertIn("collective_dynamics", bundle["analysis"])
+                without_collective = copy.deepcopy(bundle)
+                without_collective["analysis"].pop("collective_dynamics")
+                for condition in without_collective["conditions"]:
+                    for tick in condition["ticks"]:
+                        for cell in tick["cells"].values():
+                            cell.pop("collective_response", None)
+                compact = lambda value: (
+                    json.dumps(
+                        value,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    + "\n"
+                ).encode("utf-8")
+                growth = len(compact(bundle)) / len(compact(without_collective)) - 1.0
+                self.assertLessEqual(growth, 0.15, bundle_id)
+
 
 class LabLiveContractTests(unittest.TestCase):
     @classmethod
@@ -168,6 +216,23 @@ class LabLiveContractTests(unittest.TestCase):
         self.assertEqual(15, intervention["ticks"][30]["audit"]["l0_perturbation_count"])
         self.assertEqual(0, baseline["ticks"][30]["audit"]["l0_perturbation_count"])
 
+        collective = bundle["analysis"]["collective_dynamics"]
+        baseline_report = collective["conditions"]["baseline"]
+        intervention_report = collective["conditions"][self.request.condition_id]
+        for cohort_id in baseline_report["cohorts"]:
+            self.assertEqual(
+                baseline_report["cohorts"][cohort_id]["series"][:30],
+                intervention_report["cohorts"][cohort_id]["series"][:30],
+            )
+        for condition in bundle["conditions"]:
+            for tick in condition["ticks"]:
+                for cell in tick["cells"].values():
+                    self.assertAlmostEqual(
+                        cell["activation"] - cell["stress_load"],
+                        cell["collective_response"],
+                        places=4,
+                    )
+
     def test_live_pair_keeps_manifest_and_scientific_boundary(self) -> None:
         self.assertIn("不是临床预测", self.bundle["boundary_note"])
         self.assertIn("Target 尚未生成", self.bundle["target_status"])
@@ -176,6 +241,13 @@ class LabLiveContractTests(unittest.TestCase):
         for condition in self.bundle["conditions"]:
             self.assertRegex(condition["experiment_id"], r"^mgba-[0-9a-f]{16}$")
             self.assertRegex(condition["history_digest"], r"^[0-9a-f]{64}$")
+        collective = self.bundle["analysis"]["collective_dynamics"]
+        self.assertEqual(
+            "collective-dynamics-observer-0.1", collective["observer_version"]
+        )
+        self.assertRegex(collective["config_digest"], r"^[0-9a-f]{64}$")
+        self.assertIn("不是物理相变", collective["scientific_boundary"])
+        self.assertEqual("carm-state-conditioned-paired-0.3", LAB_EXECUTION_REVISION)
 
 
 if __name__ == "__main__":

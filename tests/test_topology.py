@@ -6,10 +6,13 @@ enforcement, T1 edge-count conservation, determinism, identity/time
 contract violations, and static-vs-adaptive paired-matrix invariants.
 """
 
+import json
 import math
+import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 from mgba.layers import CellPhase
 from mgba.layers.l0 import DiscreteGrnModel, load_grn_config
@@ -27,7 +30,9 @@ from mgba.models import Genome
 from mgba.runner import MultirateCrossScaleRunner, load_runner_config
 from mgba.topology_experiments import (
     TopologyExperimentRunner,
+    TopologyStability,
     load_topology_experiment_config,
+    save_topology_artifacts,
 )
 
 ROOT = Path(__file__).parents[1]
@@ -332,6 +337,191 @@ class TopologyMatrixTests(unittest.TestCase):
         config = replace(self.config, ticks=999999)
         with self.assertRaises(ValueError):
             TopologyExperimentRunner(config, runners=self._runners())
+
+class TopologyExperimentConfigCrashPreventionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.config = load_topology_experiment_config(
+            ROOT / "configs" / "experiments" / "topology_comparison.json"
+        )
+
+    def test_invalid_config_fields_fail_fast(self) -> None:
+        cases = (
+            {"model_version": "   "},
+            {"ticks": 0},
+            {"ticks": True},
+            {"seeds": (1,)},
+            {"seeds": (2, 1)},
+            {"seeds": (1, 1)},
+            {"seeds": (-1, 2)},
+            {"seeds": (True, 2)},
+        )
+        for overrides in cases:
+            with self.assertRaises(ValueError, msg=str(overrides)):
+                replace(self.config, **overrides)
+
+    def test_malformed_config_file_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid.json"
+            path.write_text("{not json", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_topology_experiment_config(path)
+
+
+class TopologyStabilityGuardTests(unittest.TestCase):
+    def test_illegal_stability_counters_fail_fast(self) -> None:
+        base = dict(
+            condition_id="adaptive_topology",
+            seed=1,
+            committed_swaps=2,
+            ticks_with_swaps=1,
+            initial_edge_count=4,
+            final_edge_count=4,
+        )
+        cases = (
+            {"committed_swaps": -1},
+            {"ticks_with_swaps": -1},
+            {"initial_edge_count": -1},
+            {"final_edge_count": -1},
+            {"committed_swaps": 1, "ticks_with_swaps": 2},
+        )
+        for overrides in cases:
+            with self.assertRaises(ValueError, msg=str(overrides)):
+                TopologyStability(**(base | overrides))
+
+
+class TopologyRunnerGuardTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.scenario = load_multiscale_scenario(
+            ROOT / "configs" / "multiscale_demo.json"
+        )
+        self.config = load_topology_experiment_config(
+            ROOT / "configs" / "experiments" / "topology_comparison.json"
+        )
+        runner_config = load_runner_config(
+            ROOT / "configs" / "runner_reference.json"
+        )
+        tissue_config = load_tissue_config(
+            LAYER_CONFIGS / "l3_reference_tissue.json"
+        )
+        self.static_runner = MultirateCrossScaleRunner(
+            runner_config,
+            **_layer_models(TissueEnvironmentModel(tissue_config)),
+        )
+        self.adaptive_runner = MultirateCrossScaleRunner(
+            runner_config,
+            **_layer_models(_adaptive_model()),
+        )
+
+    def _runners(self) -> dict:
+        return {
+            "static_topology": self.static_runner,
+            "adaptive_topology": self.adaptive_runner,
+        }
+
+    def test_runner_id_set_mismatch_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            TopologyExperimentRunner(
+                self.config,
+                runners={"static_topology": self.static_runner},
+            )
+        with self.assertRaises(ValueError):
+            TopologyExperimentRunner(
+                self.config,
+                runners={
+                    "static_topology": self.static_runner,
+                    "adaptive_topology": self.adaptive_runner,
+                    "unexpected": self.static_runner,
+                },
+            )
+
+    def test_model_version_property_tracks_config(self) -> None:
+        runner = TopologyExperimentRunner(self.config, runners=self._runners())
+        self.assertTrue(
+            runner.model_version.startswith(f"{self.config.model_version}+")
+        )
+        again = TopologyExperimentRunner(self.config, runners=self._runners())
+        self.assertEqual(runner.model_version, again.model_version)
+        other = TopologyExperimentRunner(
+            replace(self.config, model_version="other-topology-version"),
+            runners=self._runners(),
+        )
+        self.assertNotEqual(runner.model_version, other.model_version)
+
+    def test_non_scenario_rejected(self) -> None:
+        runner = TopologyExperimentRunner(self.config, runners=self._runners())
+        with self.assertRaises(TypeError):
+            runner.run(object())
+
+    def test_truncated_trace_fails_closed(self) -> None:
+        class _StubRunner:
+            def __init__(self, real: MultirateCrossScaleRunner) -> None:
+                self.config = real.config
+                self.model_versions = real.model_versions
+
+            def run(self, scenario, ticks):
+                return SimpleNamespace(ticks=())
+
+        runners = {
+            "static_topology": _StubRunner(self.static_runner),
+            "adaptive_topology": _StubRunner(self.adaptive_runner),
+        }
+        config = replace(self.config, seeds=(1, 2), ticks=4)
+        with self.assertRaises(RuntimeError):
+            TopologyExperimentRunner(config, runners=runners).run(self.scenario)
+
+    def test_artifacts_persist_and_refuse_conflicts(self) -> None:
+        config = replace(self.config, seeds=(1, 2), ticks=4)
+        result = TopologyExperimentRunner(
+            config, runners=self._runners()
+        ).run(self.scenario)
+        with tempfile.TemporaryDirectory() as directory:
+            paths = save_topology_artifacts(directory, result)
+            manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+            summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+            raw_files = tuple(paths["raw"].rglob("seed-*.json"))
+
+            self.assertEqual(result.matrix_id, manifest["matrix_id"])
+            self.assertEqual(result.matrix_id, summary["matrix_id"])
+            self.assertEqual(
+                "mgba-topology-artifact-0.1", manifest["schema_version"]
+            )
+            self.assertEqual(4, len(raw_files))
+            self.assertEqual(2, len(manifest["topology_stability"]))
+            self.assertEqual(2, len(summary["topology_stability"]))
+            save_topology_artifacts(directory, result)
+            with self.assertRaises(ValueError):
+                save_topology_artifacts(
+                    directory, replace(result, scenario_digest="different")
+                )
+            paths["summary"].write_text("{", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                save_topology_artifacts(directory, result)
+            with self.assertRaises(TypeError):
+                save_topology_artifacts(directory, object())
+        with self.assertRaises(ValueError):
+            replace(result, records=())
+
+    def test_adaptive_swaps_counted_through_public_matrix(self) -> None:
+        swapping_runner = MultirateCrossScaleRunner(
+            load_runner_config(ROOT / "configs" / "runner_reference.json"),
+            **_layer_models(_adaptive_model(exchange_gain_threshold=-1.0)),
+        )
+        runners = {
+            "static_topology": self.static_runner,
+            "adaptive_topology": swapping_runner,
+        }
+        config = replace(self.config, seeds=(1, 2), ticks=10)
+        result = TopologyExperimentRunner(config, runners=runners).run(
+            _scenario(4)
+        )
+        self.assertEqual(2, len(result.stability))
+        for stability in result.stability:
+            self.assertGreater(stability.committed_swaps, 0)
+            self.assertGreater(stability.ticks_with_swaps, 0)
+            self.assertEqual(
+                stability.initial_edge_count, stability.final_edge_count
+            )
+            self.assertEqual(0, stability.as_dict()["edge_count_delta"])
 
 
 if __name__ == "__main__":

@@ -15,9 +15,15 @@ from mgba.autolab import (
     AutolabSession,
     EvaluatorResult,
     Hypothesis,
+    build_autolab_manifest,
     load_autolab_config,
     load_proposal_file,
     validate_proposals,
+)
+from mgba.autolab_planning import (
+    compile_autolab_plan,
+    verify_autolab_plan,
+    verify_autolab_result,
 )
 from mgba.experiments import ConditionKind, CausalRunRecord, _compare_runs
 from mgba.layers.l0 import DiscreteGrnModel, load_grn_config
@@ -380,6 +386,8 @@ class AutolabRealRunnerTests(unittest.TestCase):
 
     def test_loop_rediscovers_l2_leverage_point_deterministically(self) -> None:
         config = replace(self.base_config, seeds=(41, 42), confirm_ticks=30)
+        plan = compile_autolab_plan(config)
+        self.assertTrue(verify_autolab_plan(plan, config).valid)
         first = AutolabSession(config, evaluate=self._evaluate).run()
         self.assertEqual("l2-static", first.leader)
         self.assertEqual(("l2-static",), first.confirmed)
@@ -394,6 +402,17 @@ class AutolabRealRunnerTests(unittest.TestCase):
         second = AutolabSession(config, evaluate=self._evaluate).run()
         self.assertEqual(first.session_id, second.session_id)
         self.assertEqual(first.decision_log, second.decision_log)
+        self.assertEqual(
+            [item.history_digests for item in first.evaluations],
+            [item.history_digests for item in second.evaluations],
+        )
+        verification = verify_autolab_result(
+            plan,
+            first,
+            build_autolab_manifest(first),
+            registry=config,
+        )
+        self.assertTrue(verification.fully_verified)
 
 
 if __name__ == "__main__":

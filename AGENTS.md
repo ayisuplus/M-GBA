@@ -143,6 +143,16 @@ $env:PYTHONDONTWRITEBYTECODE='1'
 .\.venv\Scripts\mgba.exe sten-smoke --config configs/demo.json
 ```
 
+覆盖率硬门禁（独立门禁，不替代上述快速门禁；coverage 追踪开销使全套测试约需 15–20 分钟）：
+
+```powershell
+$env:PYTHONDONTWRITEBYTECODE='1'
+.\.venv\Scripts\python.exe -B -m coverage run -m unittest discover -s tests
+.\.venv\Scripts\python.exe -B -m coverage report --fail-under=80
+```
+
+`source` 由 pyproject `[tool.coverage.run]` 提供；coverage 经 `pip install -e .[dev]` 装入开发环境，wheel 运行时零依赖身份不变。计量范围仅 `src/mgba` 核心包（scripts/、web/、services/ 不计）。
+
 不得通过降低断言、删除基线或把失败结果硬编码为预期值来“修复”测试。
 
 ## 8. 文档与决策同步
@@ -247,4 +257,25 @@ AI Agent 可以帮助实现、测试、调研、重构和生成实验脚本，�
 - 当前 298 项测试包含原有 293 项和 5 项序列干预协议、L0 时钟/互斥门禁、状态审计、checkpoint 与 artifact 测试。
 - `src/mgba/lab.py` 与 `mgba lab-export` 已按 ADR-0030 实现生成链外比赛数据契约：严格 `LabExperimentRequest`、统一 `LabRunBundle`、小型 catalog、按实验延迟加载 JSON 与 SHA-256 manifest；三套冻结回放覆盖 CAR 剂量、状态条件干预和固定图 vs 空间 L3，同输入可字节重建。真实空间 Target 缺失时固定显示“真实数据 Target 尚未生成”。
 - `web/` 已实现并公开发布 Cloudflare/Sites 兼容的中文比赛站（`https://mgba-cross-scale-lab.zluo66977.chatgpt.site`）：首页、双轨实验工作台、逐 Cell L0→L4 检查、传播时间轴、L4 对照、证据页、30 天分享页、响应式阅读和离线 Demo。Worker 仅接受 ADR-0029 严格枚举并代理 `services/lab-api` 的受服务凭证 Python 边界；live runner 默认关闭，失败时明确回退预计算结果，不进入 tick 或修改任何 L0–L4 DTO/Protocol。
-- 当前 309 项 Python 测试和 6 项前端测试已通过；前端 lint、生产构建、主要路由 smoke 和 npm 零漏洞审计通过。冻结单 tick、100 tick、WP8/CAR-M 基线身份均未改变。
+- `src/mgba/collective_dynamics.py` 与 `mgba collective-analyze` 已按 ADR-0031 实现生成链外群体动力学观察层：从正式 raw trace 重算 activation-stress reference proxy 的 direction/intensity/polarization、edge alignment、冻结群体状态/转换、外部 cohort、Cell archetype 和 L4 时间关联；不读取 CellAction、不进入 tick、不修改 E3 阶梯。artifact schema 为 `mgba-collective-dynamics-0.1`，write-once 且可字节重建。
+- `LabRunBundle.analysis.collective_dynamics` 与 Cell 的可选 `collective_response` 已接入三套回放，顶层 `mgba-lab-run-bundle-0.1` 不变；工作台新增双轨相图、cohort 切换、转换点 L4/事件审计和旧 bundle 降级。live revision 为 `carm-state-conditioned-paired-0.3`，请求 schema 不变且 runner 继续默认关闭。
+- 当前 319 项 Python 测试和 13 项前端测试已通过；前端 lint、生产构建和主要路由 smoke 通过。冻结单 tick、100 tick、WP8/CAR-M 基线身份均未改变。
+- `src/mgba/autolab_planning.py` 与 `mgba autolab-plan` 已按 ADR-0032 实现 OCellus 启发的 Autolab 计划控制面：人工冻结注册表规范编译 closed-schema DAG，固定工具 Router，schema/DAG→架构/预算→manifest/history/科学表述三层 Verifier；计划与验证器均不 import runner、不含 evaluator、不自动修改失败计划，计划命令固定 `executed: false`。现有 `mgba autolab` 在执行前后强制核验，默认会话仍保持原 `autolab-71df3a1d06a63ce3`、四次评估顺序、L2 leader 与 history digest。
+- `src/mgba/clock_sector.py` 已按 ADR-0033 实现生成链外 `ClockSectorObserver`：正式 `SpatialTissueState` + 同 tick 可见 L0 → 六方向×三中位最近邻归一化距离环，输出 `mgba-clock-sector-observation-0.1` write-once artifact；不修改坐标/场/边/Cell、DTO、checkpoint 或 trace。Wu/Jackson Target 到位前不实施表示优选。
+- `src/mgba/ocellus_anchors.py` 已按 ADR-0034 实现生成链外 OCellus 离线扰动锚点：严格 source/model/Hallmark 许可与 SHA-256 身份、empirical/predicted 分栏、冻结六节点桥、train/holdout 隔离、train-only centroid、MAE/方向/Spearman、负面结果与精确人审 schedule 候选。当前未下载或加载 OCellus 权重，合成 fixture 只证明契约，候选固定 `executed: false` 且不得绕过 L1。
+- 当前 356 项 Python 测试包含原有 319 项和 37 项 Autolab 计划、ClockSector 与 OCellus 锚点测试；冻结单 tick、100 tick、WP8/CAR-M、checkpoint、L0 扰动传播和三条最低 CLI 门禁保持通过。未新增在线 LLM API、OCellus 下载或深度学习依赖。
+- 两轮代码评审修复已落地：playbook/live 显示 tick 恢复携带静态组织边（dose-response 与在线 bundle 的 edge_alignment 从静默 null 恢复为 ADR-0031 冻结公式实算值，live revision 升至 `carm-state-conditioned-paired-0.3`，跨语言 run ID 同步更新为 `lab-run-a2c881bf9f696cd2`）；旧 playbook 格式缺 `audit`/`l0_updated` 时工作台显式降级而不再整树崩溃；`collective-analyze` 的 `--config` 覆盖通道按 ADR-0031 §5 移除，阈值只来自冻结默认配置；ADR-0034 通过规则补记 1e-12 浮点护栏；`mgba.lab` playbook 路径接入 `verify_lab_bundle`；删除 ocellus_anchors 未使用别名与 DOM 时代死 CSS；前端 13 项测试通过。
+- 测试覆盖率硬门禁已落地（仅测试加固，零模型/契约/协议变更）：pyproject 新增 `[tool.coverage]`（`source=["src/mgba"]`、`fail_under=80`、show_missing、`__main__` 守卫排除）与 `dev = ["coverage>=7.0"]` extra（wheel 运行时零依赖身份不变）；§7 与 README 记录独立覆盖率门禁命令（coverage 追踪使全套约 15–20 分钟，不替代快速门禁）。当前 488 项 Python 测试全绿，总量 91%（10969 语句）；cli.py 99%、lab_server.py 100%、feedback/e3/carm_spatial_experiments 100%、latent/policy/neural/topology_experiments 各 99%、scenarios/carm/data.py 99%（253 为构造不可达守卫，按预注册保留）、spatial_source_adapters.py 86%；剩余缺行均为公共 API 不可达的防御性 raise。逐模块 ≥80% 为一次性核验结果，长期硬门禁只锁总量 80（coverage.py 无 per-module fail_under）。所有冻结基线（单 tick、100 tick `FAILED`、WP8/CAR-M、E3–E5、checkpoint）身份与断言均未改动。
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `ayisuplus/M-GBA`, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role vocabulary, unchanged (`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` at root (created lazily by /domain-modeling) + ADRs in `docs/决策记录/`. See `docs/agents/domain.md`.

@@ -430,7 +430,18 @@ def save_autolab_artifacts(
     root = Path(artifact_root) / result.session_id
     manifest_path = root / "manifest.json"
     summary_path = root / "derived" / "summary.json"
-    manifest = {
+    manifest = build_autolab_manifest(result)
+    _write_json_once(manifest_path, manifest)
+    _write_json_once(summary_path, result.summary_dict())
+    return {"root": root, "manifest": manifest_path, "summary": summary_path}
+
+
+def build_autolab_manifest(result: AutolabSessionResult) -> dict[str, Any]:
+    """Rebuild the audit manifest without writing or executing anything."""
+
+    if not isinstance(result, AutolabSessionResult):
+        raise TypeError("build_autolab_manifest requires an AutolabSessionResult")
+    return {
         "schema_version": "mgba-autolab-artifact-0.1",
         "session_id": result.session_id,
         "model_version": result.config.model_version,
@@ -451,9 +462,6 @@ def save_autolab_artifacts(
             for item in result.evaluations
         ],
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
-    return {"root": root, "manifest": manifest_path, "summary": summary_path}
 
 
 def _write_json_once(path: Path, payload: dict[str, Any]) -> None:

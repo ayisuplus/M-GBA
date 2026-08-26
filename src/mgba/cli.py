@@ -35,10 +35,19 @@ from .layers.l2_latent import LatentCellModel, load_latent_cell_config
 from .autolab import (
     AutolabSession,
     EvaluatorResult,
+    build_autolab_manifest,
     load_autolab_config,
     load_proposal_file,
     save_autolab_artifacts,
     validate_proposals,
+)
+from .autolab_planning import (
+    AutolabPlan,
+    compile_autolab_plan,
+    save_autolab_plan,
+    save_verification_report,
+    verify_autolab_plan,
+    verify_autolab_result,
 )
 from .layers.l3_adaptive import (
     DynamicTopologyTissueModel,
@@ -69,6 +78,13 @@ from .neural_experiments import (
 )
 from .demo import export_carm_demo
 from .lab import export_competition_lab_data
+from .collective_dynamics import (
+    analyze_collective_dynamics_raw,
+    load_cohort_map,
+    load_collective_dynamics_config,
+    load_raw_run_mapping,
+    save_collective_dynamics_artifact,
+)
 from .carm_spatial_experiments import (
     CarmSpatialExperimentRunner,
     build_carm_spatial_runners,
@@ -658,6 +674,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="competition site lab-data output directory",
     )
 
+    collective = commands.add_parser(
+        "collective-analyze",
+        help="derive deterministic collective-dynamics proxies from a raw run",
+    )
+    collective.add_argument(
+        "--input", required=True, help="formal MultirateRun JSON artifact"
+    )
+    collective.add_argument(
+        "--cohort-map",
+        help="optional complete Cell-id to cohort-name JSON mapping",
+    )
+    collective.add_argument(
+        "--output", required=True, help="write-once collective dynamics JSON artifact"
+    )
+
     sten = commands.add_parser("sten-smoke", help="run the L3 STEN subsystem smoke test")
     sten.add_argument("--config", default="configs/demo.json", help="STEN scenario JSON")
     sten.add_argument("--ticks", type=int, help="override scenario tick count")
@@ -755,6 +786,24 @@ def build_parser() -> argparse.ArgumentParser:
     autolab.add_argument(
         "--artifact-root",
         help="optional root for the autolab session artifacts",
+    )
+
+    autolab_plan = commands.add_parser(
+        "autolab-plan",
+        help="compile or validate a closed Autolab plan without executing it",
+    )
+    autolab_plan.add_argument(
+        "--autolab-config",
+        default="configs/experiments/autolab_screen.json",
+        help="frozen autolab hypothesis registry and protocol JSON",
+    )
+    autolab_plan.add_argument(
+        "--plan",
+        help="optional closed-schema plan JSON to validate instead of compiling",
+    )
+    autolab_plan.add_argument(
+        "--artifact-root",
+        help="optional root for write-once plan and verification artifacts",
     )
 
     autolab_propose = commands.add_parser(
@@ -1188,6 +1237,25 @@ def main() -> None:
             spatial_root=args.spatial_root,
         )
         result = {name: str(path) for name, path in sorted(paths.items())}
+    elif args.command == "collective-analyze":
+        report = analyze_collective_dynamics_raw(
+            load_raw_run_mapping(args.input),
+            None if args.cohort_map is None else load_cohort_map(args.cohort_map),
+            # ADR-0031 fixes the CLI grammar; thresholds always come from the frozen default.
+            load_collective_dynamics_config("configs/experiments/collective_dynamics.json"),
+        )
+        output = save_collective_dynamics_artifact(args.output, report)
+        result = {
+            "schema_version": report.as_dict()["schema_version"],
+            "observer_version": report.as_dict()["observer_version"],
+            "source_experiment_id": report.source_experiment_id,
+            "source_history_digest": report.source_history_digest,
+            "config_digest": report.config.config_digest,
+            "report_digest": report.report_digest,
+            "cohorts": [item.cohort_id for item in report.cohorts],
+            "output": str(output),
+            "model_status": "reference-proxy-observer-not-a-physical-phase-model",
+        }
     elif args.command == "feedback-experiment":
         scenario = load_multiscale_scenario(args.config)
         e4_config = load_feedback_experiment_config(args.matrix_config)
@@ -1256,6 +1324,10 @@ def main() -> None:
     elif args.command == "autolab":
         scenario = load_multiscale_scenario(args.config)
         autolab_config = load_autolab_config(args.autolab_config)
+        plan = compile_autolab_plan(autolab_config)
+        preflight = verify_autolab_plan(plan, autolab_config)
+        if not preflight.valid:
+            raise SystemExit("frozen Autolab plan failed preflight verification")
         runner_config = load_runner_config(args.runner_config)
         if (
             max(autolab_config.probe_ticks, autolab_config.confirm_ticks)
@@ -1303,13 +1375,74 @@ def main() -> None:
             )
 
         session = AutolabSession(autolab_config, evaluate=evaluate).run()
+        manifest = build_autolab_manifest(session)
+        verification = verify_autolab_result(
+            plan,
+            session,
+            manifest,
+            registry=autolab_config,
+            claim_level="reference_model",
+        )
+        if not verification.fully_verified:
+            raise SystemExit("Autolab result failed manifest/history verification")
         result = session.summary_dict()
         result["model_status"] = "reference-model-not-validated-biological-model"
+        result["control_plane"] = {
+            "plan_id": plan.plan_id,
+            "verification": verification.summary_dict(),
+        }
         if args.artifact_root:
             paths = save_autolab_artifacts(args.artifact_root, session)
+            control_root = paths["root"] / "control"
+            plan_path = save_autolab_plan(control_root / "plan.json", plan)
+            verification_path = save_verification_report(
+                control_root / "verification.json", verification
+            )
             result["artifact_root"] = str(paths["root"])
             result["artifact_manifest"] = str(paths["manifest"])
             result["artifact_summary"] = str(paths["summary"])
+            result["control_plane"]["plan_artifact"] = str(plan_path)
+            result["control_plane"]["verification_artifact"] = str(
+                verification_path
+            )
+    elif args.command == "autolab-plan":
+        registry = load_autolab_config(args.autolab_config)
+        if args.plan:
+            try:
+                candidate = json.loads(Path(args.plan).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as error:
+                raise SystemExit(f"invalid Autolab plan file: {error}") from error
+        else:
+            candidate = compile_autolab_plan(registry)
+        verification = verify_autolab_plan(candidate, registry)
+        plan_payload = (
+            candidate.as_dict()
+            if isinstance(candidate, AutolabPlan)
+            else candidate
+        )
+        result = {
+            "schema_version": "mgba-autolab-plan-bundle-0.1",
+            "executed": False,
+            "plan": plan_payload,
+            "verification": verification.summary_dict(),
+        }
+        if verification.valid and args.artifact_root:
+            parsed_plan = (
+                candidate
+                if isinstance(candidate, AutolabPlan)
+                else AutolabPlan.from_dict(candidate)
+            )
+            control_root = Path(args.artifact_root) / parsed_plan.plan_id
+            plan_path = save_autolab_plan(control_root / "plan.json", parsed_plan)
+            verification_path = save_verification_report(
+                control_root / "verification.json", verification
+            )
+            result["artifact_root"] = str(control_root)
+            result["plan_artifact"] = str(plan_path)
+            result["verification_artifact"] = str(verification_path)
+        if not verification.valid:
+            print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+            raise SystemExit(1)
     elif args.command == "autolab-propose":
         registry = load_autolab_config(args.autolab_config)
         proposals = load_proposal_file(args.proposals)

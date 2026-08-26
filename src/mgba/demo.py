@@ -140,6 +140,9 @@ def _condition_ticks(run: MultirateRun) -> list[dict[str, Any]]:
                         for field in _L4_FIELDS
                     }
                 ),
+                "edges": [
+                    [str(source), str(target)] for source, target in tick.l3.edges
+                ],
             }
         )
     return ticks

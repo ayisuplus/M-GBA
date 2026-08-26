@@ -1,0 +1,12 @@
+{
+  "cell_direction_threshold": 0.15,
+  "endpoint_window_ticks": 5,
+  "group_direction_threshold": 0.15,
+  "high_intensity_threshold": 0.16,
+  "low_activity_fraction": 0.8,
+  "low_intensity_threshold": 0.04,
+  "minimum_dwell_ticks": 3,
+  "persistent_fraction": 0.5,
+  "population_split_threshold": 0.09,
+  "schema_version": "mgba-collective-dynamics-config-0.1"
+}

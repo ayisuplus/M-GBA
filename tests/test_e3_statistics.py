@@ -6,13 +6,18 @@ ladder across all five grades, insufficient-seed ensembles, and the
 frozen-baseline identity guard (deterministic L0 untouched).
 """
 
+import json
 import math
+import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 from mgba.e3_experiments import (
     E3ExperimentRunner,
     load_e3_experiment_config,
+    save_e3_artifacts,
 )
 from mgba.e3_statistics import (
     E3CriteriaConfig,
@@ -313,6 +318,114 @@ def replace_ticks(config, *, ticks):
     from dataclasses import replace as _replace
 
     return _replace(config, ticks=ticks)
+
+
+class E3ExperimentConfigCrashPreventionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.config = load_e3_experiment_config(
+            ROOT / "configs" / "experiments" / "e3_population.json"
+        )
+
+    def test_invalid_config_fields_fail_fast(self) -> None:
+        cases = (
+            {"model_version": "   "},
+            {"ticks": 0},
+            {"ticks": True},
+            {"seeds": (1,)},
+            {"seeds": (2, 1)},
+            {"seeds": (1, 1)},
+            {"seeds": (-1, 2)},
+            {"seeds": (True, 2)},
+        )
+        for overrides in cases:
+            with self.assertRaises(ValueError, msg=str(overrides)):
+                replace(self.config, **overrides)
+
+    def test_wrong_criteria_type_rejected(self) -> None:
+        with self.assertRaises(TypeError):
+            replace(self.config, criteria=object())
+
+    def test_malformed_config_file_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid.json"
+            path.write_text("{not json", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_e3_experiment_config(path)
+
+
+class E3RunnerGuardTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.scenario = load_multiscale_scenario(
+            ROOT / "configs" / "multiscale_demo.json"
+        )
+        self.config = load_e3_experiment_config(
+            ROOT / "configs" / "experiments" / "e3_population.json"
+        )
+
+    def _build(self, seed: int) -> MultirateCrossScaleRunner:
+        return _runner(_noisy_model(seed))
+
+    def test_model_version_property_tracks_config(self) -> None:
+        runner = E3ExperimentRunner(self.config, build_runner=self._build)
+        self.assertTrue(
+            runner.model_version.startswith(f"{self.config.model_version}+")
+        )
+        again = E3ExperimentRunner(self.config, build_runner=self._build)
+        self.assertEqual(runner.model_version, again.model_version)
+        other = E3ExperimentRunner(
+            replace(self.config, model_version="other-e3-version"),
+            build_runner=self._build,
+        )
+        self.assertNotEqual(runner.model_version, other.model_version)
+
+    def test_non_scenario_rejected(self) -> None:
+        runner = E3ExperimentRunner(self.config, build_runner=self._build)
+        with self.assertRaises(TypeError):
+            runner.run(object())
+
+    def test_truncated_trace_fails_closed(self) -> None:
+        stub = SimpleNamespace(
+            config=SimpleNamespace(max_total_ticks=1000),
+            run=lambda scenario, ticks: SimpleNamespace(ticks=()),
+        )
+        config = replace(self.config, seeds=(1, 2), ticks=4)
+        with self.assertRaises(RuntimeError):
+            E3ExperimentRunner(
+                config, build_runner=lambda seed: stub
+            ).run(self.scenario)
+
+    def test_artifacts_persist_summary_and_manifest_and_refuse_conflicts(
+        self,
+    ) -> None:
+        config = replace(self.config, seeds=(1, 2), ticks=10)
+        result = E3ExperimentRunner(config, build_runner=self._build).run(
+            self.scenario
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            paths = save_e3_artifacts(directory, result)
+            manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+            summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+
+            self.assertEqual(result.matrix_id, manifest["matrix_id"])
+            self.assertEqual(result.matrix_id, summary["matrix_id"])
+            self.assertEqual("mgba-e3-artifact-0.1", summary["schema_version"])
+            self.assertEqual([1, 2], summary["seeds"])
+            self.assertEqual(
+                result.summary_digest, manifest["summary_digest"]
+            )
+            self.assertFalse((paths["root"] / "raw").exists())
+            save_e3_artifacts(directory, result)
+            with self.assertRaises(ValueError):
+                save_e3_artifacts(
+                    directory, replace(result, scenario_digest="different")
+                )
+            paths["summary"].write_text("{", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                save_e3_artifacts(directory, result)
+            with self.assertRaises(TypeError):
+                save_e3_artifacts(directory, object())
+        with self.assertRaises(ValueError):
+            replace(result, stats=())
 
 
 class FrozenBaselineGuardTests(unittest.TestCase):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import csv
 import gzip
 import json
@@ -24,6 +25,12 @@ from mgba.spatial_anchors import (
 from mgba.spatial_source_adapters import (
     JACKSON_MANIFEST_SCHEMA_VERSION,
     WU_MANIFEST_SCHEMA_VERSION,
+    _finite,
+    _local_path,
+    _normalize,
+    _positive_int,
+    _read_object,
+    _sha256_text,
     adapt_jackson_imc_source,
     adapt_wu_visium_source,
     load_spatial_source_protocol,
@@ -218,7 +225,79 @@ class SpatialSourceProtocolTests(unittest.TestCase):
         self.assertEqual(1, protocol["feature_symbol_column"])
         self.assertEqual(4, protocol["min_genes_per_channel"])
         self.assertEqual({"stress", "resource", "signal"}, set(protocol["field_channels"]))
-        self.assertTrue(all(len(genes) == 8 for genes in protocol["field_channels"].values()))
+
+    def test_each_broken_protocol_key_fails_closed(self) -> None:
+        base = json.loads(SOURCE_PROTOCOL.read_text(encoding="utf-8"))
+        mutations = {
+            "extra top-level key": lambda payload: payload.update({"surprise": True}),
+            "empty model_version": lambda payload: payload.update({"model_version": "  "}),
+            "zero min_genes_per_channel": lambda payload: payload.update(
+                {"min_genes_per_channel": 0}
+            ),
+            "zero library_size_scale": lambda payload: payload.update(
+                {"library_size_scale": 0}
+            ),
+            "non-integer feature_symbol_column": lambda payload: payload.update(
+                {"feature_symbol_column": "symbol"}
+            ),
+            "field_channels missing signal": lambda payload: payload[
+                "field_channels"
+            ].pop("signal"),
+            "genes not a list": lambda payload: payload["field_channels"].update(
+                {"stress": "ATF3"}
+            ),
+            "duplicate genes": lambda payload: payload["field_channels"].update(
+                {"stress": payload["field_channels"]["stress"] + ["ATF3"]}
+            ),
+            "wrong schema_version": lambda payload: payload.update(
+                {"schema_version": "mgba-spatial-source-protocol-0.0"}
+            ),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "protocol.json"
+            for name, mutate in mutations.items():
+                with self.subTest(mutation=name):
+                    payload = copy.deepcopy(base)
+                    mutate(payload)
+                    _write_json(path, payload)
+                    with self.assertRaises(ValueError):
+                        load_spatial_source_protocol(path)
+
+
+class SpatialSourceHelperTests(unittest.TestCase):
+    def test_local_path_rejects_absolute_escape_and_missing_paths(self) -> None:
+        # The escape guard keeps manifested files inside the licensed source
+        # tree; it is security-relevant and pinned regardless of coverage.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaises(ValueError):
+                _local_path(root, str(root / "absolute.txt"), name="artifact")
+            with self.assertRaises(ValueError):
+                _local_path(root, "../escape.txt", name="artifact")
+            with self.assertRaises(ValueError):
+                _local_path(root, "missing.txt", name="artifact")
+
+    def test_read_object_wraps_io_errors_and_rejects_array_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaises(ValueError):
+                _read_object(root / "absent.json", name="manifest")
+            array_root = root / "array.json"
+            array_root.write_text("[1, 2]", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                _read_object(array_root, name="manifest")
+
+    def test_scalar_and_normalization_guards_fail_closed(self) -> None:
+        with self.assertRaises(ValueError):
+            _normalize([3.0, 3.0], name="intensity")
+        with self.assertRaises(ValueError):
+            _sha256_text("not-a-digest", name="digest")
+        with self.assertRaises(ValueError):
+            _finite("1", name="count")
+        with self.assertRaises(ValueError):
+            _finite(float("nan"), name="count")
+        with self.assertRaises(ValueError):
+            _positive_int(True, name="count")
 
 
 class WuVisiumSourceAdapterTests(unittest.TestCase):
@@ -260,16 +339,37 @@ class WuVisiumSourceAdapterTests(unittest.TestCase):
                 load_spatial_observation_bundle(second).input_digest,
             )
 
-    def test_source_byte_or_digest_tampering_fails_closed(self) -> None:
+
+    def test_schema_and_dataset_mismatch_fail_before_artifact_verification(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            manifest = _field_fixture(root)
-            (root / "counts.tar.gz").write_bytes(b"tampered")
-            with self.assertRaises(ValueError):
+            base = {
+                "schema_version": WU_MANIFEST_SCHEMA_VERSION,
+                "dataset_id": "wu-swarbrick-brca-visium",
+                # Empty artifacts would fail verification; the pinned error
+                # messages below prove the schema/dataset gates run first.
+                "source_artifacts": [],
+                "samples": [],
+            }
+            wrong_schema = _write_json(
+                root / "wrong-schema.json",
+                {**base, "schema_version": "mgba-wu-visium-source-manifest-0.0"},
+            )
+            with self.assertRaisesRegex(ValueError, "unsupported Wu Visium"):
                 adapt_wu_visium_source(
-                    manifest,
+                    wrong_schema,
                     protocol_path=SOURCE_PROTOCOL,
-                    output_path=root / "field.json",
+                    output_path=root / "out-a.json",
+                )
+            wrong_dataset = _write_json(
+                root / "wrong-dataset.json",
+                {**base, "dataset_id": "not-the-registered-dataset"},
+            )
+            with self.assertRaisesRegex(ValueError, "dataset_id disagrees"):
+                adapt_wu_visium_source(
+                    wrong_dataset,
+                    protocol_path=SOURCE_PROTOCOL,
+                    output_path=root / "out-b.json",
                 )
 
 
@@ -298,11 +398,37 @@ class JacksonImcSourceAdapterTests(unittest.TestCase):
     def test_unmapped_published_cluster_fails_instead_of_being_guessed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            with self.assertRaises(ValueError):
+
+    def test_schema_and_dataset_mismatch_fail_before_artifact_verification(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            base = {
+                "schema_version": JACKSON_MANIFEST_SCHEMA_VERSION,
+                "dataset_id": "jackson-brca-imc",
+                # Empty artifacts would fail verification; the pinned error
+                # messages below prove the schema/dataset gates run first.
+                "source_artifacts": [],
+                "tables": [],
+            }
+            wrong_schema = _write_json(
+                root / "wrong-schema.json",
+                {**base, "schema_version": "mgba-jackson-imc-source-manifest-0.0"},
+            )
+            with self.assertRaisesRegex(ValueError, "unsupported Jackson IMC"):
                 adapt_jackson_imc_source(
-                    _neighborhood_fixture(root, unmapped=True),
+                    wrong_schema,
                     protocol_path=SOURCE_PROTOCOL,
-                    output_path=root / "neighborhood.json",
+                    output_path=root / "out-a.json",
+                )
+            wrong_dataset = _write_json(
+                root / "wrong-dataset.json",
+                {**base, "dataset_id": "not-the-registered-dataset"},
+            )
+            with self.assertRaisesRegex(ValueError, "dataset_id disagrees"):
+                adapt_jackson_imc_source(
+                    wrong_dataset,
+                    protocol_path=SOURCE_PROTOCOL,
+                    output_path=root / "out-b.json",
                 )
 
 

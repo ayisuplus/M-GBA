@@ -25,6 +25,11 @@ export function MetricChart({ baseline, comparison, metric, label }: {
     context.clearRect(0, 0, width, height);
     const series = [l4Series(baseline, metric), l4Series(comparison, metric)];
     const values = series.flatMap((item) => item.map(([, value]) => value));
+    // x-domain comes from the observed tick values, not from ticks.length,
+    // so sparse or non-1-based logical_time cannot silently shift points.
+    const tickValues = series.flatMap((item) => item.map(([tick]) => tick));
+    const minTick = Math.min(...tickValues);
+    const tickSpan = Math.max(1, Math.max(...tickValues) - minTick);
     const min = Math.min(...values);
     const max = Math.max(...values);
     const range = Math.max(max - min, .03);
@@ -36,7 +41,7 @@ export function MetricChart({ baseline, comparison, metric, label }: {
     series.forEach((points, index) => {
       context.beginPath();
       points.forEach(([tick, value], pointIndex) => {
-        const x = ((tick - 1) / Math.max(1, baseline.ticks.length - 1)) * (width - 8) + 4;
+        const x = ((tick - minTick) / tickSpan) * (width - 8) + 4;
         const y = height - 8 - ((value - min) / range) * (height - 18);
         if (pointIndex === 0) context.moveTo(x, y); else context.lineTo(x, y);
       });

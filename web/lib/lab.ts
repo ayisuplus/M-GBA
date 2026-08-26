@@ -1,5 +1,5 @@
 export const LAB_REQUEST_SCHEMA = 'mgba-lab-experiment-request-0.1';
-export const LAB_EXECUTION_REVISION = 'carm-state-conditioned-paired-0.1';
+export const LAB_EXECUTION_REVISION = 'carm-state-conditioned-paired-0.3';
 
 export type FieldName = 'stress' | 'signal' | 'resource_level';
 
@@ -29,6 +29,7 @@ export interface CellDisplayState {
   viability: number;
   activation: number;
   stress_load: number;
+  collective_response?: number;
   l0: Record<string, number>;
   l1: Record<string, number>;
   node: { stress: number; signal: number; resource_level: number };
@@ -36,9 +37,10 @@ export interface CellDisplayState {
 
 export interface LabTick {
   t: number;
-  l0_updated: boolean;
+  // playbook-era bundles predate these display fields; absent means unknown, never HELD/zero.
+  l0_updated?: boolean;
   l4_observed: boolean;
-  audit: {
+  audit?: {
     transition_count: number;
     l0_perturbation_count: number;
     layer_paths: string[];
@@ -86,6 +88,103 @@ export interface LabBundle {
   config_summary: Record<string, unknown>;
 }
 
+export type CollectiveState =
+  | 'low_activity'
+  | 'activation_dominant'
+  | 'stress_dominant'
+  | 'population_split'
+  | 'coactivated_balance'
+  | 'transitional';
+
+export interface CollectivePoint {
+  t: number;
+  direction: number;
+  intensity: number;
+  polarization: number;
+  edge_alignment: number | null;
+  activation_dominant_fraction: number;
+  stress_dominant_fraction: number;
+  neutral_fraction: number;
+  state: CollectiveState;
+}
+
+export interface CollectiveL4State {
+  tick: number;
+  state: Record<string, number>;
+}
+
+export interface CollectiveTransition {
+  tick: number;
+  from_state: CollectiveState;
+  to_state: CollectiveState;
+  source_dwell_ticks: number;
+  target_dwell_ticks: number;
+  l4_association: {
+    relationship: 'temporal_association_only';
+    before: CollectiveL4State | null;
+    after: CollectiveL4State | null;
+  };
+}
+
+export interface CollectiveCohortReport {
+  cohort_id: string;
+  cell_ids: string[];
+  series: CollectivePoint[];
+  trajectory_class: string;
+  qualified_direction_switches: number;
+  first_qualified_transition_tick: number | null;
+  state_transitions: CollectiveTransition[];
+  cell_archetypes: Record<string, 'stable' | 'single_switch' | 'intermittent' | 'oscillatory'>;
+  archetype_counts: Record<'stable' | 'single_switch' | 'intermittent' | 'oscillatory', number>;
+}
+
+export interface CollectiveConditionReport {
+  schema_version: 'mgba-collective-dynamics-0.1';
+  observer_version: string;
+  source_experiment_id: string;
+  source_history_digest: string;
+  config_digest: string;
+  scientific_boundary: string;
+  cohorts: Record<string, CollectiveCohortReport>;
+  report_digest: string;
+}
+
+export interface CollectiveComparisonCohort {
+  first_state_divergence_tick: number | null;
+  mean_absolute_difference: {
+    direction: number;
+    intensity: number;
+    polarization: number;
+  };
+  reference_trajectory_class: string;
+  comparison_trajectory_class: string;
+  trajectory_class_changed: boolean;
+  l4_difference_at_divergence: {
+    relationship: 'temporal_association_only';
+    reference_tick: number;
+    comparison_tick: number;
+    delta: Record<string, number>;
+  } | null;
+}
+
+export interface CollectiveComparison {
+  schema_version: 'mgba-collective-dynamics-0.1';
+  observer_version: string;
+  config_digest: string;
+  cohorts: Record<string, CollectiveComparisonCohort>;
+  comparison_digest: string;
+}
+
+export interface CollectiveDynamicsAnalysis {
+  schema_version: 'mgba-collective-dynamics-0.1';
+  observer_version: string;
+  config_digest: string;
+  default_cohort: string;
+  scientific_boundary: string;
+  conditions: Record<string, CollectiveConditionReport>;
+  comparisons: Record<string, CollectiveComparison>;
+}
+
 export interface LabExperimentRequest {
   schema_version: typeof LAB_REQUEST_SCHEMA;
   scenario_id: 'carm_high_immune_her2';
@@ -111,8 +210,11 @@ export function l4Series(condition: LabCondition, metric: string): Array<[number
   const observed = condition.ticks
     .filter((tick) => tick.l4 && typeof tick.l4[metric] === 'number')
     .map((tick) => [tick.t, tick.l4![metric]] as [number, number]);
-  if (observed.length && !observed.some(([tick]) => tick === condition.ticks.length)) {
-    observed.push([condition.ticks.length, condition.terminal_l4[metric]]);
+  // terminal_l4 belongs to the final tick, which may not be an L4-observed tick;
+  // anchor it to that tick's own t rather than assuming 1-based contiguous time.
+  const finalTick = condition.ticks[condition.ticks.length - 1];
+  if (observed.length && finalTick && !observed.some(([tick]) => tick === finalTick.t)) {
+    observed.push([finalTick.t, condition.terminal_l4[metric]]);
   }
   return observed;
 }
@@ -128,4 +230,34 @@ export function roleName(role: string): string {
     wild_type_macrophage: '野生型巨噬细胞',
     cd8_t_cell: 'CD8 T 细胞',
   } as Record<string, string>)[role] ?? role;
+}
+
+export function collectiveDynamics(bundle: LabBundle): CollectiveDynamicsAnalysis | null {
+  const value = bundle.analysis.collective_dynamics;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Partial<CollectiveDynamicsAnalysis>;
+  if (
+    candidate.schema_version !== 'mgba-collective-dynamics-0.1'
+    || typeof candidate.observer_version !== 'string'
+    || typeof candidate.config_digest !== 'string'
+    || typeof candidate.default_cohort !== 'string'
+    || !candidate.conditions
+    || !candidate.comparisons
+  ) return null;
+  return candidate as CollectiveDynamicsAnalysis;
+}
+
+export function collectiveStateName(state: CollectiveState): string {
+  return ({
+    low_activity: '低活动',
+    activation_dominant: '激活主导',
+    stress_dominant: '压力主导',
+    population_split: '群体分化',
+    coactivated_balance: '共激活平衡',
+    transitional: '过渡态',
+  } as Record<CollectiveState, string>)[state];
+}
+
+export function cohortName(cohort: string): string {
+  return cohort === 'all_cells' ? '全组织' : roleName(cohort);
 }

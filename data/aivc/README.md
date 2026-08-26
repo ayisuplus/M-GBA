@@ -49,6 +49,7 @@ Stage 1 完成判据：六抽象节点映射冻结 + 一条真实扰动（如某
 |---|---|---|---|---|---|---|
 | C1 | Geneformer 预训练权重 | 离线生成细胞状态嵌入 → 聚合进场景 profile（零样本 in silico 扰动）；对应 L0/L1 数据驱动替换的"真实版" | ≤3 GB 权重 + 独立 venv（torch/transformers，**不进项目核心依赖**） | HuggingFace [ctheodoris/Geneformer](https://huggingface.co/ctheodoris/Geneformer)（[模型说明](https://virtualcellmodels.cziscience.com/model/geneformer)） | 小批量 CPU 推理可行；批量推理不现实 | 待授权 |
 | C2 | STATE（Arc Institute） | 扰动转移预测 oracle：给 M-GBA 的 L0 扰动提供数据驱动对照 | 权重 GB 级 + torch 环境 | 代码 [ArcInstitute/state](https://github.com/ArcInstitute/state)，权重经 HuggingFace 分发（见其 README） | 依赖重，笔记本仅适合极小批量尝试 | 待授权 |
+| C3 | OCellus | gene-level KO pseudo-bulk 预测候选：按 ADR-0034 与真实 Perturb-seq target、train-only centroid 做同 split 六节点对照 | 未知；代码/权重/许可公开后先核算，独立环境且不进核心依赖 | [bioRxiv v1](https://www.biorxiv.org/content/10.64898/2026.07.08.737248v1)；当前代码、权重、GNN/Agent 发布仍待确认 | 当前不可执行；只实现 `mgba-ocellus-perturbation-anchor-0.1` 离线输入契约 | 待公开、预算与授权 |
 
 ## 明确不下载
 

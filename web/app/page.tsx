@@ -23,7 +23,7 @@ export default function Home() {
             <Link className="secondary-cta" href="/evidence">先看证据与边界</Link>
           </div>
           <div className="hero-facts">
-            <div><b>298+</b><span>科学与契约门禁</span></div>
+            <div><b>356+</b><span>科学与契约门禁</span></div>
             <div><b>3</b><span>冻结比赛实验</span></div>
             <div><b>L0→L4</b><span>相邻层传播</span></div>
           </div>
@@ -39,7 +39,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div className="hero-phenotype"><small>L4 HOMEOSTASIS</small><b>0.684</b><span>Δ 方向不自动等于改善</span></div>
+          <div className="hero-phenotype"><small>L4 HOMEOSTASIS</small><b>0.7559</b><span>冻结回放 state-intervention baseline 终末值 · 非疗效指标</span></div>
         </div>
       </section>
 

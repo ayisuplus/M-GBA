@@ -17,6 +17,14 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from .demo import BOUNDARY_NOTE, _build_layout, _condition_ticks
+from .collective_dynamics import (
+    COLLECTIVE_DYNAMICS_SCHEMA,
+    COLLECTIVE_OBSERVER_VERSION,
+    CollectiveDynamicsConfig,
+    analyze_collective_dynamics_lab_condition,
+    collective_response,
+    compare_collective_dynamics,
+)
 from .experiment import canonical_json, digest_payload
 from .experiments import CausalRunRecord, ConditionKind, _compare_runs
 from .intervention_experiments import build_carm_intervention_runner
@@ -32,7 +40,7 @@ LAB_REQUEST_SCHEMA = "mgba-lab-experiment-request-0.1"
 LAB_BUNDLE_SCHEMA = "mgba-lab-run-bundle-0.1"
 LAB_CATALOG_SCHEMA = "mgba-lab-catalog-0.1"
 LAB_FILES_SCHEMA = "mgba-lab-files-0.1"
-LAB_EXECUTION_REVISION = "carm-state-conditioned-paired-0.1"
+LAB_EXECUTION_REVISION = "carm-state-conditioned-paired-0.3"
 
 _SCENARIO_ID = "carm_high_immune_her2"
 _PROTOCOL_ID = "state_conditioned_signal_expression"
@@ -195,21 +203,111 @@ def _terminal_l4(raw: Mapping[str, Any]) -> dict[str, float]:
     return {name: _round4(raw[name]) for name in _L4_FIELDS}
 
 
+def _display_condition(
+    *,
+    condition_id: str,
+    label: str,
+    experiment_id: str,
+    history_digest: str,
+    outcome: str,
+    terminal_observation: Mapping[str, Any],
+    ticks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Assemble the frozen per-condition display shape shared by both sources."""
+    return {
+        "condition_id": condition_id,
+        "label": label,
+        "experiment_id": experiment_id,
+        "history_digest": history_digest,
+        "outcome": outcome,
+        "terminal_l4": _terminal_l4(terminal_observation),
+        "ticks": ticks,
+    }
+
+
 def _condition_from_run(
     run: MultirateRun,
     *,
     condition_id: str,
     label: str,
 ) -> dict[str, Any]:
-    return {
-        "condition_id": condition_id,
-        "label": label,
-        "experiment_id": run.manifest.experiment_id,
-        "history_digest": run.history_digest,
-        "outcome": run.phenotype_window.outcome.value,
-        "terminal_l4": _terminal_l4(asdict(run.terminal_observation)),
-        "ticks": _condition_ticks(run),
+    return _condition_with_collective_response(
+        _display_condition(
+            condition_id=condition_id,
+            label=label,
+            experiment_id=run.manifest.experiment_id,
+            history_digest=run.history_digest,
+            outcome=run.phenotype_window.outcome.value,
+            terminal_observation=asdict(run.terminal_observation),
+            ticks=_condition_ticks(run),
+        )
+    )
+
+
+def _condition_with_collective_response(
+    condition: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Copy a display condition and append the frozen per-Cell proxy."""
+
+    result = dict(condition)
+    ticks: list[dict[str, Any]] = []
+    for raw_tick in condition["ticks"]:
+        tick = dict(raw_tick)
+        tick["cells"] = {
+            str(cell_id): {
+                **dict(cell),
+                "collective_response": collective_response(
+                    cell["activation"], cell["stress_load"]
+                ),
+            }
+            for cell_id, cell in raw_tick["cells"].items()
+        }
+        ticks.append(tick)
+    result["ticks"] = ticks
+    return result
+
+
+def _analysis_with_collective_dynamics(
+    analysis: Mapping[str, Any],
+    *,
+    conditions: Sequence[Mapping[str, Any]],
+    roles: Mapping[str, str],
+    reference_condition: str,
+    default_cohort: str,
+) -> dict[str, Any]:
+    if "collective_dynamics" in analysis:
+        raise ValueError("lab analysis must not predeclare collective dynamics")
+    config = CollectiveDynamicsConfig()
+    reports = {
+        str(condition["condition_id"]): analyze_collective_dynamics_lab_condition(
+            condition, roles, config
+        )
+        for condition in conditions
     }
+    if reference_condition not in reports:
+        raise ValueError("collective dynamics reference condition is unknown")
+    reference = reports[reference_condition]
+    payload = dict(analysis)
+    payload["collective_dynamics"] = {
+        "schema_version": COLLECTIVE_DYNAMICS_SCHEMA,
+        "observer_version": COLLECTIVE_OBSERVER_VERSION,
+        "config_digest": config.config_digest,
+        "default_cohort": default_cohort,
+        "scientific_boundary": (
+            "activation-stress 群体状态是 reference proxy；"
+            "不是物理相变、真实生物机制或临床预测。"
+        ),
+        "conditions": {
+            condition_id: report.as_dict()
+            for condition_id, report in reports.items()
+        },
+        "comparisons": {
+            condition_id: compare_collective_dynamics(reference, report).as_dict()
+            for condition_id, report in reports.items()
+            if condition_id != reference_condition
+        },
+    }
+    return payload
 
 
 def _comparison_payload(
@@ -324,6 +422,25 @@ def run_lab_experiment(
     if observed_ticks != request.schedule_ticks:
         raise RuntimeError("public lab intervention schedule drifted")
     role_map = {cell_id: role.value for cell_id, role in compiled.roles}
+    conditions = [
+        _condition_from_run(baseline, condition_id="baseline", label="Baseline"),
+        _condition_from_run(
+            intervention,
+            condition_id=request.condition_id,
+            label=f"{request.onset.title()} · {request.exposure.title()} · {request.dose:.1f}",
+        ),
+    ]
+    analysis = _analysis_with_collective_dynamics(
+        _comparison_payload(
+            baseline,
+            intervention,
+            condition_id=request.condition_id,
+        ),
+        conditions=conditions,
+        roles=role_map,
+        reference_condition="baseline",
+        default_cohort="engineered_macrophage",
+    )
     bundle = _finish_bundle(
         {
             "schema_version": LAB_BUNDLE_SCHEMA,
@@ -339,19 +456,8 @@ def run_lab_experiment(
             "layout": _build_layout(role_map),
             "reference_condition": "baseline",
             "default_comparison_condition": request.condition_id,
-            "conditions": [
-                _condition_from_run(baseline, condition_id="baseline", label="Baseline"),
-                _condition_from_run(
-                    intervention,
-                    condition_id=request.condition_id,
-                    label=f"{request.onset.title()} · {request.exposure.title()} · {request.dose:.1f}",
-                ),
-            ],
-            "analysis": _comparison_payload(
-                baseline,
-                intervention,
-                condition_id=request.condition_id,
-            ),
+            "conditions": conditions,
+            "analysis": analysis,
             "evidence": {
                 "execution_revision": LAB_EXECUTION_REVISION,
                 "runner_model_versions": dict(runner.model_versions),
@@ -388,6 +494,9 @@ def _raw_tick_to_display(raw: Mapping[str, Any]) -> dict[str, Any]:
             "viability": _round4(cell["viability"]),
             "activation": _round4(cell["activation"]),
             "stress_load": _round4(cell["stress_load"]),
+            "collective_response": collective_response(
+                cell["activation"], cell["stress_load"]
+            ),
             "l0": {name: _round4(l0[cell_id][name]) for name in _L0_FIELDS},
             "l1": {name: _round4(l1[cell_id][name]) for name in _L1_FIELDS},
             "node": {
@@ -443,15 +552,15 @@ def _condition_from_raw(
     label: str,
 ) -> dict[str, Any]:
     experiment = raw["experiment"]
-    return {
-        "condition_id": condition_id,
-        "label": label,
-        "experiment_id": str(experiment["experiment_id"]),
-        "history_digest": str(raw["history_digest"]),
-        "outcome": str(raw["phenotype_window"]["outcome"]),
-        "terminal_l4": _terminal_l4(raw["terminal_observation"]),
-        "ticks": [_raw_tick_to_display(tick) for tick in raw["ticks"]],
-    }
+    return _display_condition(
+        condition_id=condition_id,
+        label=label,
+        experiment_id=str(experiment["experiment_id"]),
+        history_digest=str(raw["history_digest"]),
+        outcome=str(raw["phenotype_window"]["outcome"]),
+        terminal_observation=raw["terminal_observation"],
+        ticks=[_raw_tick_to_display(tick) for tick in raw["ticks"]],
+    )
 
 
 def _roles_from_condition(condition: Mapping[str, Any]) -> dict[str, str]:
@@ -462,6 +571,10 @@ def _roles_from_condition(condition: Mapping[str, Any]) -> dict[str, str]:
 
 
 def _bundle_from_playbook(playbook: Mapping[str, Any]) -> dict[str, Any]:
+    # Playbook-era display ticks predate per-tick edges; the CAR-M graph is
+    # static, so the root edge list applies to every tick. Newer playbooks
+    # that already carry per-tick edges keep them.
+    edges = [[str(source), str(target)] for source, target in playbook["edges"]]
     conditions = []
     for item in playbook["conditions"]:
         condition = dict(item)
@@ -471,18 +584,28 @@ def _bundle_from_playbook(playbook: Mapping[str, Any]) -> dict[str, Any]:
             "car_affinity_070": "CAR affinity · 0.7",
             "car_max_100": "CAR max · 1.0",
         }.get(condition["condition_id"], condition["condition_id"])
-        conditions.append(condition)
+        condition["ticks"] = [
+            dict(tick, edges=tick.get("edges", edges))
+            for tick in condition["ticks"]
+        ]
+        conditions.append(_condition_with_collective_response(condition))
     baseline = conditions[0]["terminal_l4"]
-    analysis = {
-        "terminal_deltas": {
-            item["condition_id"]: {
-                name: _round4(item["terminal_l4"][name] - baseline[name])
-                for name in _L4_FIELDS
+    analysis = _analysis_with_collective_dynamics(
+        {
+            "terminal_deltas": {
+                item["condition_id"]: {
+                    name: _round4(item["terminal_l4"][name] - baseline[name])
+                    for name in _L4_FIELDS
+                }
+                for item in conditions[1:]
             }
-            for item in conditions[1:]
-        }
-    }
-    return _finish_bundle(
+        },
+        conditions=conditions,
+        roles=playbook["roles"],
+        reference_condition="baseline",
+        default_cohort="engineered_macrophage",
+    )
+    return verify_lab_bundle(_finish_bundle(
         {
             "schema_version": LAB_BUNDLE_SCHEMA,
             "bundle_id": "dose-response",
@@ -506,10 +629,12 @@ def _bundle_from_playbook(playbook: Mapping[str, Any]) -> dict[str, Any]:
             "config_summary": {
                 "ticks": len(conditions[0]["ticks"]),
                 "condition_count": len(conditions),
-                "field_semantics": playbook["observer"]["spatial_semantics"],
+                "field_semantics": playbook.get("observer", {}).get(
+                    "spatial_semantics", "display_projection_only"
+                ),
             },
         }
-    )
+    ))
 
 
 def _bundle_from_raw_set(
@@ -528,6 +653,14 @@ def _bundle_from_raw_set(
         for condition_id, label, raw in raw_conditions
     ]
     roles = _roles_from_condition(conditions[0])
+    default_cohort = "all_cells" if kind == "spatial_l3" else "engineered_macrophage"
+    complete_analysis = _analysis_with_collective_dynamics(
+        analysis,
+        conditions=conditions,
+        roles=roles,
+        reference_condition=raw_conditions[0][0],
+        default_cohort=default_cohort,
+    )
     layout = _build_layout(roles)
     spatial = next(
         (
@@ -559,7 +692,7 @@ def _bundle_from_raw_set(
             "reference_condition": raw_conditions[0][0],
             "default_comparison_condition": default_comparison,
             "conditions": conditions,
-            "analysis": dict(analysis),
+            "analysis": complete_analysis,
             "evidence": evidence,
             "config_summary": dict(config_summary),
         }

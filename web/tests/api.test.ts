@@ -15,7 +15,7 @@ describe('restricted experiment contract', () => {
   it('matches the Python deterministic run identity', async () => {
     expect(parseLabExperimentRequest(request)).toEqual(request);
     expect(canonicalLabIdentity(request)).toContain('"dose":"0.7"');
-    expect(await labRunId(request)).toBe('lab-run-56c56b27ce7e6710');
+    expect(await labRunId(request)).toBe('lab-run-a2c881bf9f696cd2');
   });
 
   it('fails closed on unknown fields and values', () => {

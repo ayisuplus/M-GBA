@@ -8,10 +8,13 @@ matrix (determinism, single-layer-swap enforcement, budget), and the
 frozen-baseline identity guard (default chain untouched).
 """
 
+import json
 import math
+import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 from mgba.layers import (
     CellAction,
@@ -44,6 +47,7 @@ from mgba.neural_experiments import (
     NeuralComparisonConfig,
     NeuralComparisonRunner,
     load_neural_comparison_config,
+    save_neural_artifacts,
 )
 from mgba.runner import MultirateCrossScaleRunner, load_runner_config
 
@@ -61,6 +65,17 @@ GENOME = Genome(
         "negative_feedback_expression": 0.3,
     },
 )
+
+
+class _TruncatedRunner:
+    """Runner double whose run() violates the E0 tick-completeness contract."""
+
+    def __init__(self, config, model_versions) -> None:
+        self.config = config
+        self.model_versions = model_versions
+
+    def run(self, scenario, ticks):
+        return SimpleNamespace(ticks=())
 
 
 def _neural_grn_config(**overrides) -> NeuralGrnConfig:
@@ -604,6 +619,101 @@ class NeuralComparisonTests(unittest.TestCase):
         )
         self.assertGreaterEqual(len(shipped.seeds), 2)
         self.assertGreater(shipped.ticks, 0)
+
+    def test_config_guards_cover_ticks_and_seed_sign(self) -> None:
+        with self.assertRaises(ValueError):
+            NeuralComparisonConfig(model_version="x", ticks=0, seeds=(7, 42))
+        with self.assertRaises(ValueError):
+            NeuralComparisonConfig(model_version="x", ticks=True, seeds=(7, 42))
+        with self.assertRaises(ValueError):
+            NeuralComparisonConfig(model_version="x", ticks=5, seeds=(-1, 42))
+
+    def test_load_config_wraps_malformed_and_missing_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad.json"
+            path.write_text("{not json", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_neural_comparison_config(path)
+            missing = Path(directory) / "missing.json"
+            self.assertFalse(missing.exists())
+            with self.assertRaises(ValueError):
+                load_neural_comparison_config(missing)
+
+    def test_config_type_and_scenario_type_enforced(self) -> None:
+        with self.assertRaises(TypeError):
+            NeuralComparisonRunner(
+                "not-a-config",
+                baseline_runner=MultirateCrossScaleRunner(
+                    self.runner_config, **_layer_models()
+                ),
+                neural_runner=MultirateCrossScaleRunner(
+                    self.runner_config, **_layer_models()
+                ),
+                changed_layer="L0",
+            )
+        matrix = self._runner("L0")
+        with self.assertRaises(TypeError):
+            matrix.run(object())
+
+    def test_truncated_trace_fails_closed(self) -> None:
+        base_versions = {"L0": "rule", "L1": "v", "L2": "v", "L3": "v", "L4": "v"}
+        neural_versions = dict(base_versions, L0="neural")
+        matrix = NeuralComparisonRunner(
+            replace(self.config, ticks=5),
+            baseline_runner=_TruncatedRunner(self.runner_config, base_versions),
+            neural_runner=_TruncatedRunner(self.runner_config, neural_versions),
+            changed_layer="L0",
+        )
+        with self.assertRaises(RuntimeError):
+            matrix.run(self.scenario)
+
+    def test_model_version_property_tracks_config_digest(self) -> None:
+        matrix = self._runner("L3")
+        self.assertTrue(
+            matrix.model_version.startswith(f"{self.config.model_version}+")
+        )
+        other = self._runner("L3", config=replace(self.config, ticks=3))
+        self.assertNotEqual(matrix.model_version, other.model_version)
+
+    def test_artifacts_persist_append_only_and_refuse_conflicts(self) -> None:
+        config = replace(self.config, seeds=(1, 2), ticks=3)
+        result = self._runner("L0", config=config).run(self.scenario)
+        with tempfile.TemporaryDirectory() as directory:
+            paths = save_neural_artifacts(directory, result)
+            manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+            summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+            raw_files = tuple(paths["raw"].rglob("seed-*.json"))
+
+            self.assertEqual("mgba-neural-artifact-0.1", manifest["schema_version"])
+            self.assertEqual(result.matrix_id, manifest["matrix_id"])
+            self.assertEqual("L0", manifest["changed_layer"])
+            self.assertEqual("L0", summary["changed_layer"])
+            self.assertEqual(2 * len(config.seeds), len(manifest["records"]))
+            self.assertEqual(2 * len(config.seeds), len(raw_files))
+            self.assertEqual(1, len(summary["summaries"]))
+
+            with self.assertRaises(TypeError):
+                save_neural_artifacts(directory, "not-a-result")
+
+            # Append-only: identical content is a no-op.
+            save_neural_artifacts(directory, result)
+
+            # Result payload guards: unknown layer and empty payloads rejected.
+            with self.assertRaises(ValueError):
+                replace(result, changed_layer="L2")
+            with self.assertRaises(ValueError):
+                replace(result, records=())
+
+            # A tampered result targeting the same matrix_id is refused.
+            with self.assertRaises(ValueError):
+                save_neural_artifacts(
+                    directory, replace(result, scenario_digest="0" * 64)
+                )
+
+            # A corrupt existing artifact is refused, not overwritten.
+            paths["manifest"].write_text("{corrupt", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                save_neural_artifacts(directory, result)
 
 
 class FrozenBaselineGuardTests(unittest.TestCase):
