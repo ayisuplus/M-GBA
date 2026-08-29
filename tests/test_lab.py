@@ -20,6 +20,14 @@ from mgba.lab import (
 )
 from mgba.lab_server import _allow_client
 
+ROOT = Path(__file__).parents[1]
+LAB_EXPORT_SOURCES = (
+    ROOT / "artifacts" / "demo" / "carm-playbook.json",
+    ROOT / "artifacts" / "carm-state-conditioned-intervention" / "state-intervention-0e92bb234ba3a840",
+    ROOT / "artifacts" / "carm-spatial" / "carm-spatial-0f88408d1e44b25a",
+)
+LAB_EXPORT_SOURCES_AVAILABLE = all(path.exists() for path in LAB_EXPORT_SOURCES)
+
 
 def _fixture_bundle(bundle_id: str) -> dict:
     payload = {
@@ -30,7 +38,7 @@ def _fixture_bundle(bundle_id: str) -> dict:
         "description": "deterministic bundle fixture",
         "model_status": "contract demonstrator",
         "boundary_note": "not a clinical predictor",
-        "target_status": "真实数据 Target 尚未生成",
+        "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定，ADR-0043 calibration 确认 improved。",
         "seed": 42,
         "roles": {"tumor-001": "tumor"},
         "layout": {"tumor-001": [0.5, 0.5]},
@@ -135,18 +143,15 @@ class LabBundleTests(unittest.TestCase):
                 actual = hashlib.sha256((first["catalog"].parent / name).read_bytes()).hexdigest()
                 self.assertEqual(digest, actual)
 
+    @unittest.skipUnless(
+        LAB_EXPORT_SOURCES_AVAILABLE,
+        "competition lab artifacts are gitignored; present only on the generator machine",
+    )
     def test_full_lab_export_is_rebuildable_and_collective_growth_is_bounded(self) -> None:
-        root = Path(__file__).parents[1]
         sources = {
-            "dose_playbook": root / "artifacts" / "demo" / "carm-playbook.json",
-            "intervention_root": root
-            / "artifacts"
-            / "carm-state-conditioned-intervention"
-            / "state-intervention-0e92bb234ba3a840",
-            "spatial_root": root
-            / "artifacts"
-            / "carm-spatial"
-            / "carm-spatial-0f88408d1e44b25a",
+            "dose_playbook": LAB_EXPORT_SOURCES[0],
+            "intervention_root": LAB_EXPORT_SOURCES[1],
+            "spatial_root": LAB_EXPORT_SOURCES[2],
         }
         with tempfile.TemporaryDirectory() as temporary:
             temporary_root = Path(temporary)
@@ -235,7 +240,7 @@ class LabLiveContractTests(unittest.TestCase):
 
     def test_live_pair_keeps_manifest_and_scientific_boundary(self) -> None:
         self.assertIn("不是临床预测", self.bundle["boundary_note"])
-        self.assertIn("Target 尚未生成", self.bundle["target_status"])
+        self.assertIn("Target 已于 2026-08-28 生成", self.bundle["target_status"])
         self.assertEqual(42, self.bundle["seed"])
         self.assertEqual(63, len(self.bundle["roles"]))
         for condition in self.bundle["conditions"]:

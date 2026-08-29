@@ -1,1 +1,4 @@
 data/synthetic-feedback/** -text
+data/aivc/derived/** -text
+data/spatial-carm/derived/** -text
+data/carm/** -text

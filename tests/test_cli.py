@@ -32,6 +32,10 @@ from mgba.spatial_source_adapters import (
 ROOT = Path(__file__).parents[1]
 MATRIX_ROOT = ROOT / "artifacts" / "mvp-demo" / "matrix-7da4137aa39d5122"
 RUN_ARTIFACT = MATRIX_ROOT / "raw" / "l2_static" / "seed-41.json"
+MATRIX_ARTIFACTS_AVAILABLE = (
+    (MATRIX_ROOT / "manifest.json").is_file() and RUN_ARTIFACT.is_file()
+)
+LAB_PLAYBOOK_AVAILABLE = (ROOT / "artifacts" / "demo" / "carm-playbook.json").is_file()
 SOURCE_PROTOCOL = ROOT / "configs" / "experiments" / "carm_spatial_source_protocol.json"
 ANCHOR_PROTOCOL = ROOT / "configs" / "experiments" / "carm_spatial_anchor_protocol.json"
 
@@ -387,6 +391,10 @@ class Wp8ExperimentCommandTests(unittest.TestCase):
             self.assertTrue(Path(payload["artifact_root"]).is_dir())
 
 
+@unittest.skipUnless(
+    MATRIX_ARTIFACTS_AVAILABLE,
+    "mvp-demo matrix artifacts are gitignored; present only on the generator machine",
+)
 class ReportCommandTests(unittest.TestCase):
     def test_report_rebuilds_into_temp_output(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -715,6 +723,10 @@ class DemoExportCommandTests(unittest.TestCase):
             self.assertEqual("p" * 64, payload["playbook_digest"])
 
 
+@unittest.skipUnless(
+    LAB_PLAYBOOK_AVAILABLE,
+    "dose playbook artifact is gitignored; present only on the generator machine",
+)
 class LabExportCommandTests(unittest.TestCase):
     def test_lab_export_writes_catalog_to_temp(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
