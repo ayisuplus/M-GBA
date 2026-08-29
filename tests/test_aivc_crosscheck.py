@@ -63,6 +63,11 @@ def _profile(root: Path, name: str, units: dict[str, list[float]], pid: str) -> 
     return path
 
 
+@unittest.skipUnless(
+    importlib.util.find_spec("pandas") is not None
+    and importlib.util.find_spec("numpy") is not None,
+    "pandas/numpy only in the train venv",
+)
 class RollupTests(unittest.TestCase):
     def test_frozen_rollup_rule(self) -> None:
         rollup = _load_rollup()
