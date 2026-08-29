@@ -78,6 +78,30 @@ from .neural_experiments import (
 )
 from .demo import export_carm_demo
 from .lab import export_competition_lab_data
+from .perturbation_anchors import (
+    SPLIT_SALT,
+    build_perturbation_profile,
+    compare_profiles,
+    load_empirical_bundle,
+    load_hallmark_memberships,
+    load_profile_for_crosscheck,
+    save_crosscheck,
+    save_perturbation_profile,
+)
+from .l0_training_evaluation import (
+    evaluate_training,
+    load_response_predictions,
+    save_training_evaluation,
+)
+from .calibration import load_calibration_protocol
+from .carm_spatial_experiments import build_carm_spatial_runners
+from .spatial_calibration import (
+    make_spatial_objective,
+    point_to_overrides,
+    reference_box_point,
+    run_spatial_calibration,
+    save_spatial_calibration_artifacts,
+)
 from .collective_dynamics import (
     analyze_collective_dynamics_raw,
     load_cohort_map,
@@ -85,6 +109,16 @@ from .collective_dynamics import (
     load_raw_run_mapping,
     save_collective_dynamics_artifact,
 )
+from .empirical_l0_experiments import (
+    EmpiricalL0ComparisonRunner,
+    EmpiricalL0ScheduleRunner,
+    load_empirical_l0_comparison_config,
+    load_empirical_l0_schedule_config,
+    save_empirical_l0_artifacts,
+    save_empirical_l0_schedule_artifacts,
+)
+from .empirical_response import build_response_table, load_response_table, save_response_table
+from .layers.l0_empirical import EmpiricalResponseGrnModel, load_empirical_l0_config
 from .carm_spatial_experiments import (
     CarmSpatialExperimentRunner,
     build_carm_spatial_runners,
@@ -566,6 +600,225 @@ def build_parser() -> argparse.ArgumentParser:
         "--artifact-root",
         help="optional root for raw run, manifest, and derived target score",
     )
+
+    aivc_anchor = commands.add_parser(
+        "aivc-perturbation-anchor",
+        help="build the de-identified six-node perturbation profile from an empirical log2FC bundle",
+    )
+    aivc_anchor.add_argument(
+        "--bundle",
+        required=True,
+        help="empirical log2fc bundle JSON from scripts/aivc_norman_empirical.py",
+    )
+    aivc_anchor.add_argument(
+        "--hallmark",
+        required=True,
+        help="MSigDB Hallmark symbols GMT (sha256 must match the bundle identity)",
+    )
+    aivc_anchor.add_argument(
+        "--output",
+        required=True,
+        help="write-once perturbation profile JSON output",
+    )
+    aivc_anchor.add_argument(
+        "--salt",
+        default=None,
+        help="split salt override (default: frozen Stage 1 salt)",
+    )
+
+    l0_training_eval = commands.add_parser(
+        "l0-training-evaluate",
+        help="verify L0 response predictions and apply the frozen ADR-0037 pass rule",
+    )
+    l0_training_eval.add_argument(
+        "--predictions",
+        required=True,
+        help="mgba-l0-response-predictions-0.1 JSON from the venv training script",
+    )
+    l0_training_eval.add_argument(
+        "--profile",
+        required=True,
+        help="Stage 1 perturbation profile JSON (identity cross-checked)",
+    )
+    l0_training_eval.add_argument(
+        "--output",
+        required=True,
+        help="write-once training evaluation JSON output",
+    )
+
+    response_table = commands.add_parser(
+        "l0-response-table-build",
+        help="distill verified predictions into the write-once L0 response table",
+    )
+    response_table.add_argument("--predictions", required=True)
+    response_table.add_argument("--evaluation", required=True)
+    response_table.add_argument("--output", required=True)
+
+    empirical_l0 = commands.add_parser(
+        "empirical-l0-experiment",
+        help="run the ADR-0038 empirical-response vs hard-clamp paired L0 matrix",
+    )
+    empirical_l0.add_argument(
+        "--config",
+        default="configs/multiscale_demo.json",
+        help="multiscale scenario JSON",
+    )
+    empirical_l0.add_argument(
+        "--matrix-config",
+        default="configs/experiments/empirical_l0_comparison.json",
+        help="frozen empirical L0 comparison protocol JSON",
+    )
+    empirical_l0.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    empirical_l0.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="reference L0 GRN JSON (shared natural dynamics)",
+    )
+    empirical_l0.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    empirical_l0.add_argument(
+        "--l2-config",
+        default="configs/layers/l2_reference_cell.json",
+        help="L2 rule cell model JSON",
+    )
+    empirical_l0.add_argument(
+        "--l3-config",
+        default="configs/layers/l3_reference_tissue.json",
+        help="L3 fixed-graph tissue model JSON",
+    )
+    empirical_l0.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    empirical_l0.add_argument(
+        "--empirical-l0-config",
+        default="configs/layers/l0_empirical_response.json",
+        help="empirical L0 response-table identity JSON",
+    )
+    empirical_l0.add_argument("--artifact-root", help="optional artifact root")
+
+    empirical_l0_schedule = commands.add_parser(
+        "empirical-l0-schedule-experiment",
+        help="run the ADR-0041 config-driven multi-unit/schedule paired L0 matrix",
+    )
+    empirical_l0_schedule.add_argument(
+        "--config",
+        default="configs/multiscale_demo.json",
+        help="multiscale scenario JSON",
+    )
+    empirical_l0_schedule.add_argument(
+        "--matrix-config",
+        default="configs/experiments/empirical_l0_schedule.json",
+        help="frozen schedule comparison protocol JSON",
+    )
+    empirical_l0_schedule.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    empirical_l0_schedule.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="reference L0 GRN JSON (shared natural dynamics)",
+    )
+    empirical_l0_schedule.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    empirical_l0_schedule.add_argument(
+        "--l2-config",
+        default="configs/layers/l2_reference_cell.json",
+        help="L2 rule cell model JSON",
+    )
+    empirical_l0_schedule.add_argument(
+        "--l3-config",
+        default="configs/layers/l3_reference_tissue.json",
+        help="L3 fixed-graph tissue model JSON",
+    )
+    empirical_l0_schedule.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    empirical_l0_schedule.add_argument(
+        "--empirical-l0-config",
+        default="configs/layers/l0_empirical_response.json",
+        help="empirical L0 response-table identity JSON",
+    )
+    empirical_l0_schedule.add_argument("--artifact-root", help="optional artifact root")
+
+    crosscheck = commands.add_parser(
+        "aivc-crosscheck",
+        help="compare two Stage 1 profiles from independent source formats (ADR-0042)",
+    )
+    crosscheck.add_argument("--profile-a", required=True)
+    crosscheck.add_argument("--profile-b", required=True)
+    crosscheck.add_argument("--output", required=True)
+
+    spatial_calibrate = commands.add_parser(
+        "carm-spatial-calibrate",
+        help="run the ADR-0043 calibration-subset L3 parameter selection",
+    )
+    spatial_calibrate.add_argument(
+        "--target",
+        default="data/spatial-carm/derived/carm-spatial-anchor-target.json",
+        help="verified de-identified spatial target JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--protocol",
+        default="configs/experiments/carm_spatial_anchor_protocol.json",
+        help="frozen spatial-anchor protocol JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--calibration-config",
+        default="configs/experiments/carm_spatial_calibration.json",
+        help="frozen calibration search protocol JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--evaluation-config",
+        default="configs/experiments/carm_spatial_anchor_evaluation.json",
+        help="frozen spatial evaluation horizon/seed JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--config",
+        default="configs/scenarios/carm/high_immune_her2.json",
+        help="CAR-M scenario JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--runner-config",
+        default="configs/runner_reference.json",
+        help="multi-rate runner schedule and budget JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--spatial-config",
+        default="configs/layers/l3_carm_spatial.json",
+        help="reference spatial L3 JSON (incumbent)",
+    )
+    spatial_calibrate.add_argument(
+        "--l0-config",
+        default="configs/layers/l0_reference_grn.json",
+        help="L0 discrete GRN JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--l1-config",
+        default="configs/layers/l1_reference_molecular.json",
+        help="L1 coarse molecular model JSON",
+    )
+    spatial_calibrate.add_argument(
+        "--l4-config",
+        default="configs/layers/l4_reference_phenotype.json",
+        help="L4 phenotype observer JSON",
+    )
+    spatial_calibrate.add_argument("--artifact-root", help="optional artifact root")
 
     carm_intervention = commands.add_parser(
         "carm-intervention-experiment",
@@ -1237,6 +1490,193 @@ def main() -> None:
             spatial_root=args.spatial_root,
         )
         result = {name: str(path) for name, path in sorted(paths.items())}
+    elif args.command == "l0-training-evaluate":
+        evaluation = evaluate_training(
+            load_response_predictions(args.predictions), args.profile
+        )
+        output = save_training_evaluation(evaluation, args.output)
+        result = {
+            "schema_version": evaluation["schema_version"],
+            "evaluation_id": evaluation["evaluation_id"],
+            "verdict": evaluation["pass_rule"]["verdict"],
+            "reasons": evaluation["pass_rule"]["reasons"],
+            "margin_vs_centroid": evaluation["pass_rule"]["margin_vs_centroid"],
+            "margin_vs_ridge": evaluation["pass_rule"]["margin_vs_ridge"],
+            "holdout_metrics": evaluation["metrics"]["holdout"],
+            "output": str(output),
+            "model_status": "offline-training-evaluation-not-a-runtime-change",
+        }
+    elif args.command == "l0-response-table-build":
+        table = build_response_table(args.predictions, args.evaluation)
+        output = save_response_table(table, args.output)
+        result = {
+            "schema_version": table["schema_version"],
+            "table_id": table["table_id"],
+            "units": len(table["units"]),
+            "verdict": table["source"]["verdict"],
+            "output": str(output),
+            "model_status": "verified-distilled-response-table",
+        }
+    elif args.command == "empirical-l0-schedule-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        schedule_config = load_empirical_l0_schedule_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        empirical_identity = load_empirical_l0_config(args.empirical_l0_config)
+        table = load_response_table(
+            empirical_identity["response_table_path"],
+            expected_sha256=empirical_identity["response_table_sha256"],
+        )
+        baseline_models = _load_layer_models(args)
+        empirical_models = dict(baseline_models)
+        empirical_models["genome_model"] = EmpiricalResponseGrnModel(
+            load_grn_config(args.l0_config),
+            response_table=table,
+            table_path=empirical_identity["response_table_path"],
+        )
+        matrix = EmpiricalL0ScheduleRunner(
+            schedule_config,
+            baseline_runner=MultirateCrossScaleRunner(
+                runner_config, **baseline_models
+            ),
+            empirical_runner=MultirateCrossScaleRunner(
+                runner_config, **empirical_models
+            ),
+        ).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            result["artifacts"] = {
+                name: str(path)
+                for name, path in save_empirical_l0_schedule_artifacts(
+                    args.artifact_root, matrix
+                ).items()
+            }
+    elif args.command == "empirical-l0-experiment":
+        scenario = load_multiscale_scenario(args.config)
+        comparison_config = load_empirical_l0_comparison_config(args.matrix_config)
+        runner_config = load_runner_config(args.runner_config)
+        empirical_identity = load_empirical_l0_config(args.empirical_l0_config)
+        table = load_response_table(
+            empirical_identity["response_table_path"],
+            expected_sha256=empirical_identity["response_table_sha256"],
+        )
+        baseline_models = _load_layer_models(args)
+        empirical_models = dict(baseline_models)
+        empirical_models["genome_model"] = EmpiricalResponseGrnModel(
+            load_grn_config(args.l0_config),
+            response_table=table,
+            table_path=empirical_identity["response_table_path"],
+        )
+        matrix = EmpiricalL0ComparisonRunner(
+            comparison_config,
+            baseline_runner=MultirateCrossScaleRunner(
+                runner_config, **baseline_models
+            ),
+            empirical_runner=MultirateCrossScaleRunner(
+                runner_config, **empirical_models
+            ),
+        ).run(scenario)
+        result = matrix.summary_dict()
+        result["model_status"] = "reference-model-not-validated-biological-model"
+        if args.artifact_root:
+            result["artifacts"] = {
+                name: str(path)
+                for name, path in save_empirical_l0_artifacts(
+                    args.artifact_root, matrix
+                ).items()
+            }
+    elif args.command == "carm-spatial-calibrate":
+        target = verify_spatial_anchor_target(args.target)
+        anchor_protocol = load_spatial_anchor_protocol(args.protocol)
+        compiled = compile_carm_scenario(load_carm_scenario_config(args.config))
+        runner_config = load_runner_config(args.runner_config)
+        base_spatial_config = load_carm_spatial_config(args.spatial_config)
+        evaluation_config = load_spatial_anchor_evaluation_config(args.evaluation_config)
+        protocol = load_calibration_protocol(args.calibration_config)
+
+        def _confirm(point):
+            candidate = replace(base_spatial_config, **point_to_overrides(point))
+            runners = build_carm_spatial_runners(
+                compiled,
+                runner_config=runner_config,
+                spatial_config=candidate,
+                l0_config=args.l0_config,
+                l1_config=args.l1_config,
+                l4_config=args.l4_config,
+            )
+            evaluation = SpatialAnchorEvaluator(
+                evaluation_config,
+                runner=runners["spatial_field"],
+                protocol=anchor_protocol,
+            ).evaluate(compiled, target=target)
+            role_means = {
+                role.role: role.mean_normalized_absolute_error
+                for role in evaluation.score.role_scores
+            }
+            return {
+                "evaluation_id": evaluation.evaluation_id,
+                "best_point": point_to_overrides(point),
+                "calibration_mean_nae": role_means["calibration"],
+                "holdout_mean_nae": role_means["holdout"],
+                "external_validation_mean_nae": role_means["external_validation"],
+            }
+
+        outcome = run_spatial_calibration(
+            protocol,
+            make_spatial_objective(
+                compiled=compiled,
+                target=target,
+                anchor_protocol=anchor_protocol,
+                evaluation_config=evaluation_config,
+                runner_config=runner_config,
+                base_spatial_config=base_spatial_config,
+                l0_config=args.l0_config,
+                l1_config=args.l1_config,
+                l4_config=args.l4_config,
+            ),
+            reference_point=reference_box_point(base_spatial_config),
+            confirm=_confirm,
+        )
+        result = outcome.as_dict()
+        result["model_status"] = "calibration-diagnosis-not-a-validation"
+        if args.artifact_root:
+            paths = save_spatial_calibration_artifacts(args.artifact_root, outcome)
+            result["artifact_summary"] = str(paths["summary"])
+    elif args.command == "aivc-crosscheck":
+        result = compare_profiles(
+            load_profile_for_crosscheck(args.profile_a),
+            load_profile_for_crosscheck(args.profile_b),
+        )
+        output = save_crosscheck(result, args.output)
+        result = {
+            "schema_version": result["schema_version"],
+            "crosscheck_id": result["crosscheck_id"],
+            "verdict": result["verdict"],
+            "shared_units": result["shared_units"],
+            "metrics": result["metrics"],
+            "output": str(output),
+            "model_status": "reproducibility-check-not-a-validation",
+        }
+    elif args.command == "aivc-perturbation-anchor":
+        bundle = load_empirical_bundle(args.bundle)
+        profile = build_perturbation_profile(
+            bundle,
+            load_hallmark_memberships(
+                args.hallmark, expected_sha256=bundle.hallmark_source["sha256"]
+            ),
+            salt=args.salt if args.salt is not None else SPLIT_SALT,
+        )
+        output = save_perturbation_profile(profile, args.output)
+        payload = profile.as_dict()
+        result = {
+            "schema_version": payload["schema_version"],
+            "profile_id": payload["profile_id"],
+            "units": len(payload["units"]),
+            "split": payload["split"],
+            "metrics_summary": payload["metrics_summary"],
+            "output": str(output),
+            "model_status": "reference-model-empirical-profile-not-a-validation",
+        }
     elif args.command == "collective-analyze":
         report = analyze_collective_dynamics_raw(
             load_raw_run_mapping(args.input),

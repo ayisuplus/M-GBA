@@ -1,0 +1,9 @@
+{
+  "model_version": "empirical-l0-comparison-0.1",
+  "ticks": 30,
+  "seeds": [41, 42, 43],
+  "cell_id": "cell-a",
+  "unit": "BAK1",
+  "reference_node": "damage_response",
+  "dose": 1.0
+}

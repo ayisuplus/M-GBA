@@ -38,13 +38,13 @@
       "path": "data/aivc/",
       "sha256": null,
       "provenance": {
-        "source": "AIVC 外部资源对接清单（待授权，未下载任何数据）",
+        "source": "AIVC 外部资源对接清单（ADR-0035 起分批授权下载中）",
         "date": "2026-08-21",
         "license": "逐条见 data/aivc/README.md 清单",
         "deidentified": true,
         "proxy_notice": ""
       },
-      "notes": "清单先行先例：data/aivc/README.md 为唯一事实源；每条资源须满足 AGENTS.md §6 三条件（用途/磁盘预算/授权）后下载并实测登记 sha256。"
+      "notes": "清单先行先例：data/aivc/README.md 为唯一事实源；每条资源须满足 AGENTS.md §6 三条件（用途/磁盘预算/授权）后下载并实测登记 sha256。2026-08-28：A2 已下载（scPerturb NormanWeissman2019_filtered.h5ad，698,680,199 B，CC BY 4.0）；A3/B1/B2/C1 已授权学校学术资源批次；训练前提由 ADR-0035 解除。"
     },
     {
       "dataset_id": "carm-spatial-anchor-planned",
@@ -53,13 +53,163 @@
       "path": "data/spatial-carm/",
       "sha256": null,
       "provenance": {
-        "source": "CAR-M L3 空间数据锚定预注册清单（Wu Visium + Jackson IMC；已授权，网络阻塞未下载）",
+        "source": "CAR-M L3 空间数据锚定预注册清单（Wu Visium + Jackson IMC）",
         "date": "2026-08-21",
         "license": "Wu CC BY 4.0；Jackson CC BY 1.0 Generic（2026-08-21 官方元数据已核验）",
         "deidentified": true,
         "proxy_notice": "Spatial transcriptomic spots and published imaging cell clusters are external proxy observations for L3 field/topology statistics; they are not cell identities, clinical truth, or treatment outcomes."
       },
-      "notes": "只锚定 L3 局部场异质性与细胞邻域统计；ADR-0028 修正后的五文件共 241,284,013 bytes，本地总预算不超过 2 GB；用户已授权最小包，当前网络出口无法访问 Zenodo，仍无外部文件落盘。"
+      "notes": "只锚定 L3 局部场异质性与细胞邻域统计；ADR-0028 修正后的五文件共 241,284,013 bytes，本地总预算不超过 2 GB；用户已授权最小包，2026-08-28 已下载并核验（MD5 对齐 Zenodo 公布值，SHA-256 见 data/raw/spatial-carm/ 两份 source manifest）；去标识 target 见 carm-spatial-anchor-target 条目。"
+    },
+    {
+      "dataset_id": "carm-spatial-anchor-target",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/spatial-carm/derived/carm-spatial-anchor-target.json",
+      "sha256": "bda7427ba97916e5c55e36b391e8b5f24339f7b424381bbf5a6ab9d780eeec71",
+      "provenance": {
+        "source": "Wu/Swarbrick Visium 三文件 + Jackson IMC 两文件（Zenodo 10.5281/zenodo.4739739 与 10.5281/zenodo.4607374），经 ADR-0028 源适配与 ADR-0026 去标识聚合管线生成",
+        "date": "2026-08-28",
+        "license": "Wu CC BY 4.0；Jackson CC BY 1.0 Generic",
+        "deidentified": true,
+        "proxy_notice": "Spatial field/neighborhood statistics are external proxy observations for L3 calibration only; they are not cell identities, clinical truth, or treatment outcomes."
+      },
+      "notes": "target_id spatial-anchor-29c87ba1411d4fc8；39 个预注册指标分布；角色拆分 calibration 4 / holdout 2 / external_validation 696；原始五文件与 observation bundle 留在 data/raw/spatial-carm/，不入库；首次同指标评估记录见 docs/实验记录/CAR-M-spatial-anchor-first-target-2026-08-28.md。"
+    },
+    {
+      "dataset_id": "aivc-norman-perturbation-profile",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/norman-perturbation-profile.json",
+      "sha256": "35860c026c11968ec84036810f8f7c04d31096e143de494a99bf22640afe318a",
+      "provenance": {
+        "source": "scPerturb NormanWeissman2019_filtered.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0036 两段管线（.venv-train 实证段 + 核心聚合段）生成",
+        "date": "2026-08-28",
+        "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "deidentified": true,
+        "proxy_notice": "Six-node Hallmark-bridged log2FC vectors describe public Perturb-seq aggregate responses in L0 semantic space; they are not a biological fit, a virtual-cell claim, or an efficacy predictor."
+      },
+      "notes": "profile_id norman-perturbation-profile-0a0aa914dc9fb080；236 个扰动单元（≥50 QC 细胞），digest 拆分 train 188 / holdout 48；train-only 质心 + MAE/方向/Spearman 为描述性基线，供 L0 训练对照使用；契约见 docs/决策记录/ADR-0036-AIVC-Norman实证锚点契约.md。"
+    },
+    {
+      "dataset_id": "aivc-l0-training-evaluation",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/l0-training-evaluation.json",
+      "sha256": "01d93e8d07cbaddf1e05d9c52a304d3f6c1d05276f5ed47bc70a01f86be5a070",
+      "provenance": {
+        "source": "ADR-0037 首次 L0 训练实验（.venv-train CPU 单线程 + 核心核验段），target 为 aivc-norman-perturbation-profile",
+        "date": "2026-08-28",
+        "license": "随源数据（scPerturb CC BY 4.0；MSigDB 条款）",
+        "deidentified": true,
+        "proxy_notice": "Offline perturbation-response evaluation on K562 CRISPRa data; predictions do not enter the runtime chain and are not a biological fit or efficacy predictor."
+      },
+      "notes": "evaluation_id l0-training-eval-97216b607136bef0；verdict passed：holdout MLP MAE 0.009494 严格低于 centroid 0.012872 与 ridge 0.012280（margin 0.003378/0.002786，规则 >1e-12）；训练端到端字节级确定性已验证（同种子同调用重跑 SHA-256 一致）；权重 models/l0_response_mlp.npz 不入库。"
+    },
+    {
+      "dataset_id": "aivc-replogle-kd-perturbation-profile",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/replogle-kd-perturbation-profile.json",
+      "sha256": "e233d63687b0ddfa8c7ac2f441788136dc58a15aa8ada8a029b51f9e466fa34a",
+      "provenance": {
+        "source": "scPerturb ReplogleWeissman2022_K562_essential.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0039 管线（dense-X 实证段 + 核心聚合段）生成",
+        "date": "2026-08-29",
+        "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "deidentified": true,
+        "proxy_notice": "Six-node Hallmark-bridged log2FC vectors describe public CRISPRi knockdown aggregate responses; reference-model grade description only, not a biological fit or efficacy predictor."
+      },
+      "notes": "profile_id replogle-kd-perturbation-profile-5eeb02e1124fcbad；1,832 个 KD 单元（≥50 细胞，无额外 QC——调和版无 good_coverage 字段），digest 拆分 train 1465 / holdout 367（salt mgba-aivc-replogle-kd-anchor-2026-08-29）；契约见 docs/决策记录/ADR-0039-KD语义扩展契约.md。"
+    },
+    {
+      "dataset_id": "aivc-replogle-kd-training-evaluation",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/replogle-kd-training-evaluation.json",
+      "sha256": "a9ddea68222a53540f5b76605ed74f1b60a5d64f502029a4869ace8353c88592",
+      "provenance": {
+        "source": "ADR-0039 KD 训练实验（与 ADR-0037 同冻结超参；.venv-train CPU 单线程 + 核心核验段）",
+        "date": "2026-08-29",
+        "license": "随源数据（scPerturb CC BY 4.0；MSigDB 条款）",
+        "deidentified": true,
+        "proxy_notice": "Offline KD perturbation-response evaluation; predictions do not enter the runtime chain."
+      },
+      "notes": "evaluation_id l0-training-eval-257b37036f010055；**verdict failed**：holdout MLP MAE 0.014813 vs centroid 0.014821（margin +7e-06，勉强）vs ridge 0.014418（margin −0.000396，不优于）——按冻结规则不通过，负面结果原样保留；不生成 KD 响应表、不进入链路实验；权重 models/replogle_kd_mlp.npz 不入库。"
+    },
+    {
+      "dataset_id": "aivc-gene-embedding-table",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/gene-embedding-table.json",
+      "sha256": "34785e7ace44c91652a9cd5e5d381772e5a49d3108b3f37db8c36806f5d66791",
+      "provenance": {
+        "source": "Geneformer-V2-104M_CLcancer 输入 token 嵌入表纯查表提取（无模型前向），映射链 symbol→gene_name_id_dict→Ensembl→token_dictionary→嵌入行",
+        "date": "2026-08-29",
+        "license": "Geneformer 仓库条款",
+        "deidentified": true,
+        "proxy_notice": "Gene token embedding rows are pretrained static features for perturbation-identity encoding; no inference or fine-tuning was run."
+      },
+      "notes": "1,877 基因解析、56 未映射（已记录名单）；768 维；嵌入表 SHA-256 与 C1 权重/字典溯源齐全；契约见 docs/决策记录/ADR-0040-Geneformer嵌入特征重训契约.md。"
+    },
+    {
+      "dataset_id": "aivc-replogle-kd-embedding-evaluation",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/replogle-kd-emb-evaluation.json",
+      "sha256": "5c6e4312b58aa6bfc3dcc7bd81fa1957a7d08b125ef436044288ecf78e2b61ce",
+      "provenance": {
+        "source": "ADR-0040 KD 嵌入重训（1,780 覆盖单元；与 ADR-0039 同盐、同冻结超参）",
+        "date": "2026-08-29",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Offline evaluation; predictions do not enter the runtime chain."
+      },
+      "notes": "evaluation_id l0-training-eval-d6471a14fc2f3a5d；**verdict failed**：holdout MLP 0.014212 < centroid 0.014805（+0.000593）但不优于 ridge 0.014181（−3e-05）；嵌入修复了 one-hot 退化（ridge 恢复有效基线），任务在基因语义空间近似线性；负面结果保留，KD 链路继续关闭。"
+    },
+    {
+      "dataset_id": "aivc-norman-embedding-evaluation",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/norman-emb-evaluation.json",
+      "sha256": "a8893ec063a80a8275b2127d5680ceff6f0c3daa1e279018a97ab11866bfca34",
+      "provenance": {
+        "source": "ADR-0040 OE 描述臂（Norman profile 同盐；仅描述性，不进通过判定）",
+        "date": "2026-08-29",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Descriptive arm; does not amend the ADR-0037 passed identity."
+      },
+      "notes": "evaluation_id l0-training-eval-03e335bca1ca8c9b；holdout MLP 0.010710 vs centroid 0.012514（+0.001803）vs ridge 0.010691（−2e-05）；描述性参考 ADR-0037 主结论不变。"
+    },
+    {
+      "dataset_id": "aivc-norman-geo-perturbation-profile",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/norman-geo-perturbation-profile.json",
+      "sha256": "3d6bceaffe4934fec906647a2cc207d51a6c491fdd8eba9667cdaeb062069fe0",
+      "provenance": {
+        "source": "GEO GSE133344 原生处理文件（filtered matrix + barcodes + genes + cell_identities），经 ADR-0042 归并规则与 ADR-0036 同冻结归一化管线生成",
+        "date": "2026-08-29",
+        "license": "GEO 公共数据；Hallmark 遵守 MSigDB 条款",
+        "deidentified": true,
+        "proxy_notice": "GEO-native six-node profile of the same Norman dataset, built only for the two-source reproducibility check; the scPerturb profile remains the frozen in-chain source."
+      },
+      "notes": "profile_id norman-geo-perturbation-profile-101f1145faa49694；240 单元（含技术重复 _1/_2 后缀单元，与 scPerturb 的合并命名差 6 个）；control 11,183 细胞与 A2 一致；契约见 ADR-0042。"
+    },
+    {
+      "dataset_id": "aivc-norman-source-crosscheck",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/norman-source-crosscheck.json",
+      "sha256": "e57e9ab9540bf9023f25fa13243f0d583ebdd489094c6d8803b90d28e0c73421",
+      "provenance": {
+        "source": "Stage 1 双源格式交叉校验（scPerturb 调和版 vs GEO 原生），ADR-0042 冻结判据",
+        "date": "2026-08-29",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Reproducibility evidence across source formats; not a biological validation."
+      },
+      "notes": "crosscheck_id aivc-crosscheck-0a62229c8d964655；**verdict consistent**：234 共享单元，展平 Spearman 0.99993、方向一致率 0.9986、MAE 2.98e-05（远超冻结阈值 0.8/0.8）；未共享单元为 _1/_2 技术重复命名差异（6 个，已记录）。"
     }
   ]
 }

@@ -1,0 +1,88 @@
+{
+  "schema_version": "mgba-l0-training-evaluation-0.1",
+  "profile_id": "norman-perturbation-profile-0a0aa914dc9fb080",
+  "scientific_boundary": "Offline evaluation of a small perturbation-response predictor against the Stage 1 empirical profile (Norman 2019, K562 CRISPRa). Predictions do not enter the runtime chain and are not a biological fit, a virtual-cell claim, or an efficacy predictor. Reference-model grade.",
+  "source": {
+    "predictions_sha256": "4be37b1a289309b731851a0db500f2167b11e25615eb796ad37abfe483b5acef",
+    "profile_sha256": "35860c026c11968ec84036810f8f7c04d31096e143de494a99bf22640afe318a",
+    "weights": {
+      "path": "norman_emb_mlp.npz",
+      "sha256": "00804e9920473e75453fadc65550703ea34cc7bf51ee2f7aa9294297e084135f",
+      "bytes": 100230
+    }
+  },
+  "training": {
+    "seed": 42,
+    "hidden": 32,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "epochs": 3000,
+    "ridge_lambda": 1.0,
+    "device": "cpu-single-thread",
+    "torch_version": "2.7.0+cu128",
+    "final_train_loss_mse": 7.966694101924077e-05,
+    "feature_encoding": "geneformer-embedding",
+    "embedding_table_sha256": "34785e7ace44c91652a9cd5e5d381772e5a49d3108b3f37db8c36806f5d66791",
+    "embedding_dim": 768,
+    "covered_units": 226,
+    "excluded_units": 10,
+    "centroid_drift_vs_profile": 0.0009318518041084925
+  },
+  "split": {
+    "salt": "mgba-aivc-norman-anchor-2026-08-28",
+    "train_units": 180,
+    "holdout_units": 46
+  },
+  "metrics": {
+    "train": {
+      "centroid": {
+        "six_node_mae": 0.01353004886203658,
+        "sign_agreement": 0.7212962962962963,
+        "spearman": 0.6965079365079365,
+        "unit_count": 180
+      },
+      "ridge": {
+        "six_node_mae": 0.008151562309382914,
+        "sign_agreement": 0.8555555555555555,
+        "spearman": 0.7711111111111112,
+        "unit_count": 180
+      },
+      "mlp": {
+        "six_node_mae": 0.005989567405454956,
+        "sign_agreement": 0.8814814814814814,
+        "spearman": 0.8679365079365079,
+        "unit_count": 180
+      }
+    },
+    "holdout": {
+      "centroid": {
+        "six_node_mae": 0.012513530014284477,
+        "sign_agreement": 0.713768115942029,
+        "spearman": 0.8198757763975155,
+        "unit_count": 46
+      },
+      "ridge": {
+        "six_node_mae": 0.010690561525935232,
+        "sign_agreement": 0.8079710144927535,
+        "spearman": 0.8621118012422361,
+        "unit_count": 46
+      },
+      "mlp": {
+        "six_node_mae": 0.010710464813289567,
+        "sign_agreement": 0.8188405797101449,
+        "spearman": 0.8770186335403727,
+        "unit_count": 46
+      }
+    }
+  },
+  "pass_rule": {
+    "rule": "holdout mlp MAE strictly below centroid AND ridge, margins > 1e-12",
+    "margin_vs_centroid": 0.0018030652009949095,
+    "margin_vs_ridge": -1.9903287354334706e-05,
+    "verdict": "failed",
+    "reasons": [
+      "mlp does not beat ridge on holdout"
+    ]
+  },
+  "evaluation_id": "l0-training-eval-03e335bca1ca8c9b"
+}

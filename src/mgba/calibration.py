@@ -193,6 +193,24 @@ class CalibrationResult:
         }
 
 
+def load_calibration_protocol(path: str | Path) -> CalibrationProtocol:
+    """Load a frozen calibration protocol; any read/parse failure is a ValueError."""
+    try:
+        raw: Any = json.loads(Path(path).read_text(encoding="utf-8"))
+        return CalibrationProtocol(
+            model_version=str(raw["model_version"]),
+            search_seed=int(raw["search_seed"]),
+            candidate_count=int(raw["candidate_count"]),
+            top_k=int(raw["top_k"]),
+            refinement_steps=tuple(float(v) for v in raw["refinement_steps"]),
+            max_sweeps=int(raw["max_sweeps"]),
+            ticks=int(raw["ticks"]),
+            parameter_names=tuple(str(name) for name in raw["parameter_names"]),
+        )
+    except (KeyError, TypeError, json.JSONDecodeError, OSError) as error:
+        raise ValueError(f"invalid calibration protocol config: {error}") from error
+
+
 def sample_candidates(protocol: CalibrationProtocol) -> tuple[tuple[float, ...], ...]:
     """Seeded uniform sweep of the unit box, one stream per candidate."""
     if not isinstance(protocol, CalibrationProtocol):

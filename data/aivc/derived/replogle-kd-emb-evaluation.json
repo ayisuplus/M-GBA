@@ -1,0 +1,88 @@
+{
+  "schema_version": "mgba-l0-training-evaluation-0.1",
+  "profile_id": "replogle-kd-perturbation-profile-5eeb02e1124fcbad",
+  "scientific_boundary": "Offline evaluation of a small perturbation-response predictor against the Stage 1 empirical profile (Norman 2019, K562 CRISPRa). Predictions do not enter the runtime chain and are not a biological fit, a virtual-cell claim, or an efficacy predictor. Reference-model grade.",
+  "source": {
+    "predictions_sha256": "8c42908ed8c2b55486a6451fd3547ff21e9c1450c61f4f3649e23fbbbea6d275",
+    "profile_sha256": "e233d63687b0ddfa8c7ac2f441788136dc58a15aa8ada8a029b51f9e466fa34a",
+    "weights": {
+      "path": "replogle_kd_emb_mlp.npz",
+      "sha256": "7d5256407ac2e6446e33e035c2c27aa6bbb4e77e6201f55030351b8c655d3571",
+      "bytes": 100230
+    }
+  },
+  "training": {
+    "seed": 42,
+    "hidden": 32,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "epochs": 3000,
+    "ridge_lambda": 1.0,
+    "device": "cpu-single-thread",
+    "torch_version": "2.7.0+cu128",
+    "final_train_loss_mse": 0.0003981431946158409,
+    "feature_encoding": "geneformer-embedding",
+    "embedding_table_sha256": "34785e7ace44c91652a9cd5e5d381772e5a49d3108b3f37db8c36806f5d66791",
+    "embedding_dim": 768,
+    "covered_units": 1780,
+    "excluded_units": 52,
+    "centroid_drift_vs_profile": 0.0002948325155459376
+  },
+  "split": {
+    "salt": "mgba-aivc-replogle-kd-anchor-2026-08-29",
+    "train_units": 1426,
+    "holdout_units": 354
+  },
+  "metrics": {
+    "train": {
+      "centroid": {
+        "six_node_mae": 0.017159792996580683,
+        "sign_agreement": 0.6409537166900421,
+        "spearman": 0.3329593267882188,
+        "unit_count": 1426
+      },
+      "ridge": {
+        "six_node_mae": 0.01345304053166855,
+        "sign_agreement": 0.6957690509583917,
+        "spearman": 0.46736125025045083,
+        "unit_count": 1426
+      },
+      "mlp": {
+        "six_node_mae": 0.013644320233793068,
+        "sign_agreement": 0.6860682561944834,
+        "spearman": 0.3872169905830495,
+        "unit_count": 1426
+      }
+    },
+    "holdout": {
+      "centroid": {
+        "six_node_mae": 0.014804580121758868,
+        "sign_agreement": 0.626647834274953,
+        "spearman": 0.31251008878127523,
+        "unit_count": 354
+      },
+      "ridge": {
+        "six_node_mae": 0.014181388150748738,
+        "sign_agreement": 0.628060263653484,
+        "spearman": 0.31719128329297824,
+        "unit_count": 354
+      },
+      "mlp": {
+        "six_node_mae": 0.014211508041232505,
+        "sign_agreement": 0.6285310734463276,
+        "spearman": 0.31476997578692495,
+        "unit_count": 354
+      }
+    }
+  },
+  "pass_rule": {
+    "rule": "holdout mlp MAE strictly below centroid AND ridge, margins > 1e-12",
+    "margin_vs_centroid": 0.0005930720805263634,
+    "margin_vs_ridge": -3.0119890483766912e-05,
+    "verdict": "failed",
+    "reasons": [
+      "mlp does not beat ridge on holdout"
+    ]
+  },
+  "evaluation_id": "l0-training-eval-d6471a14fc2f3a5d"
+}

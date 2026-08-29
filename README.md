@@ -18,6 +18,16 @@ L0 基因/转录调控
 
 ## 当前状态
 
+- 空间 L3 calibration 回应"未锚定"（ADR-0043，2026-08-29）：按 ADR-0025 §4.3 冻结框架，只在 calibration 子集搜索 4 个 L3 参数（105 次评估留痕，incumbent 不劣保证），一次确认 holdout 均 NAE 12.15→8.71（−28.3%）→ **improved**；calibration −28.6%，external 1.33→1.54 如实报告不进门控；field_retention 顶到盒上界已记录（扩盒需另行预注册）；标定配置只存 artifact，冻结配置未动，采纳为新 reference 需另行 ADR。
+- Stage 1 完成双源格式交叉校验（ADR-0042，2026-08-29）：GEO 原生管线（MatrixMarket 流式 + guide 归并）与 scPerturb 调和版在 234 个共享单元上 Spearman **0.99993**、方向一致率 **0.9986**（冻结阈值 0.8/0.8），verdict **consistent**；Stage 1 格式处理获独立复现性证据，scPerturb 版仍是唯一入链主源。
+- OE 链路多单元/组合/调度扩展完成（ADR-0041，2026-08-29）：配置驱动调度配对 runner 跑通冻结五条件 × 3 seed 矩阵 `empirical-l0-schedule-f562ddbcb6d71d44`——多单元并行把两种语义的 L4 差异放大到 3.24e-04（单单元 2.01e-04），经验臂以约 1/55 的 L0 强度达到同量级 L4 效应；晚 onset 时序效应可见；组合单元携带真实组合测量（最弱）；调度不变量逐位保持（onset 前与 baseline 一致）；全部条件 failed 负基线不变。
+- Geneformer 嵌入重训两臂完成（ADR-0040，2026-08-29）：C1 输入 token 嵌入纯查表（1,877 基因，768 维）修复了 KD 的 one-hot 结构退化（ridge 恢复有效基线、两臂均明确优于质心），但 MLP 不优于 ridge（KD −3e-05 / OE −2e-05），两臂按冻结规则均 failed——任务在基因语义空间近似线性；KD 链路继续关闭，负面评估原样登记。结论性对照：OE 可学性来自组合共享成分，KD 单敲低需要新数据维度而非更强特征。
+- KD 语义扩展完成首次实验（ADR-0039，2026-08-29）：Replogle K562 CRISPRi（310,385 细胞、1,832 单元）经同构管线产出 profile 与训练评估——**按冻结规则未通过**（holdout MLP MAE 0.014813 仅险胜质心 +7e-06、不优于 ridge −0.000396），verdict failed 原样登记，不生成响应表、不进链路；失败分析指向身份 one-hot 在单样本单元上无共享结构，候选解法是 C1 Geneformer 基因嵌入（需另行 ADR）。
+- 训练成果已接入主链（ADR-0038，2026-08-28）：响应表经 passed 门禁蒸馏（`l0-response-table-60c838d81d379f17`），`EmpiricalResponseGrnModel` 作为 L0 层内可选变体（自然动力学与参考 GRN 逐位一致、抽象节点硬钳制语义不变、表内单元按冻结 2^x 规则逐节点审计）；首次配对矩阵 `empirical-l0-6a202fa1b24f1617`（baseline / 硬钳制 / 经验响应 × 3 seed）显示硬钳制 L0 强度高 36 倍但经验多节点模式在 L3/L4 的相对距离更大（4.0e-05/1.96e-04 vs 3.0e-06/5.1e-06），全部条件保持 failed 负基线。核心包仍零依赖。
+- L0 扰动响应首次训练实验**通过**冻结规则（ADR-0037，2026-08-28）：种子化 CPU 单线程 MLP 预测六节点扰动响应，holdout MAE 0.009494 严格优于质心（0.012872）与 ridge（0.012280）双基线（margin +0.003378/+0.002786，规则 >1e-12），方向一致率 0.833、Spearman 0.852 同向改善；训练端到端字节级确定性已验证；评估 artifact `l0-training-eval-97216b607136bef0` 已登记（7 条目全绿）。接链由 ADR-0038 完成（见上一条）。
+- AIVC Stage 1 已完成首次实证锚定（ADR-0036，2026-08-28）：Norman scPerturb 236 个真实扰动经冻结 Hallmark 六节点桥表达为 L0 语义向量，产出 write-once profile `norman-perturbation-profile-0a0aa914dc9fb080`（digest 拆分 train 188 / holdout 48，train-only 质心 + MAE/方向/Spearman 描述性基线，holdout MAE 0.0129）；已登记 registry（6 条目全绿）。这为 L0 训练提供了实证 target，不构成任何验证结论。
+- "本机不训练"阶段前提已由 ADR-0035 解除（2026-08-28，硬件 RTX 5090 32 GB 到位）：训练只在独立虚拟环境、PyTorch 永不进核心零依赖包、每次只训练替换一层、规则基线永久默认；首个训练目标为 L0 扰动响应（A2 scPerturb Norman h5ad 已下载核验；A3/B1/B2/C1 移学校学术资源批次；A1 Hallmark v2026.1 已下载登记，桥拼写经真实数据修正）。
+- CAR-M 空间 L3 已完成首次真实数据锚定（2026-08-28）：首次同指标评估 `spatial-score-f693c3da106acdc5` 按预注册判据记为**未锚定**（calibration 平均归一化误差 10.35、holdout 12.15、场指标全部落在观测分布外；external validation 1.33）；ADR-0043 的 calibration 子集参数选择随后按冻结确认规则把该结论翻转为 **improved**（见最新一条）。
 - 已完成可行性评估、核心原则、跨尺度架构与五层纵向 MVP 计划。
 - 已初始化一个只依赖 Python 标准库的 L0→L4 契约演示器。
 - 已验证一次 L0 修复表达敲低能够依次改变 L1、L2、L3 和 L4。
@@ -42,10 +52,10 @@ L0 基因/转录调控
 - `mgba demo-export` 已升级为 CAR-M 跨尺度研究观察台（ADR-0022）：seed-42 baseline/干预双画布同 tick 对照、L3 压力/信号/资源显示投影、配对 L4 曲线、逐细胞 L0→L1→L2→局部 L3 差异和转换事件审计；旧项目 `D:\car-m-virtual-cell` 只提供交互参考，其 ABM/GAT 热路径没有迁移，负面基线原样保留。
 - CAR-M 已增加可选因果空间 L3（ADR-0023）：`SpatialTissueState` 把归一化 Cell 坐标、12×12 压力/资源/信号场和半径邻域纳入正式 trace/checkpoint；`mgba carm-spatial-experiment` 运行固定图 vs 空间场的同 seed 单层配对，并报告位移、边周转、场异质性和梯度。它是无量纲 reference model，不是物理扩散或组织重建；原固定图基线与冻结矩阵不变。
 - `mgba carm-spatial-ablation` 已完成 movement×field×topology 的 2×2×2 L3 内部审计（ADR-0024）：全关和仅移动均为 L3/L4 零效应负对照；20 tick 描述性主效应显示场耦合的 L4 距离最大（0.048720），空间邻域其次（0.025588），移动最小（0.000898）。这只定位当前 reference rules 的杠杆点，不是统计或疗效证据。
-- CAR-M 空间 L3 的外部数据锚定已预注册（ADR-0025/0028）：Wu/Swarbrick Visium 三文件锚定场异质性，Jackson IMC 位置/聚类两文件锚定细胞邻域；Rights 已核验为 CC BY 4.0 / CC BY 1.0 Generic。未被当前指标消费的 mask 归档在下载前移出，最小包现为五文件 241,284,013 bytes、本地峰值 ≤2 GB。用户已授权，但当前环境访问 Zenodo 被 DNS/超时阻塞，仍没有外部文件落盘或运行时模型变更。
-- 空间锚点聚合契约已实现（ADR-0026）：`mgba spatial-anchor-build/check` 将有许可与 SHA-256 的临时 observation bundle 转成只有不可逆样本别名和预注册 L3 统计的 write-once target；Wu 4/2 calibration/holdout 和 Jackson external-validation 角色在协议中冻结。旧 `D:\car-m-virtual-cell` 的 TCGA/Tahoe/OmniPath 缓存不含空间真值，ABM 坐标/手工场只作格式参考。当前仍未下载外部空间数据。
-- 模型—Target 同指标评估已实现（ADR-0027）：`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影为同一 24 个指标，分别报告 calibration 15、holdout 15、external validation 9 共 39 个描述性距离，并保存完整 raw trace；合成 target 仅用于测试管线，没有正式外部评分或生物验证结论。
-- 空间源格式适配器已实现（ADR-0028）：`mgba spatial-source-adapt-field` 流式读取已登记的 10x MatrixMarket，按下载前冻结的三个透明八基因代理生成单位区间场观察；`mgba spatial-source-adapt-neighborhood` 精确连接 Jackson 位置/cluster 表，所有 cluster 必须显式映射到 `immune|tumor|other`。适配器逐文件复核路径、Rights、bytes 和 SHA-256，合成原始格式 fixture 已贯通现有 target checker；这仍是 contract demonstrator，不是外部验证结果。
+- CAR-M 空间 L3 的外部数据锚定已预注册（ADR-0025/0028）：Wu/Swarbrick Visium 三文件锚定场异质性，Jackson IMC 位置/聚类两文件锚定细胞邻域；Rights 已核验为 CC BY 4.0 / CC BY 1.0 Generic。未被当前指标消费的 mask 归档在下载前移出，最小包现为五文件 241,284,013 bytes、本地峰值 ≤2 GB。用户已授权；最小包已于 2026-08-28 下载核验，运行时模型未变。
+- 空间锚点聚合契约已实现（ADR-0026）：`mgba spatial-anchor-build/check` 将有许可与 SHA-256 的临时 observation bundle 转成只有不可逆样本别名和预注册 L3 统计的 write-once target；Wu 4/2 calibration/holdout 和 Jackson external-validation 角色在协议中冻结。旧 `D:\car-m-virtual-cell` 的 TCGA/Tahoe/OmniPath 缓存不含空间真值，ABM 坐标/手工场只作格式参考。真实最小包已于 2026-08-28 落盘并生成首个 target。
+- 模型—Target 同指标评估已实现（ADR-0027）：`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影为同一 24 个指标，分别报告 calibration 15、holdout 15、external validation 9 共 39 个描述性距离，并保存完整 raw trace；首个真实 target 已评分（2026-08-28，未锚定）；仍无生物验证结论。
+- 空间源格式适配器已实现（ADR-0028）：`mgba spatial-source-adapt-field` 流式读取已登记的 10x MatrixMarket，按下载前冻结的三个透明八基因代理生成单位区间场观察；`mgba spatial-source-adapt-neighborhood` 精确连接 Jackson 位置/cluster 表，所有 cluster 必须显式映射到 `immune|tumor|other`。适配器逐文件复核路径、Rights、bytes 和 SHA-256，真实文件已于 2026-08-28 贯通该边界（三处源格式偏差以机械派生处理，冻结配置与适配器未改）；这仍不是外部验证结论。
 - AIDO 启发的状态条件序列干预已实现并完成首次实验（ADR-0029）：借鉴“初始状态 + perturbation/environment → 后续状态”的任务形状，不引入 AIDO 权重或中央跨层潜状态。`mgba carm-intervention-experiment` 对同一批 15 个 engineered macrophage 施加等剂量/等暴露次数的 early/late L0 signal pulse；晚期条件在 onset 前与 baseline 逐层零差异。60-tick 首次矩阵中 short/long timing contrast 的终末 L4 距离分别为 0.006580/0.020899；晚期干预减轻 vitality/damage 代价但增加 inflammation，所有条件仍为 `RECOVERED`。这是 reference-rule trade-off，不是疗效或真实 virtual cell 证据。
 - 比赛版“跨尺度虚拟实验室”已实现（ADR-0030）：`mgba lab-export` 把三套冻结实验转换为可字节重建的 catalog、按实验延迟加载 bundle 和 SHA-256 manifest；`web/` 提供首页、双轨实验工作台、30 天分享结果页、证据页和离线 Demo。普通首页不加载或渲染黑洞；同源 `event-horizon-visual` Web Component 仅保留为站长显式嵌入或诱捕主题页使用的可选只读展示层，不读取实验数据、不发起网络请求，也不进入 L0–L4 生成链。GitHub Actions 对站点相关 PR/`main` 推送执行锁文件安装、测试、lint、生产构建和 Sites bundle 门禁，并为成功的 `main` 构建保存按 commit 标识的可部署产物；生产发布继续复用现有 Sites 项目，不在 GitHub 保存长期生产凭据。第一版在线入口只接受 CAR-M 状态条件实验的严格枚举，请求与模型版本共同生成确定性 run ID；Cloudflare Worker 负责凭证隔离、R2 保存和显式离线回退，`services/lab-api/` 提供可容器化 Python 执行边界。网站与 API 均在生成链外，不修改 L0–L4 DTO/Protocol 或冻结结果；真实空间 Target 仍明确显示为“尚未生成”。
 - 群体动力学观察层已实现（ADR-0031）：`CollectiveDynamicsObserver` 和 `mgba collective-analyze` 只从正式 raw trace 重算 activation-stress reference proxy 的 direction、intensity、polarization、edge alignment、冻结状态转换、外部 cohort、Cell archetype 及 L4 时间关联。三套比赛 bundle 与工作台已加入同步双轨相图；旧 bundle 仍可读取。该能力不进入 tick、不改变 E3 阶梯，也不宣称物理相变、涌现或临床预测。
@@ -116,6 +126,23 @@ L0 基因/转录调控
 - [ADR-0032：OCellus 启发的 Autolab 计划控制面](docs/决策记录/ADR-0032-OCellus启发的Autolab计划控制面.md)
 - [ADR-0033：EvenClock 启发的 ClockSector 空间观察层](docs/决策记录/ADR-0033-EvenClock启发的ClockSector观察层.md)
 - [ADR-0034：OCellus 离线扰动锚点契约](docs/决策记录/ADR-0034-OCellus离线扰动锚点契约.md)
+- [ADR-0035：解除不训练前提与 L0 训练轨道](docs/决策记录/ADR-0035-解除不训练前提与L0训练轨道.md)
+- [ADR-0036：AIVC Norman 实证锚点契约](docs/决策记录/ADR-0036-AIVC-Norman实证锚点契约.md)
+- [ADR-0037：L0 扰动响应首次训练契约](docs/决策记录/ADR-0037-L0扰动响应首次训练契约.md)
+- [ADR-0038：实证响应表接入 L0 契约](docs/决策记录/ADR-0038-实证响应表接入L0契约.md)
+- [ADR-0039：KD 语义扩展契约](docs/决策记录/ADR-0039-KD语义扩展契约.md)
+- [ADR-0040：Geneformer 嵌入特征重训契约](docs/决策记录/ADR-0040-Geneformer嵌入特征重训契约.md)
+- [ADR-0041：OE 链路多单元与调度扩展契约](docs/决策记录/ADR-0041-OE链路多单元与调度扩展契约.md)
+- [ADR-0042：GEO 原生交叉校验契约](docs/决策记录/ADR-0042-GEO原生交叉校验契约.md)
+- [ADR-0043：CAR-M 空间 L3 标定契约](docs/决策记录/ADR-0043-CAR-M空间L3标定契约.md)
+- [CAR-M 空间 L3 calibration 记录](docs/实验记录/CAR-M-spatial-calibration-2026-08-29.md)
+- [Stage 1 GEO 交叉校验记录](docs/实验记录/Stage1-GEO-native-crosscheck-2026-08-29.md)
+- [OE 多单元/调度扩展实验记录](docs/实验记录/OE-multi-unit-schedule-2026-08-29.md)
+- [Geneformer 嵌入重训实验记录（两臂未通过）](docs/实验记录/Geneformer-embedding-retrain-2026-08-29.md)
+- [KD 首次训练实验记录（负面结果）](docs/实验记录/KD-replogle-first-training-2026-08-29.md)
+- [实证响应接入 L0 首次配对实验记录](docs/实验记录/L0-empirical-response-first-matrix-2026-08-28.md)
+- [L0 扰动响应首次训练实验记录](docs/实验记录/L0-perturbation-response-training-2026-08-28.md)
+- [AIVC Stage 1 首次实证锚定记录](docs/实验记录/AIVC-Norman-Stage1-2026-08-28.md)
 - [CAR-M 状态条件序列干预首次实验记录](docs/实验记录/CAR-M-state-conditioned-intervention-2026-08-21.md)
 - [CAR-M v0.2 实验记录](docs/实验记录/CAR-M-vertical-slice-2026-08-19.md)
 - [0.1.0 中文设计报告](docs/报告/M-GBA-MVP-中文设计报告.md)

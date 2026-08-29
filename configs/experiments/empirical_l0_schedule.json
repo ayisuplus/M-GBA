@@ -1,0 +1,60 @@
+{
+  "model_version": "empirical-l0-schedule-0.1",
+  "ticks": 30,
+  "seeds": [41, 42, 43],
+  "conditions": [
+    {
+      "condition_id": "baseline",
+      "arm": "reference",
+      "perturbations": null,
+      "schedule": null
+    },
+    {
+      "condition_id": "reference_multi_clamp",
+      "arm": "reference",
+      "perturbations": {
+        "cell-a": { "damage_response": 1.0 },
+        "cell-b": { "signal_expression": 1.0 },
+        "cell-c": { "damage_response": 1.0 }
+      },
+      "schedule": null
+    },
+    {
+      "condition_id": "empirical_multi_constant",
+      "arm": "empirical",
+      "perturbations": {
+        "cell-a": { "BAK1": 1.0 },
+        "cell-b": { "ETS2": 1.0 },
+        "cell-c": { "TGFBR2": 1.0 }
+      },
+      "schedule": null
+    },
+    {
+      "condition_id": "empirical_multi_scheduled",
+      "arm": "empirical",
+      "perturbations": null,
+      "schedule": {
+        "16": {
+          "cell-a": { "BAK1": 1.0 },
+          "cell-b": { "ETS2": 1.0 },
+          "cell-c": { "TGFBR2": 1.0 }
+        }
+      }
+    },
+    {
+      "condition_id": "empirical_combo_constant",
+      "arm": "empirical",
+      "perturbations": {
+        "cell-a": { "BCL2L11_BAK1": 1.0 }
+      },
+      "schedule": null
+    }
+  ],
+  "comparisons": [
+    ["baseline", "reference_multi_clamp"],
+    ["baseline", "empirical_multi_constant"],
+    ["reference_multi_clamp", "empirical_multi_constant"],
+    ["empirical_multi_constant", "empirical_multi_scheduled"],
+    ["baseline", "empirical_combo_constant"]
+  ]
+}

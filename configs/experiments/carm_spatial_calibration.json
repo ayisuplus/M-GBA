@@ -1,0 +1,15 @@
+{
+  "model_version": "carm-spatial-calibration-0.1",
+  "search_seed": 20260829,
+  "candidate_count": 24,
+  "top_k": 4,
+  "refinement_steps": [0.25, 0.125],
+  "max_sweeps": 2,
+  "ticks": 20,
+  "parameter_names": [
+    "neighbor_radius",
+    "field_retention",
+    "field_diffusion",
+    "node_field_coupling"
+  ]
+}

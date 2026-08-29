@@ -14,5 +14,11 @@ dist/
 .env
 .tmp/
 data/raw/
+data/aivc/A1-msigdb-hallmark/
+data/aivc/A2-scperturb/
+data/aivc/A3-norman2019-geo/
+data/aivc/B1-tahoe100/
+data/aivc/B2-replogle2022/
+data/aivc/C1-geneformer/
 models/
 artifacts/

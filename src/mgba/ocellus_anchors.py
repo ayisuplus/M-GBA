@@ -67,7 +67,7 @@ HALLMARK_BRIDGE: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("HALLMARK_OXIDATIVE_PHOSPHORYLATION", "HALLMARK_GLYCOLYSIS"),
     ),
     ("death_expression", ("HALLMARK_APOPTOSIS",)),
-    ("negative_feedback_expression", ("HALLMARK_TGFBETA_SIGNALING",)),
+    ("negative_feedback_expression", ("HALLMARK_TGF_BETA_SIGNALING",)),
 )
 
 HALLMARK_BRIDGE_STRENGTHS: tuple[tuple[str, str], ...] = (

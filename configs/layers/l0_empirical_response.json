@@ -1,0 +1,5 @@
+{
+  "model_version": "empirical-l0-response-0.1",
+  "response_table_path": "data/aivc/derived/l0-response-table.json",
+  "response_table_sha256": "879877dbabe51faf452fa260d1d20d302c103b6377bc53277f9d0e6b9bc08a49"
+}

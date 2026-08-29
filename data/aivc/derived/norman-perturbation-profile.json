@@ -1,0 +1,4316 @@
+{
+  "schema_version": "mgba-aivc-perturbation-profile-0.1",
+  "dataset_id": "norman-weissman-2019-scperturb-filtered",
+  "scientific_boundary": "De-identified aggregate empirical profile of public Perturb-seq data projected through the frozen Hallmark six-node bridge; reference-model grade description only. Not a biological fit, a virtual-cell claim, or an efficacy predictor; Norman 2019 is CRISPRa overexpression in a single K562 background and must not be extrapolated.",
+  "bridge": {
+    "version": "mgba-hallmark-six-node-bridge-0.1",
+    "digest": "74c7c8a2158c721dc05f8712077163542712cad80c2cf856cecbfb22ac3f6d36"
+  },
+  "source": {
+    "bundle_sha256": "0ec11b0dfa46ca2933fa3a7714e60ca22cda954e5cfa41238746ddf2e34517a0",
+    "h5ad": {
+      "path": "NormanWeissman2019_filtered.h5ad",
+      "sha256": "efde6f5301fe256725dce1d980f37bd96a13481a9a16135515897368e631affc",
+      "bytes": 698680199,
+      "license": "CC BY 4.0",
+      "rights_verified": true,
+      "zenodo_doi": "10.5281/zenodo.7041849"
+    },
+    "hallmark_gmt": {
+      "path": "h.all.v2026.1.Hs.symbols.gmt",
+      "sha256": "eecaf6dad908334ae885406ec72bdc0646d8917588ed7c219fac92fc5363f596",
+      "bytes": 48686,
+      "license": "MSigDB terms (no redistribution)",
+      "rights_verified": true,
+      "version": "MSigDB v2026.1"
+    }
+  },
+  "parameters": {
+    "qc_flag": "good_coverage",
+    "control_label": "control",
+    "min_cells": 50,
+    "library_size_scale": 10000.0,
+    "normalization": "library-size-1e4-log2(1+x)-unit-mean",
+    "log2fc_rule": "log2fc = unit_mean_log2 - control_mean_log2"
+  },
+  "split": {
+    "salt": "mgba-aivc-norman-anchor-2026-08-28",
+    "train_fraction": 0.8,
+    "rule": "sha256(salt|unit) ranked; floor(n*0.8) train",
+    "train_units": 188,
+    "holdout_units": 48
+  },
+  "centroid_train_only": {
+    "damage_response": 8.09027781671221e-05,
+    "signal_expression": 0.0055357499935785905,
+    "repair_expression": -0.03325742009449137,
+    "metabolic_expression": -0.03644377675402052,
+    "death_expression": -0.002293629858553786,
+    "negative_feedback_expression": 0.011345401312724539
+  },
+  "units": [
+    {
+      "unit": "AHR",
+      "cells": 518,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004893084647474164,
+        "signal_expression": 0.006367818936707186,
+        "repair_expression": -0.018375196384022015,
+        "metabolic_expression": -0.025512434778863405,
+        "death_expression": 0.01003765085161808,
+        "negative_feedback_expression": 0.020571311261509892
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008835834526169888,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "AHR_FEV",
+      "cells": 257,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.013443079394318285,
+        "signal_expression": 0.017877936508570384,
+        "repair_expression": -0.02883085882138296,
+        "metabolic_expression": -0.03424665259391949,
+        "death_expression": 0.031649493584953975,
+        "negative_feedback_expression": 0.059948367633414455
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019145689721425014,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "AHR_KLF1",
+      "cells": 451,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0073309247928931955,
+        "signal_expression": 0.007834861290744951,
+        "repair_expression": 0.010067641622146751,
+        "metabolic_expression": 0.011757142675668394,
+        "death_expression": 0.014920947410858493,
+        "negative_feedback_expression": 0.010048030585690683
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0199311770757776,
+        "sign_agreement": 0.5,
+        "spearman": -0.6
+      }
+    },
+    {
+      "unit": "ARID1A",
+      "cells": 211,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.00824331561433575,
+        "signal_expression": 0.0005901464781661624,
+        "repair_expression": -0.06413983827086901,
+        "metabolic_expression": -0.08588106386171995,
+        "death_expression": -0.01873759273050685,
+        "negative_feedback_expression": -0.001370850170069816
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.020458290257789967,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "ARRDC3",
+      "cells": 455,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.001116110841329737,
+        "signal_expression": 6.372344616378155e-05,
+        "repair_expression": -0.026936996119743165,
+        "metabolic_expression": -0.029740545377733955,
+        "death_expression": -0.003935867699238565,
+        "negative_feedback_expression": -0.0033145880545368284
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005999153787648763,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "ATL1",
+      "cells": 352,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.010075789105270086,
+        "signal_expression": -0.004210247280462708,
+        "repair_expression": -0.05096113582068764,
+        "metabolic_expression": -0.056671734713171495,
+        "death_expression": -0.020331299873178995,
+        "negative_feedback_expression": -0.006978373851205475
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015699301336896832,
+        "sign_agreement": 0.5,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "BAK1",
+      "cells": 1349,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0004124294590514231,
+        "signal_expression": 0.00030810813289211525,
+        "repair_expression": 0.0033794701598477976,
+        "metabolic_expression": 0.00901983516975172,
+        "death_expression": -0.0012718521353214814,
+        "negative_feedback_expression": -0.004759079534474837
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01746432154835231,
+        "sign_agreement": 0.5,
+        "spearman": -0.8285714285714286
+      }
+    },
+    {
+      "unit": "BCL2L11",
+      "cells": 532,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.00041075611164207267,
+        "signal_expression": -0.0006293724036332764,
+        "repair_expression": -0.0012687172970204611,
+        "metabolic_expression": -0.00016428141634054606,
+        "death_expression": -0.0007640591281801842,
+        "negative_feedback_expression": -0.002593481158120081
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015065572103898361,
+        "sign_agreement": 0.5,
+        "spearman": -0.4857142857142857
+      }
+    },
+    {
+      "unit": "BCL2L11_BAK1",
+      "cells": 167,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0007921505226865817,
+        "signal_expression": -0.002591116684404563,
+        "repair_expression": 0.0029196742146230144,
+        "metabolic_expression": 0.011070392747134497,
+        "death_expression": 0.0006702295169608083,
+        "negative_feedback_expression": -0.003648513637668126
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01844149301916892,
+        "sign_agreement": 0.0,
+        "spearman": -1.0
+      }
+    },
+    {
+      "unit": "BCL2L11_TGFBR2",
+      "cells": 423,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0011847717886006586,
+        "signal_expression": -0.002388718584174166,
+        "repair_expression": -0.0007597134041213851,
+        "metabolic_expression": 0.0018388223530028992,
+        "death_expression": -0.0006598866452371462,
+        "negative_feedback_expression": -0.006446792125097058
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.016566064265508697,
+        "sign_agreement": 0.3333333333333333,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "BCORL1",
+      "cells": 497,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0005217817018761304,
+        "signal_expression": -0.0002247220466777534,
+        "repair_expression": -0.007047183989755559,
+        "metabolic_expression": -0.005790081364033863,
+        "death_expression": 0.0012427996369480565,
+        "negative_feedback_expression": 0.0041906545663394764
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012319710709484828,
+        "sign_agreement": 0.5,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "BPGM",
+      "cells": 432,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.005608945495211085,
+        "signal_expression": -0.0049020156278817735,
+        "repair_expression": -0.019075627100437025,
+        "metabolic_expression": -0.029473686733330524,
+        "death_expression": -0.010638455402301666,
+        "negative_feedback_expression": -0.006768089600605755
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010622968894443514,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "BPGM_SAMD1",
+      "cells": 278,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.010230182399443496,
+        "signal_expression": -0.003794864536496474,
+        "repair_expression": -0.04998060010613083,
+        "metabolic_expression": -0.06719502717325064,
+        "death_expression": -0.016471131681921942,
+        "negative_feedback_expression": -0.0071704668960235534
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.016634916695111922,
+        "sign_agreement": 0.5,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "BPGM_ZBTB1",
+      "cells": 326,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0015609004828211277,
+        "signal_expression": -0.0014078355424586848,
+        "repair_expression": -0.021386112369814178,
+        "metabolic_expression": -0.03338692231153241,
+        "death_expression": -0.010653410503791148,
+        "negative_feedback_expression": 0.003938221836140045
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00654675184766878,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "C19orf26",
+      "cells": 817,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0016491197086575282,
+        "signal_expression": 0.0014637796970330141,
+        "repair_expression": 0.0022956128552063327,
+        "metabolic_expression": -0.000927183092808636,
+        "death_expression": 0.0001708602561854607,
+        "negative_feedback_expression": 0.0001825622382991227
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01505619050451837,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.2
+      }
+    },
+    {
+      "unit": "C3orf72",
+      "cells": 240,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0010507060158194933,
+        "signal_expression": 0.006790556915494793,
+        "repair_expression": -0.044847139140981145,
+        "metabolic_expression": -0.04116671729046927,
+        "death_expression": -0.010132757205030325,
+        "negative_feedback_expression": 0.025515718837819515
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.006757785769013103,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "C3orf72_FOXL2",
+      "cells": 55,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.002645221249822917,
+        "signal_expression": 0.00686398094755636,
+        "repair_expression": -0.057192934473877924,
+        "metabolic_expression": -0.05071135035214864,
+        "death_expression": -0.004824844924198218,
+        "negative_feedback_expression": 0.03209825002044283
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010923584455474202,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CBFA2T3",
+      "cells": 602,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.00020991010511400805,
+        "signal_expression": 0.0020004587320935348,
+        "repair_expression": -0.03169781879429582,
+        "metabolic_expression": -0.03290597162012688,
+        "death_expression": -0.001951722220606833,
+        "negative_feedback_expression": 0.0016099894354669158
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0031668050156766583,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CBL",
+      "cells": 590,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.002665073140745177,
+        "signal_expression": -0.002881839948176263,
+        "repair_expression": -0.02640715668338511,
+        "metabolic_expression": -0.0337252423010744,
+        "death_expression": -0.011186450186490853,
+        "negative_feedback_expression": -0.006157077604650537
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00785461049500528,
+        "sign_agreement": 0.5,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "CBL_CNN1",
+      "cells": 328,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.010333293209687289,
+        "signal_expression": -0.009522137351651461,
+        "repair_expression": -0.06699755929426082,
+        "metabolic_expression": -0.08614225552271858,
+        "death_expression": -0.020018537475944776,
+        "negative_feedback_expression": -0.01806550089283138
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.026007751854083147,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CBL_PTPN12",
+      "cells": 307,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0037595490256098728,
+        "signal_expression": -0.006456661800318463,
+        "repair_expression": -0.04277128172542405,
+        "metabolic_expression": -0.06005350307307835,
+        "death_expression": -0.014143902491889574,
+        "negative_feedback_expression": -0.0017823449709989585
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01232241174412064,
+        "sign_agreement": 0.5,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CBL_PTPN9",
+      "cells": 276,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.011336352046375398,
+        "signal_expression": -0.006917849088219525,
+        "repair_expression": -0.06771303258246444,
+        "metabolic_expression": -0.07717669328562574,
+        "death_expression": -0.023607699153113094,
+        "negative_feedback_expression": -0.02071332368518221
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02540536286973083,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CBL_TGFBR2",
+      "cells": 175,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0015813294287257593,
+        "signal_expression": -0.002341883985810085,
+        "repair_expression": -0.031660330746040445,
+        "metabolic_expression": -0.0371176022922625,
+        "death_expression": -0.010989544331203178,
+        "negative_feedback_expression": -0.012097128855129589
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.007324870952246331,
+        "sign_agreement": 0.5,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "CBL_UBASH3A",
+      "cells": 56,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.004466366079982552,
+        "signal_expression": -0.006377948120778388,
+        "repair_expression": -0.056872166218882275,
+        "metabolic_expression": -0.055713516277983474,
+        "death_expression": -0.01931136572203562,
+        "negative_feedback_expression": 0.0025929097198783523
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.014185946679531422,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "CBL_UBASH3B",
+      "cells": 373,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.010828824396604103,
+        "signal_expression": -0.009491965054391158,
+        "repair_expression": -0.07566801344094293,
+        "metabolic_expression": -0.08621615028195105,
+        "death_expression": -0.025894894335915065,
+        "negative_feedback_expression": -0.014235426440124722
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.027883750221222265,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CDKN1A",
+      "cells": 330,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.0029547087509717586,
+        "signal_expression": 0.003510046632221384,
+        "repair_expression": -0.048847075810341034,
+        "metabolic_expression": -0.056012593841598596,
+        "death_expression": -0.004983971525880304,
+        "negative_feedback_expression": -0.006302112609907643
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010065972954591381,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.6571428571428571
+      }
+    },
+    {
+      "unit": "CDKN1B",
+      "cells": 500,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0012657950692265627,
+        "signal_expression": 0.0014927825291317159,
+        "repair_expression": -0.04582141163493996,
+        "metabolic_expression": -0.05171904065925432,
+        "death_expression": -0.011409799645951058,
+        "negative_feedback_expression": 0.008218148301561312
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0075787239260139095,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CDKN1B_CDKN1A",
+      "cells": 118,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0030772572261285915,
+        "signal_expression": 0.0038239149153285407,
+        "repair_expression": -0.06653528817502644,
+        "metabolic_expression": -0.07718518438528371,
+        "death_expression": -0.009521767579439384,
+        "negative_feedback_expression": -0.0076803623987778446
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.017496894445066292,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CDKN1C",
+      "cells": 202,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0031188780303079322,
+        "signal_expression": 0.004793038159157454,
+        "repair_expression": -0.056174746588534115,
+        "metabolic_expression": -0.05929749270177449,
+        "death_expression": -0.012142461103594394,
+        "negative_feedback_expression": 0.014028284526795196
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010347240664578322,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CDKN1C_CDKN1A",
+      "cells": 110,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.007298379060364071,
+        "signal_expression": 0.00657870922734317,
+        "repair_expression": -0.05421309275493696,
+        "metabolic_expression": -0.06814791714145069,
+        "death_expression": -0.006406612342187276,
+        "negative_feedback_expression": 0.015083686259477916
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011461919332370693,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CDKN1C_CDKN1B",
+      "cells": 96,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0007443851542195424,
+        "signal_expression": 0.0026454143894956567,
+        "repair_expression": -0.061003380167298706,
+        "metabolic_expression": -0.0659526975819221,
+        "death_expression": -0.011504878652371686,
+        "negative_feedback_expression": 0.0051205141539906
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012707472472232686,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CEBPA",
+      "cells": 427,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.002160505573396095,
+        "signal_expression": 0.04065336735604502,
+        "repair_expression": -0.10286830941755264,
+        "metabolic_expression": -0.0978487542717761,
+        "death_expression": 0.007626308245955911,
+        "negative_feedback_expression": 0.018600511294336063
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.030898022514105578,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CEBPB",
+      "cells": 457,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0006950192910900223,
+        "signal_expression": 0.01412956658560019,
+        "repair_expression": -0.05222876228162485,
+        "metabolic_expression": -0.05446769002182227,
+        "death_expression": -0.001980797947764915,
+        "negative_feedback_expression": 0.0602710058623782
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01593390509610942,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CEBPB_CEBPA",
+      "cells": 55,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.005679453756967958,
+        "signal_expression": 0.039020751547609527,
+        "repair_expression": -0.07942782232208158,
+        "metabolic_expression": -0.0905805929806926,
+        "death_expression": 0.014157913351365934,
+        "negative_feedback_expression": 0.05493619028439256
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.03323885052811363,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CEBPB_MAPK1",
+      "cells": 386,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004380729225027929,
+        "signal_expression": 0.01342213564223957,
+        "repair_expression": -0.03603109795556067,
+        "metabolic_expression": -0.04348620703312425,
+        "death_expression": 0.0054453498918729994,
+        "negative_feedback_expression": 0.06787584977489748
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.014378624741382426,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CEBPB_OSR2",
+      "cells": 201,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.007238119223742698,
+        "signal_expression": 0.02493008855247113,
+        "repair_expression": -0.0506440825188974,
+        "metabolic_expression": -0.043848363465213654,
+        "death_expression": 0.0016589025021790614,
+        "negative_feedback_expression": 0.06638252709711454
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018388743714198356,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CEBPB_PTPN12",
+      "cells": 310,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.002198943897172204,
+        "signal_expression": 0.0060025904990097445,
+        "repair_expression": -0.034189644052734454,
+        "metabolic_expression": -0.04639159127558061,
+        "death_expression": -0.0016992234037222006,
+        "negative_feedback_expression": 0.051504212382836506
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009063323864252869,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CEBPE",
+      "cells": 1172,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0017288091235154862,
+        "signal_expression": 0.018824024330478046,
+        "repair_expression": -0.06462924199418082,
+        "metabolic_expression": -0.06520601344141032,
+        "death_expression": -0.0040974727113028174,
+        "negative_feedback_expression": 0.02764006867638438
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015528124914289324,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CEBPE_CEBPA",
+      "cells": 162,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004729997880187521,
+        "signal_expression": 0.03909771892389334,
+        "repair_expression": -0.08466450431730527,
+        "metabolic_expression": -0.09617224629741175,
+        "death_expression": 0.011129403694101363,
+        "negative_feedback_expression": 0.031302960688712
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.03045453512119715,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "CEBPE_CEBPB",
+      "cells": 102,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.008686965080573312,
+        "signal_expression": 0.031477530246303814,
+        "repair_expression": -0.07486979768885785,
+        "metabolic_expression": -0.07783149470563515,
+        "death_expression": 0.00777906572670906,
+        "negative_feedback_expression": 0.051862160264019984
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.028022898772945132,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CEBPE_CNN1",
+      "cells": 219,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.003254019790103862,
+        "signal_expression": 0.0055623874232520205,
+        "repair_expression": -0.04929995469445489,
+        "metabolic_expression": -0.06581748765640277,
+        "death_expression": -0.006048453487512117,
+        "negative_feedback_expression": 0.007153365472314292
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009427143235554087,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CEBPE_KLF1",
+      "cells": 432,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.005529778623122987,
+        "signal_expression": 0.006356547470597181,
+        "repair_expression": -0.003846288955186927,
+        "metabolic_expression": 0.0011276478273597272,
+        "death_expression": 0.009297583950432713,
+        "negative_feedback_expression": 0.011284678306660667
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.014150694309618253,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "CEBPE_PTPN12",
+      "cells": 382,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.0027391188887731935,
+        "signal_expression": 0.0036876809308681044,
+        "repair_expression": -0.03687274123959716,
+        "metabolic_expression": -0.045932374460581495,
+        "death_expression": 5.661603682921132e-05,
+        "negative_feedback_expression": 0.010483000841048687
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0034704750653403627,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CEBPE_RUNX1T1",
+      "cells": 1135,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.0028128890275569084,
+        "signal_expression": 0.0098371893774236,
+        "repair_expression": -0.0329999132177888,
+        "metabolic_expression": -0.032512964483253796,
+        "death_expression": -8.588796656960472e-05,
+        "negative_feedback_expression": 0.017782093436296196
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.003311029799376654,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "CEBPE_SPI1",
+      "cells": 171,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.003034576643987821,
+        "signal_expression": 0.031934743540269775,
+        "repair_expression": -0.11824971298219493,
+        "metabolic_expression": -0.11725225591339843,
+        "death_expression": -0.006036587054120825,
+        "negative_feedback_expression": 0.016486592376124695
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.034033232212482466,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "CELF2",
+      "cells": 437,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.002930971570780413,
+        "signal_expression": 0.005642650602448461,
+        "repair_expression": -0.017867532310564736,
+        "metabolic_expression": -0.020330936613019428,
+        "death_expression": 0.0027983281284659272,
+        "negative_feedback_expression": 0.011811362882986605
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0066696028139487775,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CITED1",
+      "cells": 196,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0038631587275874094,
+        "signal_expression": 0.007059263483867941,
+        "repair_expression": -0.044212780263211605,
+        "metabolic_expression": -0.055642794408483034,
+        "death_expression": -0.004661670192401249,
+        "negative_feedback_expression": 0.018856498266952577
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00758351501788369,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "CKS1B",
+      "cells": 220,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0031019577734698054,
+        "signal_expression": -0.0026173689822154046,
+        "repair_expression": -0.04158787519902396,
+        "metabolic_expression": -0.06252577610176749,
+        "death_expression": -0.0043954358025023255,
+        "negative_feedback_expression": -0.003508405765373299
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010450674500292809,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CLDN6",
+      "cells": 626,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0030580633575063272,
+        "signal_expression": 0.00021982067296439931,
+        "repair_expression": -0.04801722729414671,
+        "metabolic_expression": -0.05085309806999936,
+        "death_expression": -0.01364519270202147,
+        "negative_feedback_expression": -0.011203968481790486
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011920826101650754,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CNN1",
+      "cells": 718,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.002050081941951026,
+        "signal_expression": -0.004302839847060185,
+        "repair_expression": -0.02442682403020748,
+        "metabolic_expression": -0.03665670821925962,
+        "death_expression": -0.011435584553080951,
+        "negative_feedback_expression": -0.012400185081350735
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008983440529813725,
+        "sign_agreement": 0.5,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "CNN1_MAPK1",
+      "cells": 369,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.002050035068608035,
+        "signal_expression": 0.0012757416613462798,
+        "repair_expression": -0.03386351037792867,
+        "metabolic_expression": -0.05729427425383101,
+        "death_expression": 0.0014662552695648627,
+        "negative_feedback_expression": 0.006335625245654155
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.006102865859574049,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CNN1_UBASH3A",
+      "cells": 165,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.01386852415679847,
+        "signal_expression": -0.008061368049205441,
+        "repair_expression": -0.07822151741184967,
+        "metabolic_expression": -0.09479950697040876,
+        "death_expression": -0.023244329949581193,
+        "negative_feedback_expression": -0.019450428649607932
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.030435483760809342,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "CNNM4",
+      "cells": 430,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.004884363810757685,
+        "signal_expression": -0.000370626185060614,
+        "repair_expression": -0.01660709681777991,
+        "metabolic_expression": -0.015743352901254743,
+        "death_expression": -0.004498927609303181,
+        "negative_feedback_expression": -0.005001378213502671
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011129077862336308,
+        "sign_agreement": 0.5,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "COL1A1",
+      "cells": 297,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.009965008677964814,
+        "signal_expression": 0.004332342722737996,
+        "repair_expression": -0.06132656609576174,
+        "metabolic_expression": -0.04877286861179868,
+        "death_expression": -0.006736649979913337,
+        "negative_feedback_expression": -0.012395226036328111
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013278233083349836,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "COL2A1",
+      "cells": 552,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.000960282791010803,
+        "signal_expression": 0.009344379616066507,
+        "repair_expression": -0.027257132847498238,
+        "metabolic_expression": -0.0174576142035839,
+        "death_expression": 0.014058222645476019,
+        "negative_feedback_expression": 0.006546205627308359
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008470917937034554,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "CSRNP1",
+      "cells": 427,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0004610494212967275,
+        "signal_expression": -0.001486807062805283,
+        "repair_expression": 0.0011680772501935577,
+        "metabolic_expression": 0.012684726750315262,
+        "death_expression": -0.005054834483926585,
+        "negative_feedback_expression": -0.01211595794623278
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019556845664866426,
+        "sign_agreement": 0.16666666666666666,
+        "spearman": -0.8285714285714286
+      }
+    },
+    {
+      "unit": "DLX2",
+      "cells": 682,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0109082712076074,
+        "signal_expression": -0.0010450992080110843,
+        "repair_expression": -0.038022008880127224,
+        "metabolic_expression": -0.04649609908325451,
+        "death_expression": -0.014271962078095718,
+        "negative_feedback_expression": -0.012025814946085457
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011289413796764328,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "DUSP9",
+      "cells": 691,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004006888801155563,
+        "signal_expression": 0.0014251489127825993,
+        "repair_expression": -0.00017148288553489976,
+        "metabolic_expression": -0.011633246126108306,
+        "death_expression": -0.0033325341780265595,
+        "negative_feedback_expression": 0.0012404617997184716
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012846149795521991,
+        "sign_agreement": 1.0,
+        "spearman": 0.7142857142857143
+      }
+    },
+    {
+      "unit": "DUSP9_ETS2",
+      "cells": 749,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004510337878295161,
+        "signal_expression": 0.005692743073021385,
+        "repair_expression": 0.0002722869717003735,
+        "metabolic_expression": -0.009118991027181821,
+        "death_expression": 0.0025753462779746572,
+        "negative_feedback_expression": 0.006518437482229341
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012522810156604154,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "DUSP9_IGDCC3",
+      "cells": 356,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0038919011411533335,
+        "signal_expression": 0.005364174322650095,
+        "repair_expression": -0.029505711792806,
+        "metabolic_expression": -0.03894880382097685,
+        "death_expression": -0.008633980215984483,
+        "negative_feedback_expression": 0.007981433972982592
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.003323937849954843,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "DUSP9_KLF1",
+      "cells": 333,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.006109856396817789,
+        "signal_expression": 0.004514707683242177,
+        "repair_expression": -0.00901849407730258,
+        "metabolic_expression": -0.012708667104660672,
+        "death_expression": -0.005097003738128411,
+        "negative_feedback_expression": -0.004036308550368157
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01220151922303384,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "DUSP9_MAPK1",
+      "cells": 271,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004867738112912116,
+        "signal_expression": 0.0047867404140267975,
+        "repair_expression": 0.008574526380502242,
+        "metabolic_expression": -0.001960012310490782,
+        "death_expression": 0.007740329288899073,
+        "negative_feedback_expression": 0.011700232192593819
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015373390976690377,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.42857142857142855
+      }
+    },
+    {
+      "unit": "DUSP9_PRTG",
+      "cells": 276,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0044641634276969735,
+        "signal_expression": 0.006437505609607349,
+        "repair_expression": -0.03601409946314763,
+        "metabolic_expression": -0.040257190762939356,
+        "death_expression": -0.01078296920968828,
+        "negative_feedback_expression": 0.009166033591631921
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0037539694525601376,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "DUSP9_SNAI1",
+      "cells": 175,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.010966887915141743,
+        "signal_expression": 0.019723794150822933,
+        "repair_expression": -0.056793163637719586,
+        "metabolic_expression": -0.06076622459719112,
+        "death_expression": -0.005448627499586019,
+        "negative_feedback_expression": 0.06848551255953937
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.022204554928077474,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "EGR1",
+      "cells": 292,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.001844538704647631,
+        "signal_expression": 0.0008221386596658,
+        "repair_expression": -0.014298579709391909,
+        "metabolic_expression": -0.025220629264479422,
+        "death_expression": -0.0026739115597229695,
+        "negative_feedback_expression": 0.005976757086534169
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.007094994436454609,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "ELMSAN1",
+      "cells": 874,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0028357128933687416,
+        "signal_expression": -0.004144820308654751,
+        "repair_expression": 0.005046614253308721,
+        "metabolic_expression": 0.005518773610208687,
+        "death_expression": -0.0074129685675307,
+        "negative_feedback_expression": -0.007942777408003967
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019545214685917318,
+        "sign_agreement": 0.16666666666666666,
+        "spearman": -0.8285714285714286
+      }
+    },
+    {
+      "unit": "ETS2",
+      "cells": 1126,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0026454801749425053,
+        "signal_expression": 0.006019989349782451,
+        "repair_expression": -0.01022134793724703,
+        "metabolic_expression": -0.013435253931407804,
+        "death_expression": 0.010946752610915935,
+        "negative_feedback_expression": 0.022234653124433842
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012203841002335887,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "ETS2_CEBPE",
+      "cells": 341,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.006118598922391275,
+        "signal_expression": 0.01741501131108169,
+        "repair_expression": -0.0422587209602513,
+        "metabolic_expression": -0.04010892015857362,
+        "death_expression": 0.009843839245499378,
+        "negative_feedback_expression": 0.043624613834067905
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012500013892906135,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "ETS2_CNN1",
+      "cells": 846,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0013627192632133267,
+        "signal_expression": 0.0003055587716113046,
+        "repair_expression": -0.027796962971928123,
+        "metabolic_expression": -0.0447906759992171,
+        "death_expression": 0.001134163096271798,
+        "negative_feedback_expression": 4.681103863764688e-06
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005874947132465654,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "ETS2_IGDCC3",
+      "cells": 409,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0002779442784725297,
+        "signal_expression": 0.005415267496101827,
+        "repair_expression": -0.028014391643029605,
+        "metabolic_expression": -0.03117768845959405,
+        "death_expression": -0.0015302852050569902,
+        "negative_feedback_expression": 0.01052689072996796
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0020950502560430034,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "ETS2_IKZF3",
+      "cells": 416,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0032993548765332652,
+        "signal_expression": 0.007922832814173953,
+        "repair_expression": -0.04952366047391413,
+        "metabolic_expression": -0.045426514026085545,
+        "death_expression": -0.004915614394550647,
+        "negative_feedback_expression": 0.01438484220379992
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0061129572589759635,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "ETS2_MAP7D1",
+      "cells": 295,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0008572031013735802,
+        "signal_expression": 0.004586292229462131,
+        "repair_expression": -0.013365091774825437,
+        "metabolic_expression": 0.008065100852053914,
+        "death_expression": 0.007115195519042954,
+        "negative_feedback_expression": 0.006265097801639465
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013436015483624183,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": -0.2
+      }
+    },
+    {
+      "unit": "ETS2_MAPK1",
+      "cells": 439,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.007438525554271568,
+        "signal_expression": 0.016823039726142675,
+        "repair_expression": -0.03821864424881818,
+        "metabolic_expression": -0.04609251761911294,
+        "death_expression": 0.0188214846924718,
+        "negative_feedback_expression": 0.04925814789551732
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015380456443651021,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "ETS2_PRTG",
+      "cells": 408,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 6.812760738277562e-05,
+        "signal_expression": 0.006983382749891466,
+        "repair_expression": -0.03131695835779942,
+        "metabolic_expression": -0.036278204912981976,
+        "death_expression": 0.0022356715531406625,
+        "negative_feedback_expression": 0.018557222422872506
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.002551260671111688,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FEV",
+      "cells": 668,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.009700102199968603,
+        "signal_expression": 0.007256025779239708,
+        "repair_expression": 0.011326418708322149,
+        "metabolic_expression": 0.013724465833932524,
+        "death_expression": 0.010726720357638133,
+        "negative_feedback_expression": 0.020206218958981573
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02132878741011302,
+        "sign_agreement": 0.5,
+        "spearman": -0.14285714285714285
+      }
+    },
+    {
+      "unit": "FEV_CBFA2T3",
+      "cells": 149,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.013060322144176354,
+        "signal_expression": 0.021773524533994094,
+        "repair_expression": -0.045559874700612554,
+        "metabolic_expression": -0.04654951781576726,
+        "death_expression": 0.018153250661286265,
+        "negative_feedback_expression": 0.05417633073373569
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019150533252523978,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FEV_ISL2",
+      "cells": 275,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.01113213843701645,
+        "signal_expression": 0.018308645356038013,
+        "repair_expression": -0.012171876497233546,
+        "metabolic_expression": -0.01713086785273875,
+        "death_expression": 0.018335519770071723,
+        "negative_feedback_expression": 0.037144765449374
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018441849547520553,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "FEV_MAP7D1",
+      "cells": 258,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.008626081708724871,
+        "signal_expression": 0.010144390979638863,
+        "repair_expression": -0.00225130293691869,
+        "metabolic_expression": 0.015601685548489517,
+        "death_expression": 0.013778508287251995,
+        "negative_feedback_expression": 0.013379612051959509
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01905195804362358,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": -0.2
+      }
+    },
+    {
+      "unit": "FOSB",
+      "cells": 578,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.005345054879885368,
+        "signal_expression": 0.007746069529837719,
+        "repair_expression": -0.011334076056559906,
+        "metabolic_expression": -0.016885104623671626,
+        "death_expression": 0.007873290792769667,
+        "negative_feedback_expression": 0.02322835629824298
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01183439390718327,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "FOSB_CEBPB",
+      "cells": 67,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.002203878040486533,
+        "signal_expression": 0.027996788768937755,
+        "repair_expression": -0.07448324932560592,
+        "metabolic_expression": -0.06758114694355155,
+        "death_expression": 0.005856786686092273,
+        "negative_feedback_expression": 0.02817040879829662
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.020320439581423717,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "FOSB_CEBPE",
+      "cells": 141,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.005808371077826885,
+        "signal_expression": 0.030329424468416764,
+        "repair_expression": -0.07461537100018063,
+        "metabolic_expression": -0.07671828175205081,
+        "death_expression": 0.009678072480489507,
+        "negative_feedback_expression": 0.031341323206144536
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.024020203818446797,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOSB_IKZF3",
+      "cells": 231,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0010631076020213718,
+        "signal_expression": 0.005243777460292945,
+        "repair_expression": -0.041177647154078095,
+        "metabolic_expression": -0.04230175814485498,
+        "death_expression": -0.010356642039139899,
+        "negative_feedback_expression": 0.009596254986961587
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.004144090718985025,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOSB_OSR2",
+      "cells": 358,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.01445439493609914,
+        "signal_expression": 0.02614545279302297,
+        "repair_expression": -0.017325599902513773,
+        "metabolic_expression": -0.003391231823247755,
+        "death_expression": 0.022472333848979738,
+        "negative_feedback_expression": 0.04966479727121948
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.024508819957692538,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "FOSB_PTPN12",
+      "cells": 329,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.000795441601379199,
+        "signal_expression": -0.0016229404033192994,
+        "repair_expression": -0.02488784213100002,
+        "metabolic_expression": -0.03203872035721829,
+        "death_expression": 0.0013654961704407614,
+        "negative_feedback_expression": -0.003874436585324482
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.006614772177296893,
+        "sign_agreement": 0.3333333333333333,
+        "spearman": 0.42857142857142855
+      }
+    },
+    {
+      "unit": "FOSB_UBASH3B",
+      "cells": 408,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.001310254079329827,
+        "signal_expression": 0.0023562376844176226,
+        "repair_expression": -0.02311528992212696,
+        "metabolic_expression": -0.03152163666296068,
+        "death_expression": 0.0018013182242618859,
+        "negative_feedback_expression": 0.011850067255413358
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.004012124649875402,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOXA1",
+      "cells": 814,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.005731222739321264,
+        "signal_expression": -0.0001485192679266011,
+        "repair_expression": -0.01857346279122115,
+        "metabolic_expression": -0.018910153887819234,
+        "death_expression": -0.006092312186269406,
+        "negative_feedback_expression": 0.012293163116391828
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008076736513307998,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOXA1_FOXF1",
+      "cells": 261,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0003536879941496225,
+        "signal_expression": 0.00789003403610101,
+        "repair_expression": -0.034488247409674024,
+        "metabolic_expression": -0.03296124774086419,
+        "death_expression": -0.0030671192874435543,
+        "negative_feedback_expression": 0.03749255000270946
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005737144877008805,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOXA1_FOXL2",
+      "cells": 183,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0020573697784849417,
+        "signal_expression": 0.009580843762107116,
+        "repair_expression": -0.04308454754859503,
+        "metabolic_expression": -0.049983079661926666,
+        "death_expression": -0.006855835174211016,
+        "negative_feedback_expression": 0.05076841922591182
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01222886905995011,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOXA1_HOXB9",
+      "cells": 281,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0046249410376499045,
+        "signal_expression": 0.01353579025900541,
+        "repair_expression": -0.0485232743165906,
+        "metabolic_expression": -0.04815732323727954,
+        "death_expression": -0.0015711277642102156,
+        "negative_feedback_expression": 0.04867391242455998
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012956049665463517,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "FOXA3",
+      "cells": 461,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.003888565895768367,
+        "signal_expression": 0.003883779398768369,
+        "repair_expression": -0.033235611089032245,
+        "metabolic_expression": -0.03528795699529075,
+        "death_expression": -0.0036878842465021613,
+        "negative_feedback_expression": 0.0216306346614714
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0030797592949383065,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOXA3_FOXA1",
+      "cells": 205,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0013980797579923297,
+        "signal_expression": 0.009107553575542089,
+        "repair_expression": -0.053069151368726086,
+        "metabolic_expression": -0.044699937683781395,
+        "death_expression": -0.00579002833270892,
+        "negative_feedback_expression": 0.038642778482113005
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01065207566094369,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOXA3_FOXF1",
+      "cells": 160,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0023162215900748052,
+        "signal_expression": 0.010674098681220207,
+        "repair_expression": -0.03961614131780408,
+        "metabolic_expression": -0.03641687025816116,
+        "death_expression": -0.002940642725691839,
+        "negative_feedback_expression": 0.042117247880936806
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00752969244234528,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOXA3_FOXL2",
+      "cells": 123,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.008294178450397737,
+        "signal_expression": 0.017581256668144113,
+        "repair_expression": -0.06347482209548087,
+        "metabolic_expression": -0.06130131300982561,
+        "death_expression": -0.006665312209271121,
+        "negative_feedback_expression": 0.056315283259912856
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.020779214150249397,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOXA3_HOXB9",
+      "cells": 313,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0012495946069790234,
+        "signal_expression": 0.01805413580314228,
+        "repair_expression": -0.06260174877254246,
+        "metabolic_expression": -0.06741341091913014,
+        "death_expression": 0.005384227338182885,
+        "negative_feedback_expression": 0.05247760108411512
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02049548383433297,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "FOXF1",
+      "cells": 817,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0034827417819599167,
+        "signal_expression": -0.00012098661226770265,
+        "repair_expression": -0.015334787321992843,
+        "metabolic_expression": -0.015930287654112238,
+        "death_expression": -0.0042406512771486415,
+        "negative_feedback_expression": 0.0029714662482252558
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009662909920245712,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOXF1_FOXL2",
+      "cells": 183,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.007323539532998374,
+        "signal_expression": 0.015555870402620164,
+        "repair_expression": -0.054583931783483454,
+        "metabolic_expression": -0.05540837637629022,
+        "death_expression": -0.0008118545755628171,
+        "negative_feedback_expression": 0.04025190315857219
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.014657024267328872,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOXF1_HOXB9",
+      "cells": 187,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.001398703931078902,
+        "signal_expression": 0.01431959314839474,
+        "repair_expression": -0.041460981080389946,
+        "metabolic_expression": -0.04006974047202142,
+        "death_expression": 0.003587191137353758,
+        "negative_feedback_expression": 0.03253204647192687
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008166439194456214,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "FOXL2",
+      "cells": 604,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0009496605704154436,
+        "signal_expression": 0.005626103022218247,
+        "repair_expression": -0.031263631274749445,
+        "metabolic_expression": -0.03815126228349807,
+        "death_expression": -0.007548127271151589,
+        "negative_feedback_expression": 0.023756034980803076
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0037209193751306328,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOXL2_HOXB9",
+      "cells": 93,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -9.75147409114357e-05,
+        "signal_expression": 0.017372287723985354,
+        "repair_expression": -0.0621924102569053,
+        "metabolic_expression": -0.07355287271069844,
+        "death_expression": -0.004004405698105053,
+        "negative_feedback_expression": 0.03539759129446275
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.017303667864977775,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOXL2_MEIS1",
+      "cells": 186,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0043564149795204754,
+        "signal_expression": 0.009381969934651015,
+        "repair_expression": -0.034653428500190105,
+        "metabolic_expression": -0.0365607308980116,
+        "death_expression": -0.00471032354050809,
+        "negative_feedback_expression": 0.03355478658524524
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005710128941098434,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "FOXO4",
+      "cells": 206,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.009739734535190546,
+        "signal_expression": -0.0048445647944122625,
+        "repair_expression": -0.06230072283597182,
+        "metabolic_expression": -0.07010980454034182,
+        "death_expression": -0.018000885476972657,
+        "negative_feedback_expression": -0.008109570051146526
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019678751601906703,
+        "sign_agreement": 0.5,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "GLB1L2",
+      "cells": 433,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.002866833023485314,
+        "signal_expression": 0.0013890044960933351,
+        "repair_expression": -0.022888506265688446,
+        "metabolic_expression": -0.02892676457370799,
+        "death_expression": 0.009988856436134529,
+        "negative_feedback_expression": 0.01475190975280902
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.006751266081115283,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "HES7",
+      "cells": 117,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.008482837147528588,
+        "signal_expression": 0.01865330370026089,
+        "repair_expression": -0.07826610241740499,
+        "metabolic_expression": -0.09321349158961291,
+        "death_expression": 0.0017537152071660188,
+        "negative_feedback_expression": 0.03551294153444011
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.025279096013053236,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "HK2",
+      "cells": 289,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.00035777925432369656,
+        "signal_expression": 0.0004939920205648425,
+        "repair_expression": -0.019076358447907536,
+        "metabolic_expression": -0.024065779024368628,
+        "death_expression": 0.003960632667145753,
+        "negative_feedback_expression": 0.005190109672194033
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.007381207998606015,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "HNF4A",
+      "cells": 224,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0012684852722764665,
+        "signal_expression": 0.0021191518047184617,
+        "repair_expression": -0.07798946113873827,
+        "metabolic_expression": -0.07442040392098327,
+        "death_expression": -0.006293512541200521,
+        "negative_feedback_expression": 0.001847527797073292
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.016828735108135224,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "HOXA13",
+      "cells": 255,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.00041510074668333935,
+        "signal_expression": 0.014319665071981747,
+        "repair_expression": -0.06339707127906148,
+        "metabolic_expression": -0.07213077189700388,
+        "death_expression": -9.210194573029486e-05,
+        "negative_feedback_expression": 0.042282443404259115
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018013888229805153,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "HOXB9",
+      "cells": 661,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0007415216962898145,
+        "signal_expression": 0.007707658080619474,
+        "repair_expression": -0.02421214644686009,
+        "metabolic_expression": -0.03520536304367844,
+        "death_expression": 0.00047566120350038446,
+        "negative_feedback_expression": 0.013482214062886902
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0030306872886146185,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "HOXC13",
+      "cells": 370,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 1.0895082571889975e-05,
+        "signal_expression": 0.009204353460960884,
+        "repair_expression": -0.05150383154874304,
+        "metabolic_expression": -0.05735633498211066,
+        "death_expression": -0.0049234664107215415,
+        "negative_feedback_expression": 0.030482350791977
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010777394479456593,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "IER5L",
+      "cells": 386,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.001305337802206712,
+        "signal_expression": 0.003198545891281752,
+        "repair_expression": -0.03429436535111215,
+        "metabolic_expression": -0.04714973221478138,
+        "death_expression": -0.005349316641328351,
+        "negative_feedback_expression": 0.01630483219461655
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0038866095847307747,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "IGDCC3",
+      "cells": 574,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0022678238488364117,
+        "signal_expression": 0.0008772263102651322,
+        "repair_expression": -0.037904548399643086,
+        "metabolic_expression": -0.0384506925878083,
+        "death_expression": -0.010923504734549951,
+        "negative_feedback_expression": 0.0016618474847368352
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00532912052554006,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "IGDCC3_MAPK1",
+      "cells": 334,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0024564309285758134,
+        "signal_expression": 0.0031929381116779,
+        "repair_expression": -0.02732424674865454,
+        "metabolic_expression": -0.03689387206062454,
+        "death_expression": -0.001411588599915619,
+        "negative_feedback_expression": 0.01336114007755682
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.002360199044092488,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "IGDCC3_PRTG",
+      "cells": 126,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0006298301711094225,
+        "signal_expression": 0.0055262329187227835,
+        "repair_expression": -0.04391500736997624,
+        "metabolic_expression": -0.03462025162624675,
+        "death_expression": -0.005141131476853098,
+        "negative_feedback_expression": 0.0016599596453761277
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00428905095217312,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "IGDCC3_ZBTB25",
+      "cells": 126,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.008957747576525501,
+        "signal_expression": -0.001548773706454487,
+        "repair_expression": -0.07519011076099251,
+        "metabolic_expression": -0.0792581437042741,
+        "death_expression": -0.02292952346549224,
+        "negative_feedback_expression": 0.0007029443128085546
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02202476371305581,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "IKZF3",
+      "cells": 645,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.003127477093526754,
+        "signal_expression": 0.00308304381200486,
+        "repair_expression": -0.05179992163753967,
+        "metabolic_expression": -0.05257809774276473,
+        "death_expression": -0.015706308335811898,
+        "negative_feedback_expression": 0.007279942595535766
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009636007629917835,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "IRF1",
+      "cells": 397,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0005219588205835665,
+        "signal_expression": 0.010599933418615587,
+        "repair_expression": -0.03785284029391191,
+        "metabolic_expression": -0.030734795467632563,
+        "death_expression": 0.005006713068257224,
+        "negative_feedback_expression": -0.01471841793602849
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008222601447526703,
+        "sign_agreement": 0.5,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "IRF1_SET",
+      "cells": 408,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0020517221319974912,
+        "signal_expression": 0.012860278423731402,
+        "repair_expression": -0.06206105613190137,
+        "metabolic_expression": -0.09489083156516447,
+        "death_expression": 0.0004788178001737895,
+        "negative_feedback_expression": -0.016087869753730926
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02115226048567574,
+        "sign_agreement": 0.5,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "ISL2",
+      "cells": 540,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0009260217985762477,
+        "signal_expression": 0.0014007383870915226,
+        "repair_expression": -0.0029717982944282777,
+        "metabolic_expression": -0.0019089138821143173,
+        "death_expression": -0.0006019457749545075,
+        "negative_feedback_expression": 0.001888489163515929
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013491535255278896,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "JUN",
+      "cells": 252,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004707769455400573,
+        "signal_expression": 0.0074943543114549425,
+        "repair_expression": -0.03658488431696725,
+        "metabolic_expression": -0.040904672805971785,
+        "death_expression": 0.0006962879652529611,
+        "negative_feedback_expression": 0.009184306279688902
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0032541406877298895,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "JUN_CEBPA",
+      "cells": 51,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.00674190989459239,
+        "signal_expression": 0.052838741774376974,
+        "repair_expression": -0.10232338506243721,
+        "metabolic_expression": -0.09845944765524249,
+        "death_expression": 0.02187141919719826,
+        "negative_feedback_expression": 0.04335189034343708
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.04020286214214268,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "JUN_CEBPB",
+      "cells": 54,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.016945875225297103,
+        "signal_expression": 0.029080818896569667,
+        "repair_expression": -0.08824086287080155,
+        "metabolic_expression": -0.08307535124108015,
+        "death_expression": 0.018115006413100335,
+        "negative_feedback_expression": 0.06766351177919462
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.036458634225269175,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "KIAA1804",
+      "cells": 268,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0027458749323827033,
+        "signal_expression": 0.0020844402818413865,
+        "repair_expression": -0.010137863318618065,
+        "metabolic_expression": -0.015976141788887305,
+        "death_expression": 0.0040128930512742704,
+        "negative_feedback_expression": 0.0032816425797829096
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010678959208288165,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "KIF18B",
+      "cells": 232,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0016397980840049888,
+        "signal_expression": 0.0010220400014757734,
+        "repair_expression": -0.008122128217934583,
+        "metabolic_expression": -0.017216305438462386,
+        "death_expression": 0.00020794699919781512,
+        "negative_feedback_expression": -0.001225161575736485
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010917918039378036,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "KIF18B_KIF2C",
+      "cells": 89,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.003111381752130688,
+        "signal_expression": 0.0013888063812633352,
+        "repair_expression": -0.02339403133132513,
+        "metabolic_expression": -0.032026165290684715,
+        "death_expression": 0.0016803093654123142,
+        "negative_feedback_expression": -0.003679973243136533
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0067699236914903795,
+        "sign_agreement": 0.5,
+        "spearman": 0.4857142857142857
+      }
+    },
+    {
+      "unit": "KIF2C",
+      "cells": 589,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0011489113664455467,
+        "signal_expression": 0.0012752749612873994,
+        "repair_expression": -0.006774657842384104,
+        "metabolic_expression": -0.014882775945554559,
+        "death_expression": -0.002005335455827882,
+        "negative_feedback_expression": 0.003954681624713644
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010175210128646606,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "KLF1",
+      "cells": 1843,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004138613632532443,
+        "signal_expression": 0.0030226385055233205,
+        "repair_expression": 0.006724239802177458,
+        "metabolic_expression": 0.007141744821804592,
+        "death_expression": 0.004972043959344002,
+        "negative_feedback_expression": -0.0012523849147534607
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018333577310048386,
+        "sign_agreement": 0.3333333333333333,
+        "spearman": -1.0
+      }
+    },
+    {
+      "unit": "KLF1_BAK1",
+      "cells": 374,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.005356307985226912,
+        "signal_expression": 0.00378867889211609,
+        "repair_expression": 0.0066843428567187144,
+        "metabolic_expression": 0.010208085035041822,
+        "death_expression": 0.0023092861216136113,
+        "negative_feedback_expression": -0.003850321775387518
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01890245668617903,
+        "sign_agreement": 0.3333333333333333,
+        "spearman": -0.8285714285714286
+      }
+    },
+    {
+      "unit": "KLF1_CEBPA",
+      "cells": 293,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.002297552893768909,
+        "signal_expression": 0.030233345888621505,
+        "repair_expression": -0.07457780772857883,
+        "metabolic_expression": -0.06716839557180154,
+        "death_expression": 0.00825395048816693,
+        "negative_feedback_expression": 0.020968417908809434
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019854974900886467,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "KLF1_CLDN6",
+      "cells": 222,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0014245015142030162,
+        "signal_expression": 0.008627656436413661,
+        "repair_expression": -0.03395129842953044,
+        "metabolic_expression": -0.0339992255020065,
+        "death_expression": -0.0006003364335731089,
+        "negative_feedback_expression": 0.008243376717087648
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0020615421310902697,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "KLF1_COL2A1",
+      "cells": 278,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.003525823370269955,
+        "signal_expression": 0.00791822573920775,
+        "repair_expression": -0.023926636439175936,
+        "metabolic_expression": -0.004284759700525802,
+        "death_expression": 0.008087938190923419,
+        "negative_feedback_expression": -0.0015654261597494205
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011768265428082217,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.42857142857142855
+      }
+    },
+    {
+      "unit": "KLF1_FOXA1",
+      "cells": 344,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.002960200622795993,
+        "signal_expression": 0.01067055466930683,
+        "repair_expression": -0.005640453128372396,
+        "metabolic_expression": -0.00020839873237561853,
+        "death_expression": 0.011291962281651894,
+        "negative_feedback_expression": 0.03427596055322595
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018063766481471347,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "KLF1_MAP2K6",
+      "cells": 255,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.000269955681799769,
+        "signal_expression": 0.0025228541815453345,
+        "repair_expression": 0.008225201413212292,
+        "metabolic_expression": 0.018290794819325457,
+        "death_expression": 0.007468317738496824,
+        "negative_feedback_expression": -0.000769903611446738
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.020243033312378613,
+        "sign_agreement": 0.16666666666666666,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "KLF1_TGFBR2",
+      "cells": 304,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0017993516652245992,
+        "signal_expression": 0.002040778928988985,
+        "repair_expression": -0.004384962473338632,
+        "metabolic_expression": -0.005218352241421551,
+        "death_expression": -0.0026043092584234232,
+        "negative_feedback_expression": -0.00253761240465162
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013250832533774097,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "KMT2A",
+      "cells": 218,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0013536870319219786,
+        "signal_expression": 0.00047453921845288366,
+        "repair_expression": -0.009319342134067612,
+        "metabolic_expression": -0.021059448415479503,
+        "death_expression": -0.00376772174267491,
+        "negative_feedback_expression": 0.0021799163198366715
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009409630626864762,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "LHX1",
+      "cells": 355,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0016812984022540004,
+        "signal_expression": 0.005386434354482728,
+        "repair_expression": -0.02272917958884149,
+        "metabolic_expression": -0.02154379499268168,
+        "death_expression": 0.00036287591052118446,
+        "negative_feedback_expression": 0.015586243590796208
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005706181188942057,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "LHX1_ELMSAN1",
+      "cells": 611,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.005282794841164202,
+        "signal_expression": 0.0017245356420061506,
+        "repair_expression": -0.021758499861019884,
+        "metabolic_expression": -0.02870340264268667,
+        "death_expression": -0.004842012005057455,
+        "negative_feedback_expression": 0.014425393905184526
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005673763509112125,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "LYL1",
+      "cells": 402,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.002534654870736748,
+        "signal_expression": 0.0009522385668804171,
+        "repair_expression": -0.011595412237978027,
+        "metabolic_expression": -0.018407246916285,
+        "death_expression": -0.00306095953123751,
+        "negative_feedback_expression": 0.005638046586615709
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008868414268718202,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "LYL1_CEBPB",
+      "cells": 182,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004523155069141371,
+        "signal_expression": 0.009633257460533834,
+        "repair_expression": -0.04704920361544747,
+        "metabolic_expression": -0.04141153757114396,
+        "death_expression": -0.0016428466302599817,
+        "negative_feedback_expression": 0.06474927551718924
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013558993588127925,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "LYL1_IER5L",
+      "cells": 592,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.0018973312587872023,
+        "signal_expression": 0.005575790626035556,
+        "repair_expression": -0.0490457859457182,
+        "metabolic_expression": -0.05804901444013009,
+        "death_expression": -0.005088240991644545,
+        "negative_feedback_expression": 0.023413849924360595
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009018855399190043,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "MAML2",
+      "cells": 586,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.002333351148310571,
+        "signal_expression": 0.001280673742194206,
+        "repair_expression": 0.005239545723867913,
+        "metabolic_expression": 0.013718219157193958,
+        "death_expression": 0.0013382831315731439,
+        "negative_feedback_expression": 0.0007250382326012289
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018236460403558637,
+        "sign_agreement": 0.5,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAP2K3",
+      "cells": 530,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0015671786340640827,
+        "signal_expression": -0.0012785166854895533,
+        "repair_expression": 0.0198656514944173,
+        "metabolic_expression": 0.032373507288164335,
+        "death_expression": 0.0028669432893169795,
+        "negative_feedback_expression": -0.00698084461898189
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02564825380032834,
+        "sign_agreement": 0.0,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAP2K3_ELMSAN1",
+      "cells": 551,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0037361190569891716,
+        "signal_expression": -0.003109701940598007,
+        "repair_expression": 0.018931645797401926,
+        "metabolic_expression": 0.03216061254369178,
+        "death_expression": 0.0022535649791386387,
+        "negative_feedback_expression": -0.0006640172444377141
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.024968757058965525,
+        "sign_agreement": 0.0,
+        "spearman": -0.7714285714285715
+      }
+    },
+    {
+      "unit": "MAP2K3_IKZF3",
+      "cells": 242,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.010230526502935782,
+        "signal_expression": -0.0014702409721983774,
+        "repair_expression": -0.03909607352232372,
+        "metabolic_expression": -0.033734730616106566,
+        "death_expression": -0.01754212876466591,
+        "negative_feedback_expression": -0.014121620361046479
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011096773398751552,
+        "sign_agreement": 0.5,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "MAP2K3_MAP2K6",
+      "cells": 525,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0006492783826893306,
+        "signal_expression": 0.0001952575828118783,
+        "repair_expression": 0.0207260908913809,
+        "metabolic_expression": 0.03839574844607013,
+        "death_expression": 0.006152832067057824,
+        "negative_feedback_expression": -0.005844385014866877
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.026754993001798188,
+        "sign_agreement": 0.16666666666666666,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAP2K3_SLC38A2",
+      "cells": 324,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0015851049020199272,
+        "signal_expression": -0.0020264687249465442,
+        "repair_expression": 0.02459237758023212,
+        "metabolic_expression": 0.04173160905959414,
+        "death_expression": 0.00407933751284632,
+        "negative_feedback_expression": -0.005720166496228524
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.028115324177900584,
+        "sign_agreement": 0.0,
+        "spearman": -1.0
+      }
+    },
+    {
+      "unit": "MAP2K6",
+      "cells": 826,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0025918103196233945,
+        "signal_expression": -0.001346134613517089,
+        "repair_expression": 0.013301692251228297,
+        "metabolic_expression": 0.02500892332681823,
+        "death_expression": 0.003451969639080467,
+        "negative_feedback_expression": -0.006396901228158463
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02350905202832698,
+        "sign_agreement": 0.0,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAP2K6_ELMSAN1",
+      "cells": 421,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.003679250130258443,
+        "signal_expression": -0.0035204899194271107,
+        "repair_expression": 0.02081707257855448,
+        "metabolic_expression": 0.02690526892200963,
+        "death_expression": 0.0026238626315525275,
+        "negative_feedback_expression": -0.0030644011742168293
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02492787102459249,
+        "sign_agreement": 0.0,
+        "spearman": -0.7714285714285715
+      }
+    },
+    {
+      "unit": "MAP2K6_IKZF3",
+      "cells": 284,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0034325489072687377,
+        "signal_expression": 0.0010550185796859557,
+        "repair_expression": -0.034059149247963286,
+        "metabolic_expression": -0.029207806315621355,
+        "death_expression": -0.012573928462231595,
+        "negative_feedback_expression": 0.0020003364924610933
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005942874352523472,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAP2K6_SPI1",
+      "cells": 274,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.009654760314003715,
+        "signal_expression": -0.0021326720630951133,
+        "repair_expression": -0.03046026882846487,
+        "metabolic_expression": -0.027489225910613882,
+        "death_expression": -0.013760789657290337,
+        "negative_feedback_expression": -0.004004221601453047
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009328761661865302,
+        "sign_agreement": 0.5,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "MAP4K3",
+      "cells": 352,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0002908603393583653,
+        "signal_expression": 0.0006600442164320035,
+        "repair_expression": -0.011829303143496513,
+        "metabolic_expression": -0.011956352125799733,
+        "death_expression": -0.0027466242549417765,
+        "negative_feedback_expression": -0.0016161651323689083
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010762928552561524,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "MAP4K5",
+      "cells": 343,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0018856945154968544,
+        "signal_expression": -0.0016817495051279986,
+        "repair_expression": -0.0171907176344194,
+        "metabolic_expression": -0.016035849704212,
+        "death_expression": -0.007646698208918831,
+        "negative_feedback_expression": 0.0014592725351051227
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010149653905039252,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAP7D1",
+      "cells": 706,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 5.202117179320157e-06,
+        "signal_expression": -0.0008212358539288194,
+        "repair_expression": 0.0055617660277495545,
+        "metabolic_expression": 0.015273447028584774,
+        "death_expression": 0.002710204964286712,
+        "negative_feedback_expression": -0.00041253187597707224
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01895514407081392,
+        "sign_agreement": 0.16666666666666666,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAPK1",
+      "cells": 724,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0042034917825920564,
+        "signal_expression": 0.007637763402477092,
+        "repair_expression": -0.01870662569735541,
+        "metabolic_expression": -0.027502641424099368,
+        "death_expression": 0.010948653481475628,
+        "negative_feedback_expression": 0.02428106284689384
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009315746169096544,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "MAPK1_IKZF3",
+      "cells": 290,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.00282940186716487,
+        "signal_expression": 0.006382458462996098,
+        "repair_expression": -0.04032731979221023,
+        "metabolic_expression": -0.03904475901652844,
+        "death_expression": -0.005838261536304697,
+        "negative_feedback_expression": 0.010779763775217764
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0029230273817056605,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAPK1_PRTG",
+      "cells": 457,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0008940755125082477,
+        "signal_expression": 0.005394327353105987,
+        "repair_expression": -0.02349671214154859,
+        "metabolic_expression": -0.03391226085861552,
+        "death_expression": 0.0004063229965661137,
+        "negative_feedback_expression": 0.01612152484012811
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.003480783527003204,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "MAPK1_TGFBR2",
+      "cells": 457,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004792534636994373,
+        "signal_expression": 0.006780128361013744,
+        "repair_expression": -0.013979943626381964,
+        "metabolic_expression": -0.022205055484247407,
+        "death_expression": 0.00838609508820072,
+        "negative_feedback_expression": 0.023740926983689133
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010424576430310669,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "MEIS1",
+      "cells": 743,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0003258771861213573,
+        "signal_expression": 0.003275004581178386,
+        "repair_expression": -0.00011113710690304732,
+        "metabolic_expression": -0.003995506099802592,
+        "death_expression": 4.6094644825334895e-05,
+        "negative_feedback_expression": 0.009725879587958832
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012009919948384252,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "MIDN",
+      "cells": 278,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.002234962354091923,
+        "signal_expression": 0.012921691721158753,
+        "repair_expression": -0.036265291517023936,
+        "metabolic_expression": -0.04186176602815461,
+        "death_expression": 0.0032925773038310437,
+        "negative_feedback_expression": 0.06509820549089734
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012911113149510585,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "NCL",
+      "cells": 218,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.003242517330315674,
+        "signal_expression": 0.0022985358617457255,
+        "repair_expression": -0.01789968151559854,
+        "metabolic_expression": -0.012038165394489831,
+        "death_expression": -0.00319190263899833,
+        "negative_feedback_expression": -0.00421604378108844
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010463950342166116,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "NIT1",
+      "cells": 187,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0038341665072567114,
+        "signal_expression": 0.009282031956156366,
+        "repair_expression": -0.052028557563645564,
+        "metabolic_expression": -0.06829346453016366,
+        "death_expression": 0.009817916347233807,
+        "negative_feedback_expression": 0.006941439354745081
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012439313183455293,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "OSR2",
+      "cells": 960,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.008010457317037846,
+        "signal_expression": 0.0181921516034241,
+        "repair_expression": -0.0029287258793134906,
+        "metabolic_expression": 0.011581526705841762,
+        "death_expression": 0.015454998179381405,
+        "negative_feedback_expression": 0.03003264159761616
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.022562637024430534,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.7142857142857143
+      }
+    },
+    {
+      "unit": "PLK4",
+      "cells": 107,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0034968881504764183,
+        "signal_expression": 0.0010854015006109704,
+        "repair_expression": -0.0259150136841028,
+        "metabolic_expression": -0.02251099107819785,
+        "death_expression": -0.0019768161557750484,
+        "negative_feedback_expression": -0.004076405973410695
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.007506992082789395,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "PLK4_STIL",
+      "cells": 71,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.0025413240247688876,
+        "signal_expression": 0.006779223535216444,
+        "repair_expression": -0.02875362675546685,
+        "metabolic_expression": -0.01590780922573896,
+        "death_expression": 0.006132738595341475,
+        "negative_feedback_expression": -0.002763746673463017
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008546528682604752,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "POU3F2",
+      "cells": 343,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0023450706936493843,
+        "signal_expression": 0.0024062034493374483,
+        "repair_expression": -0.0121500882373853,
+        "metabolic_expression": -0.018865088265491523,
+        "death_expression": -0.002555813313756901,
+        "negative_feedback_expression": 0.004700462078367889
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008524777175208746,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "POU3F2_CBFA2T3",
+      "cells": 206,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.0009355710643411195,
+        "signal_expression": 0.007757442543109941,
+        "repair_expression": -0.03402553562611042,
+        "metabolic_expression": -0.045394393738728236,
+        "death_expression": 0.004831191792463991,
+        "negative_feedback_expression": 0.02921616579851054
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0062984465814726505,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "POU3F2_FOXL2",
+      "cells": 300,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0018298771007435525,
+        "signal_expression": 0.011313135063747483,
+        "repair_expression": -0.05625802542230523,
+        "metabolic_expression": -0.05033835087047382,
+        "death_expression": -0.006284649344760564,
+        "negative_feedback_expression": 0.0340411355558444
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011851382094389856,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "PRDM1",
+      "cells": 287,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.007211196764186429,
+        "signal_expression": 0.0002735293367686241,
+        "repair_expression": -0.042058442417515246,
+        "metabolic_expression": -0.052739051411619414,
+        "death_expression": 0.008127847789762112,
+        "negative_feedback_expression": 0.0222091572726212
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009822641797999809,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "PRDM1_CBFA2T3",
+      "cells": 103,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.00836799617659851,
+        "signal_expression": 0.005146343486751401,
+        "repair_expression": -0.07539606859936997,
+        "metabolic_expression": -0.07865689852351893,
+        "death_expression": -0.0005131989804713824,
+        "negative_feedback_expression": 0.032716112105201395
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019390202901088182,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "PRTG",
+      "cells": 643,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0021823755571214157,
+        "signal_expression": 0.0017831003987021253,
+        "repair_expression": -0.03686527086288761,
+        "metabolic_expression": -0.036735474112609225,
+        "death_expression": -0.009214987283951032,
+        "negative_feedback_expression": 0.00018522516173381288
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00466616827225632,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "PTPN1",
+      "cells": 392,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.00664059463869514,
+        "signal_expression": -0.005724356986369388,
+        "repair_expression": -0.06680775136053121,
+        "metabolic_expression": -0.07659841527519956,
+        "death_expression": -0.015950299401450953,
+        "negative_feedback_expression": -0.006781738334546748
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.02057839722903293,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "PTPN12",
+      "cells": 428,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0017570722827029773,
+        "signal_expression": -0.0029087744836288334,
+        "repair_expression": -0.0149640284701286,
+        "metabolic_expression": -0.02923657855215891,
+        "death_expression": -0.006526328768586273,
+        "negative_feedback_expression": -0.0038843627191482433
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009207592051034528,
+        "sign_agreement": 0.5,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "PTPN12_OSR2",
+      "cells": 325,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.00012403122053862394,
+        "signal_expression": 0.0035526107049476353,
+        "repair_expression": -0.00963895232448038,
+        "metabolic_expression": -0.005588759431389765,
+        "death_expression": 0.0073387072721267516,
+        "negative_feedback_expression": 0.006071806232940868
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011927915098407108,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "PTPN12_PTPN9",
+      "cells": 342,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.008863588585670858,
+        "signal_expression": -0.008531436593548835,
+        "repair_expression": -0.06271281311368347,
+        "metabolic_expression": -0.07161164371542773,
+        "death_expression": -0.015460094177961282,
+        "negative_feedback_expression": -0.009992270891715551
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.020356512409235385,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "PTPN12_SNAI1",
+      "cells": 264,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0012912472637745416,
+        "signal_expression": 0.0014839806164991464,
+        "repair_expression": -0.029796789742243465,
+        "metabolic_expression": -0.05089658747593983,
+        "death_expression": -0.0033402956550506436,
+        "negative_feedback_expression": 0.011079872181718934
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.004108259236781798,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "PTPN12_UBASH3A",
+      "cells": 290,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.01061053654039153,
+        "signal_expression": -0.008628727659631538,
+        "repair_expression": -0.06170569712533434,
+        "metabolic_expression": -0.07646660489567654,
+        "death_expression": -0.019389411256916865,
+        "negative_feedback_expression": -0.014550718364546387
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.022719820536650295,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "PTPN12_ZBTB25",
+      "cells": 288,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.010188865614041693,
+        "signal_expression": -0.009935895465208688,
+        "repair_expression": -0.06164335868842076,
+        "metabolic_expression": -0.07768068288318301,
+        "death_expression": -0.02003361382114737,
+        "negative_feedback_expression": -0.007279475780279414
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.021954853271614255,
+        "sign_agreement": 0.5,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "PTPN13",
+      "cells": 255,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0011998470924317983,
+        "signal_expression": 0.004753457084907038,
+        "repair_expression": -0.007819890450132684,
+        "metabolic_expression": -0.008154382764478791,
+        "death_expression": -0.0023502950779987373,
+        "negative_feedback_expression": 0.03521031646108509
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013258290204107024,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "PTPN9",
+      "cells": 417,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.003356740885257864,
+        "signal_expression": -0.00419411392381446,
+        "repair_expression": -0.027011289872859744,
+        "metabolic_expression": -0.03735716988869721,
+        "death_expression": -0.007879803680998184,
+        "negative_feedback_expression": -0.008332378281659097
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.007598497392325731,
+        "sign_agreement": 0.5,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "RHOXF2",
+      "cells": 316,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.010496054001401323,
+        "signal_expression": 0.012623554407209223,
+        "repair_expression": -0.043590170968238376,
+        "metabolic_expression": -0.06087624965099388,
+        "death_expression": 0.0006393839316925188,
+        "negative_feedback_expression": 0.021319986485431906
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010862629728423145,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "RHOXF2_SET",
+      "cells": 308,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.012329564711329294,
+        "signal_expression": 0.014599114679365163,
+        "repair_expression": -0.04922808626356719,
+        "metabolic_expression": -0.09610078955333924,
+        "death_expression": 0.004398289100715757,
+        "negative_feedback_expression": 0.004592913836108141
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018397352003871537,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "RHOXF2_ZBTB25",
+      "cells": 241,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0027201279407838446,
+        "signal_expression": 0.006743783048558078,
+        "repair_expression": -0.06956055101488356,
+        "metabolic_expression": -0.09207394762633508,
+        "death_expression": -0.012353356243426926,
+        "negative_feedback_expression": 0.0161377231126852
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018438768032522795,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "RREB1",
+      "cells": 311,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.003985292116138703,
+        "signal_expression": 0.001252351709272553,
+        "repair_expression": -0.03374322926910772,
+        "metabolic_expression": -0.03584956013861044,
+        "death_expression": -0.004569354119657308,
+        "negative_feedback_expression": -0.0036830653381345686
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.004455634980100154,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "RUNX1T1",
+      "cells": 729,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0007078505704016554,
+        "signal_expression": 0.0010297456012523605,
+        "repair_expression": -0.006238238558171377,
+        "metabolic_expression": -0.0066951534083129005,
+        "death_expression": -0.00098176373936084,
+        "negative_feedback_expression": -0.0035023612889791065
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013037031890636534,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.6571428571428571
+      }
+    },
+    {
+      "unit": "S1PR2",
+      "cells": 511,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0011808790742284666,
+        "signal_expression": 0.001282198087543089,
+        "repair_expression": -0.025564913792455117,
+        "metabolic_expression": -0.023057578012695697,
+        "death_expression": -0.0011288760883472302,
+        "negative_feedback_expression": 0.024983420991406845
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0068725011157244635,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "SAMD1",
+      "cells": 471,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0034353410520005395,
+        "signal_expression": 0.004759680221732701,
+        "repair_expression": -0.03651503813690078,
+        "metabolic_expression": -0.049665292466509046,
+        "death_expression": -0.002371089089472426,
+        "negative_feedback_expression": 0.008633444682501924
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0039268105363421246,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "SAMD1_PTPN12",
+      "cells": 327,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.012583714118100945,
+        "signal_expression": -0.004688953393667348,
+        "repair_expression": -0.06760526041438307,
+        "metabolic_expression": -0.08120222401712074,
+        "death_expression": -0.01671465050297107,
+        "negative_feedback_expression": -0.013083503357431338
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.023474255530179847,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "SAMD1_TGFBR2",
+      "cells": 66,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0031913142060503628,
+        "signal_expression": 0.0015743171030316407,
+        "repair_expression": -0.0503254898051414,
+        "metabolic_expression": -0.059617399566910756,
+        "death_expression": -0.007344712205557139,
+        "negative_feedback_expression": 0.007081405889152578
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00946507002814667,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "SAMD1_UBASH3B",
+      "cells": 228,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.01232015639961135,
+        "signal_expression": -0.0012695294834526281,
+        "repair_expression": -0.0778446988010603,
+        "metabolic_expression": -0.08998189363115915,
+        "death_expression": -0.010957113141653235,
+        "negative_feedback_expression": 0.006984590460929768
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.021726004728901915,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "SAMD1_ZBTB1",
+      "cells": 177,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.004996414988048396,
+        "signal_expression": 0.004438325249753725,
+        "repair_expression": -0.04768314115460403,
+        "metabolic_expression": -0.06829237394519701,
+        "death_expression": -0.009128516864801203,
+        "negative_feedback_expression": 0.019714895124376915
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01127557359653822,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "SET",
+      "cells": 913,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.004772487739670403,
+        "signal_expression": 0.001126428406759785,
+        "repair_expression": -0.04448726203081768,
+        "metabolic_expression": -0.07313667332229823,
+        "death_expression": -0.00927478377814625,
+        "negative_feedback_expression": -0.01419846403073516
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.014951744978718753,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.6571428571428571
+      }
+    },
+    {
+      "unit": "SET_CEBPE",
+      "cells": 621,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.00011444252118643113,
+        "signal_expression": 0.006363492453811814,
+        "repair_expression": -0.043720487175236,
+        "metabolic_expression": -0.06637826002973501,
+        "death_expression": 0.000813711164129817,
+        "negative_feedback_expression": 0.0031908169942204407
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008780427242872268,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "SET_KLF1",
+      "cells": 624,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.001037833024718277,
+        "signal_expression": 0.0002263219448335518,
+        "repair_expression": -0.023705800947984218,
+        "metabolic_expression": -0.0433709566693093,
+        "death_expression": -0.006814561181345251,
+        "negative_feedback_expression": -0.01589642149011446
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009111619506509473,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.6571428571428571
+      }
+    },
+    {
+      "unit": "SGK1",
+      "cells": 469,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.00036983318939975263,
+        "signal_expression": 0.0028761475052110027,
+        "repair_expression": -0.043727655807148824,
+        "metabolic_expression": -0.0400232303680998,
+        "death_expression": -0.008604464314843279,
+        "negative_feedback_expression": -0.000202751257760691
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.005836502468240987,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "SGK1_S1PR2",
+      "cells": 340,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0016325184950674383,
+        "signal_expression": 0.00835089624866022,
+        "repair_expression": -0.0570457371659297,
+        "metabolic_expression": -0.053027708126861764,
+        "death_expression": -0.0004482323482288493,
+        "negative_feedback_expression": 0.057673333218432266
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015485389972049032,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "SGK1_TBX2",
+      "cells": 331,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.002524449975051591,
+        "signal_expression": 0.002679003366471488,
+        "repair_expression": -0.0547344468449251,
+        "metabolic_expression": -0.061629852287113096,
+        "death_expression": -0.014088364413779603,
+        "negative_feedback_expression": 0.0037482635467006864
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.011919512330850299,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "SGK1_TBX3",
+      "cells": 282,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.005882225421550187,
+        "signal_expression": 0.003255954493385262,
+        "repair_expression": -0.05555193718084798,
+        "metabolic_expression": -0.05045485898777473,
+        "death_expression": -0.01443699548661798,
+        "negative_feedback_expression": 0.0048391552902594965
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01053302244509178,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "SLC38A2",
+      "cells": 319,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0011796315490595684,
+        "signal_expression": 5.0095426730704e-05,
+        "repair_expression": 0.012201969565445418,
+        "metabolic_expression": 0.01284187831112223,
+        "death_expression": 0.0006388810500539499,
+        "negative_feedback_expression": -0.0027525808321694134
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.019726653519386926,
+        "sign_agreement": 0.3333333333333333,
+        "spearman": -0.9428571428571428
+      }
+    },
+    {
+      "unit": "SLC4A1",
+      "cells": 937,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.004889862639249073,
+        "signal_expression": 0.001493695432863079,
+        "repair_expression": -0.020275016215571387,
+        "metabolic_expression": -0.016178256331494306,
+        "death_expression": -0.001862559457082942,
+        "negative_feedback_expression": -0.0116799197269836
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01095285595345948,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "SLC6A9",
+      "cells": 527,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0016560468440644965,
+        "signal_expression": 0.005246797090917148,
+        "repair_expression": -0.016077527986931763,
+        "metabolic_expression": -0.022228352127590695,
+        "death_expression": 0.0010527902592570278,
+        "negative_feedback_expression": -0.0024599300367581472
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008428828454362665,
+        "sign_agreement": 0.5,
+        "spearman": 0.6
+      }
+    },
+    {
+      "unit": "SNAI1",
+      "cells": 439,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.000591139204150957,
+        "signal_expression": 0.006066315464372738,
+        "repair_expression": -0.02524652933119871,
+        "metabolic_expression": -0.035141085744020355,
+        "death_expression": -0.0017015716421688505,
+        "negative_feedback_expression": 0.0174156535330491
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0028630832771857576,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "SNAI1_DLX2",
+      "cells": 120,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.011191975168244987,
+        "signal_expression": 0.008528352011531988,
+        "repair_expression": -0.09174905315633228,
+        "metabolic_expression": -0.0889681002392321,
+        "death_expression": -0.01765196298623358,
+        "negative_feedback_expression": 0.024402652974032726
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.025616170216734332,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "SNAI1_UBASH3B",
+      "cells": 280,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.006152788395405991,
+        "signal_expression": -0.0014330059575125584,
+        "repair_expression": -0.04745808462080168,
+        "metabolic_expression": -0.06103520085467034,
+        "death_expression": -0.013134234613460572,
+        "negative_feedback_expression": 0.001004584988403418
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012195992805142051,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "SPI1",
+      "cells": 581,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.013446115180834025,
+        "signal_expression": 0.003581017140764887,
+        "repair_expression": -0.0933355228810738,
+        "metabolic_expression": -0.08210918314062411,
+        "death_expression": -0.022565125744811666,
+        "negative_feedback_expression": -0.001818203444071366
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.025776726771342445,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "STIL",
+      "cells": 285,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0023383121655622674,
+        "signal_expression": 0.0016105898990271105,
+        "repair_expression": -0.027179461321100874,
+        "metabolic_expression": -0.02563916660252364,
+        "death_expression": -0.005409364626075998,
+        "negative_feedback_expression": -0.0007297767282849511
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.006402976128616657,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "TBX2",
+      "cells": 649,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.001730272727762586,
+        "signal_expression": -4.179419006169096e-06,
+        "repair_expression": -0.028070232338346796,
+        "metabolic_expression": -0.03235976545833576,
+        "death_expression": -0.007101853559219813,
+        "negative_feedback_expression": 0.003140742702892774
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.004939197713473599,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "TBX3",
+      "cells": 646,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.007014406458543011,
+        "signal_expression": -0.0010201152475375393,
+        "repair_expression": -0.03210791033906583,
+        "metabolic_expression": -0.02797537971017082,
+        "death_expression": -0.012277859419451934,
+        "negative_feedback_expression": -0.004573613554297268
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008195387617503576,
+        "sign_agreement": 0.5,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "TBX3_TBX2",
+      "cells": 1094,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.00850854018656843,
+        "signal_expression": -0.002903151647777618,
+        "repair_expression": -0.05048631603402434,
+        "metabolic_expression": -0.05123473279894015,
+        "death_expression": -0.017939293869108485,
+        "negative_feedback_expression": -0.0038202959270316307
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013309926306809204,
+        "sign_agreement": 0.5,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "TGFBR2",
+      "cells": 611,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.001784081898345506,
+        "signal_expression": -0.0013291129552481721,
+        "repair_expression": -0.0033109888686656892,
+        "metabolic_expression": -0.0008497380035340936,
+        "death_expression": -0.005406604678552186,
+        "negative_feedback_expression": -0.003039195900887776
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015294648272543702,
+        "sign_agreement": 0.5,
+        "spearman": -0.08571428571428572
+      }
+    },
+    {
+      "unit": "TGFBR2_C19orf26",
+      "cells": 308,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0002862236053405145,
+        "signal_expression": 0.0037513142031256374,
+        "repair_expression": -0.024893458491375094,
+        "metabolic_expression": -0.024011480279531892,
+        "death_expression": -0.008498841524970784,
+        "negative_feedback_expression": -0.005400433147098089
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.007622843470245146,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "TGFBR2_ETS2",
+      "cells": 304,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0015588516213053709,
+        "signal_expression": 0.005089454711691474,
+        "repair_expression": -0.0024752313873764925,
+        "metabolic_expression": -0.006476772685334215,
+        "death_expression": 0.01021713519204853,
+        "negative_feedback_expression": 0.016797689176656087
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.013439414969226736,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "TGFBR2_IGDCC3",
+      "cells": 288,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0016862362707390302,
+        "signal_expression": 0.0008505375931557299,
+        "repair_expression": -0.032612678560209746,
+        "metabolic_expression": -0.033303559955335876,
+        "death_expression": -0.009139131651706637,
+        "negative_feedback_expression": 0.005209066641273437
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.0038698577078165384,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "TGFBR2_PRTG",
+      "cells": 250,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0004362944483280552,
+        "signal_expression": 0.0008633068128095424,
+        "repair_expression": -0.0329868953422318,
+        "metabolic_expression": -0.038433113841002536,
+        "death_expression": -0.009967109829023005,
+        "negative_feedback_expression": -0.001224490430226193
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.00461547899332096,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "TMSB4X",
+      "cells": 512,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.004563915875936568,
+        "signal_expression": -0.001021733983228759,
+        "repair_expression": -0.020035989969605327,
+        "metabolic_expression": -0.02066084583405601,
+        "death_expression": -0.005198621903253737,
+        "negative_feedback_expression": -0.008307771760347112
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010460804798922198,
+        "sign_agreement": 0.5,
+        "spearman": 0.6571428571428571
+      }
+    },
+    {
+      "unit": "TMSB4X_BAK1",
+      "cells": 301,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.00585027391786379,
+        "signal_expression": -0.0002400440732990482,
+        "repair_expression": -0.0160681377335437,
+        "metabolic_expression": -0.015056920168312286,
+        "death_expression": -0.008002875117523196,
+        "negative_feedback_expression": -0.007286419110193129
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.012437362565241921,
+        "sign_agreement": 0.5,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "TP73",
+      "cells": 239,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.018959525831198847,
+        "signal_expression": 0.017450103528773752,
+        "repair_expression": -0.08121937659098064,
+        "metabolic_expression": -0.07392877390850217,
+        "death_expression": -0.0003113223548627677,
+        "negative_feedback_expression": 0.03070695211545366
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.022930631424269658,
+        "sign_agreement": 1.0,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "TSC22D1",
+      "cells": 426,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0045890704718462155,
+        "signal_expression": 0.004226460313877816,
+        "repair_expression": -0.00622333865605931,
+        "metabolic_expression": -0.014602654797859783,
+        "death_expression": 0.002570493866932488,
+        "negative_feedback_expression": 0.0063944083536028005
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010751296242096779,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "UBASH3A",
+      "cells": 772,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0016112332931635556,
+        "signal_expression": -0.0014423566166622567,
+        "repair_expression": -0.015633283575982097,
+        "metabolic_expression": -0.021127056820653342,
+        "death_expression": -0.005191996196579732,
+        "negative_feedback_expression": -0.003764041540201558
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009936484720733335,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "UBASH3B",
+      "cells": 1132,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.004453236196582396,
+        "signal_expression": -0.0040050591367273075,
+        "repair_expression": -0.02823388271547951,
+        "metabolic_expression": -0.03395636620862312,
+        "death_expression": -0.010093862225529809,
+        "negative_feedback_expression": -0.005215384455745867
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.007657819027485184,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "UBASH3B_CNN1",
+      "cells": 386,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.013022661390929224,
+        "signal_expression": -0.013102482427382921,
+        "repair_expression": -0.06797517532904201,
+        "metabolic_expression": -0.08974479181532648,
+        "death_expression": -0.02546521988135525,
+        "negative_feedback_expression": -0.020750030975376317
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.029171264866136134,
+        "sign_agreement": 0.5,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "UBASH3B_OSR2",
+      "cells": 766,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.003443737062843379,
+        "signal_expression": 0.005833712290100514,
+        "repair_expression": -0.002432568668689686,
+        "metabolic_expression": 0.0054326524799588145,
+        "death_expression": 0.005826364765364948,
+        "negative_feedback_expression": 0.012488426167785767
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.014270849453326526,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 0.7142857142857143
+      }
+    },
+    {
+      "unit": "UBASH3B_PTPN12",
+      "cells": 281,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0069720592836665955,
+        "signal_expression": -0.00842954929117079,
+        "repair_expression": -0.05232863847430605,
+        "metabolic_expression": -0.07513140856698908,
+        "death_expression": -0.014181381497932194,
+        "negative_feedback_expression": -0.0009384514771890782
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.017158119328109726,
+        "sign_agreement": 0.5,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "UBASH3B_PTPN9",
+      "cells": 315,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.0089434711308653,
+        "signal_expression": -0.006357181615720193,
+        "repair_expression": -0.06565345686907402,
+        "metabolic_expression": -0.07616437320490324,
+        "death_expression": -0.019553199043192117,
+        "negative_feedback_expression": -0.012262933251399924
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.022316973748759895,
+        "sign_agreement": 0.5,
+        "spearman": 0.8285714285714286
+      }
+    },
+    {
+      "unit": "UBASH3B_UBASH3A",
+      "cells": 515,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0050068355740704226,
+        "signal_expression": -0.0035045220345139537,
+        "repair_expression": -0.03815255990462161,
+        "metabolic_expression": -0.044049602449162124,
+        "death_expression": -0.012388112842863855,
+        "negative_feedback_expression": 1.28076684203796e-05
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.008009342085702694,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "UBASH3B_ZBTB25",
+      "cells": 248,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": -0.008566388885256555,
+        "signal_expression": -0.009264133595160496,
+        "repair_expression": -0.0609818678907044,
+        "metabolic_expression": -0.06807670484499931,
+        "death_expression": -0.021425640426033586,
+        "negative_feedback_expression": -2.1785907322470275e-05
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.018883958154480233,
+        "sign_agreement": 0.5,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "ZBTB1",
+      "cells": 656,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0017984253171904766,
+        "signal_expression": -0.0006314468370763014,
+        "repair_expression": -0.013350618147386402,
+        "metabolic_expression": -0.027332997410569604,
+        "death_expression": -0.01158201191868687,
+        "negative_feedback_expression": 0.0034945155373874537
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.009033895675339756,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "ZBTB10",
+      "cells": 155,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.00531363265868145,
+        "signal_expression": 0.01289610996114715,
+        "repair_expression": -0.04687618566115894,
+        "metabolic_expression": -0.046099522014560496,
+        "death_expression": 0.005684466675159501,
+        "negative_feedback_expression": 0.0358534285175471
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01139228740230438,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.8857142857142857
+      }
+    },
+    {
+      "unit": "ZBTB10_DLX2",
+      "cells": 83,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.004787603424357844,
+        "signal_expression": 0.024708159743411545,
+        "repair_expression": -0.08455462961401143,
+        "metabolic_expression": -0.09526595561879099,
+        "death_expression": -0.0033752883883884735,
+        "negative_feedback_expression": 0.04598647909753951
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.028286872515827313,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "ZBTB10_ELMSAN1",
+      "cells": 168,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.006500876584309695,
+        "signal_expression": 0.016208468972563193,
+        "repair_expression": -0.0458408175482105,
+        "metabolic_expression": -0.051612536658798565,
+        "death_expression": 0.0013724811349945785,
+        "negative_feedback_expression": 0.05060053701941068
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01462768280730981,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "ZBTB10_PTPN12",
+      "cells": 257,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.00040429716581412965,
+        "signal_expression": 0.004934982509987016,
+        "repair_expression": -0.05711488315591246,
+        "metabolic_expression": -0.059648415840398955,
+        "death_expression": -0.0011982208708749358,
+        "negative_feedback_expression": -0.00374335697297726
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010695071882069793,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.6571428571428571
+      }
+    },
+    {
+      "unit": "ZBTB10_SNAI1",
+      "cells": 93,
+      "role": "holdout",
+      "six_node_vector": {
+        "damage_response": 0.01067106975042715,
+        "signal_expression": 0.02761516216081049,
+        "repair_expression": -0.08210017951303293,
+        "metabolic_expression": -0.08559111913621645,
+        "death_expression": -0.0023656215062953247,
+        "negative_feedback_expression": 0.07377262661725986
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.03219314964875105,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "ZBTB25",
+      "cells": 689,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.004890262092845109,
+        "signal_expression": -0.005075267431427973,
+        "repair_expression": -0.02428743848899292,
+        "metabolic_expression": -0.02993348506131514,
+        "death_expression": -0.013951982263835446,
+        "negative_feedback_expression": -0.0073116782570310105
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01022964792820997,
+        "sign_agreement": 0.5,
+        "spearman": 0.7714285714285715
+      }
+    },
+    {
+      "unit": "ZC3HAV1",
+      "cells": 485,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": -0.0021823275479808863,
+        "signal_expression": 0.00016570956880539585,
+        "repair_expression": -0.007393005123969883,
+        "metabolic_expression": -0.0037071643285996408,
+        "death_expression": -0.003783336140029376,
+        "negative_feedback_expression": -0.014050781032748016
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.015520031128968619,
+        "sign_agreement": 0.6666666666666666,
+        "spearman": -0.02857142857142857
+      }
+    },
+    {
+      "unit": "ZC3HAV1_CEBPA",
+      "cells": 83,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.003489550434403003,
+        "signal_expression": 0.03732799251554169,
+        "repair_expression": -0.06655490533370857,
+        "metabolic_expression": -0.06394522251260833,
+        "death_expression": 0.013356186405549742,
+        "negative_feedback_expression": 0.010378601539022222
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01876940620230164,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.6571428571428571
+      }
+    },
+    {
+      "unit": "ZC3HAV1_CEBPE",
+      "cells": 393,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.003004336362266613,
+        "signal_expression": 0.0066750106573696165,
+        "repair_expression": -0.01376074448500856,
+        "metabolic_expression": -0.010020675487383595,
+        "death_expression": 0.0036791812244077794,
+        "negative_feedback_expression": 0.0015936147325182875
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.010951178131196344,
+        "sign_agreement": 0.8333333333333334,
+        "spearman": 0.5428571428571428
+      }
+    },
+    {
+      "unit": "ZC3HAV1_HOXC13",
+      "cells": 590,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0006617528629851437,
+        "signal_expression": 0.004886144271381557,
+        "repair_expression": -0.027575567795367233,
+        "metabolic_expression": -0.033059018089835294,
+        "death_expression": -0.0003824843512463624,
+        "negative_feedback_expression": 0.009168870857845547
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.002397457122085138,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    },
+    {
+      "unit": "ZNF318",
+      "cells": 622,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0009780155510712204,
+        "signal_expression": 7.485073861094953e-05,
+        "repair_expression": -0.009001154752644673,
+        "metabolic_expression": -0.017784694865166963,
+        "death_expression": -0.0049341009439758925,
+        "negative_feedback_expression": 0.0030987841052409794
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.01002674125857961,
+        "sign_agreement": 1.0,
+        "spearman": 0.9428571428571428
+      }
+    },
+    {
+      "unit": "ZNF318_FOXL2",
+      "cells": 233,
+      "role": "train",
+      "six_node_vector": {
+        "damage_response": 0.0012309383321751491,
+        "signal_expression": 0.002702853424272525,
+        "repair_expression": -0.0419470900188891,
+        "metabolic_expression": -0.04348285267751166,
+        "death_expression": -0.011531601551240061,
+        "negative_feedback_expression": 0.018482694502507342
+      },
+      "metrics_vs_centroid": {
+        "six_node_mae": 0.006014490475612008,
+        "sign_agreement": 1.0,
+        "spearman": 1.0
+      }
+    }
+  ],
+  "metrics_summary": {
+    "train": {
+      "six_node_mae": 0.013469483215072318,
+      "sign_agreement": 0.7180851063829787,
+      "spearman": 0.6817629179331307,
+      "unit_count": 188
+    },
+    "holdout": {
+      "six_node_mae": 0.012872174640087454,
+      "sign_agreement": 0.7013888888888888,
+      "spearman": 0.7904761904761904,
+      "unit_count": 48
+    }
+  },
+  "profile_id": "norman-perturbation-profile-0a0aa914dc9fb080"
+}

@@ -1,7 +1,7 @@
 # CAR-M 空间 L3 数据锚定执行清单
 
 > 建立：2026-08-21 · 关联：ADR-0023、ADR-0024、ADR-0025、ADR-0028  
-> 状态：**许可/文件/预算已核验，用户已授权最小包；当前环境无法连接 Zenodo，尚未下载任何外部数据。**
+> 状态：**最小包已于 2026-08-28 下载并完成 MD5/字节数核验**（五文件 241,284,013 bytes，与 Zenodo 公布值一致）；source manifest、observation bundle 与去标识 target 均已生成，首次同指标评估见 `docs/实验记录/CAR-M-spatial-anchor-first-target-2026-08-28.md`。
 
 ## 1. 为什么建立这份清单
 
@@ -16,8 +16,8 @@ ADR-0024 的 2×2×2 机制审计显示，当前 CAR-M 空间 reference model �
 
 | # | 资源与最小文件 | 回答的研究问题 | 压缩下载预算 | 许可状态 | 授权状态 |
 |---|---|---|---:|---|---|
-| S1 | Wu/Swarbrick 乳腺癌 Visium：`filtered_count_matrices.tar.gz`（155,703,418 bytes）+ `spatial.tar.gz`（54,282,871 bytes）+ `metadata.tar.gz`（217,533 bytes） | 六例原发乳腺癌中，spot 级局部表达场的 CV、空间自相关、梯度和病理区域间差异处于什么范围？ | **210,203,822 bytes**；不取 raw counts 与 image PDF | Zenodo/DataCite：**CC BY 4.0**，已于 2026-08-21 核验 | 已授权；网络阻塞未下载 |
-| S2 | Jackson 等乳腺癌 Imaging Mass Cytometry：`singlecell_locations.zip`（23,191,397 bytes）+ `singlecell_cluster_labels.zip`（7,888,794 bytes） | 细胞级免疫—肿瘤邻接富集、最近邻距离分位数和接触混合度处于什么范围？ | **31,080,191 bytes**；不取 48.3 GB 全量数据 | DataCite：**CC BY 1.0 Generic**，已于 2026-08-21 核验 | 已授权；网络阻塞未下载 |
+| S1 | Wu/Swarbrick 乳腺癌 Visium：`filtered_count_matrices.tar.gz`（155,703,418 bytes）+ `spatial.tar.gz`（54,282,871 bytes）+ `metadata.tar.gz`（217,533 bytes） | 六例原发乳腺癌中，spot 级局部表达场的 CV、空间自相关、梯度和病理区域间差异处于什么范围？ | **210,203,822 bytes**；不取 raw counts 与 image PDF | Zenodo/DataCite：**CC BY 4.0**，已于 2026-08-21 核验 | 已授权；2026-08-28 已下载核验 |
+| S2 | Jackson 等乳腺癌 Imaging Mass Cytometry：`singlecell_locations.zip`（23,191,397 bytes）+ `singlecell_cluster_labels.zip`（7,888,794 bytes） | 细胞级免疫—肿瘤邻接富集、最近邻距离分位数和接触混合度处于什么范围？ | **31,080,191 bytes**；不取 48.3 GB 全量数据 | DataCite：**CC BY 1.0 Generic**，已于 2026-08-21 核验 | 已授权；2026-08-28 已下载核验 |
 
 权威来源：
 
@@ -133,5 +133,8 @@ S1 与 S2 修正后的五文件合计为 **241,284,013 bytes（230.11 MiB）**�
 
 | 编号 | 文件 | 来源 URL | 日期 | SHA-256 | 许可 | 字节数 | 状态 |
 |---|---|---|---|---|---|---:|---|
-| S1 | `filtered_count_matrices.tar.gz`、`spatial.tar.gz`、`metadata.tar.gz` | Zenodo 10.5281/zenodo.4739739 | — | — | CC BY 4.0（元数据已核验） | 210,203,822 | 网络阻塞，未下载 |
-| S2 | `singlecell_locations.zip`、`singlecell_cluster_labels.zip` | Zenodo 10.5281/zenodo.4607374 | — | — | CC BY 1.0 Generic（DataCite 已核验） | 31,080,191 | 网络阻塞，未下载 |
+| S1 | `filtered_count_matrices.tar.gz` | Zenodo 10.5281/zenodo.4739739 | 2026-08-28 | 57531d348b7c2ae9c5cd6b6c3bf36ce2850945565f8aa381c7edc5b7fc4e4e1e | CC BY 4.0 | 155,703,418 | 已下载，MD5 对齐公布值 |
+| S1 | `spatial.tar.gz` | Zenodo 10.5281/zenodo.4739739 | 2026-08-28 | bc3168535172c0970add12a9c13ab797dc5fee79fc42c392b9bea30c8f99a20a | CC BY 4.0 | 54,282,871 | 已下载，MD5 对齐公布值 |
+| S1 | `metadata.tar.gz` | Zenodo 10.5281/zenodo.4739739 | 2026-08-28 | beb8c05063f279fef805349ee8cc0714957576fbfb4af7c119dc46ec5cc8bea3 | CC BY 4.0 | 217,533 | 已下载，MD5 对齐公布值 |
+| S2 | `singlecell_locations.zip` | Zenodo 10.5281/zenodo.4607374 | 2026-08-28 | 8b7a42c373840983dd1c768512dbb2a651a5009e0e2964cd722119be23cedc24 | CC BY 1.0 Generic | 23,191,397 | 已下载，MD5 对齐公布值 |
+| S2 | `singlecell_cluster_labels.zip` | Zenodo 10.5281/zenodo.4607374 | 2026-08-28 | c026694a83f28dc5081d7ac05558ea904df072d16ebe73feb3f967ae71ed4984 | CC BY 1.0 Generic | 7,888,794 | 已下载，MD5 对齐公布值 |
