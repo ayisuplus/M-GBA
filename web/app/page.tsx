@@ -55,7 +55,7 @@ export default function Home() {
         <div className="flagship-grid">
           <div className="flagship-card"><small>SHORT TIMING · L4 DISTANCE</small><b>0.006580</b><span>可检测传播，不等于疗效改善</span></div>
           <div className="flagship-card"><small>LONG TIMING · L4 DISTANCE</small><b>0.020899</b><span>代价与收益同时显现</span></div>
-          <div className="flagship-card target-card"><small>REAL SPATIAL TARGET</small><b>尚未生成</b><span>合成 fixture 不冒充外部验证</span></div>
+          <div className="flagship-card target-card"><small>REAL SPATIAL TARGET</small><b>已生成 · improved</b><span>首次未锚定 → ADR-0043 improved</span></div>
         </div>
         <Link className="inline-cta" href="/lab">用 3 分钟完成一次实验回放 →</Link>
       </section>

@@ -13,7 +13,7 @@ const boundaries = [
   ['结果解释', '终点距离与曲线差值描述模型内效应，不能直接解释为疗效、机制真值或统计显著性。'],
   ['群体动力学', 'direction / intensity / polarization 是 activation-stress reference proxy；状态转换不是物理相变、涌现证明或机制验证。'],
   ['空间边界', '组织画布是显示投影；空间 L3 是无量纲 reference model，不是空间组学重建。'],
-  ['真实 Target', 'Wu / Jackson 真实空间聚合 Target 尚未生成；合成 fixture 只验证管线。'],
+  ['真实 Target', 'Wu / Jackson Target 已于 2026-08-28 生成；首次评估未锚定，calibration 后 improved（ADR-0043），仍非生物验证。'],
 ];
 
 export default function EvidencePage() {
