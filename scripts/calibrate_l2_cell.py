@@ -274,6 +274,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--search-seed", type=int, default=20260821)
     parser.add_argument("--candidates", type=int, default=512)
+    parser.add_argument("--max-evaluations", type=int, default=1003)
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--max-sweeps", type=int, default=4)
     parser.add_argument("--ticks", type=int, default=60)
@@ -292,6 +293,7 @@ def main() -> None:
         model_version="l2-cell-calibration-0.1",
         search_seed=args.search_seed,
         candidate_count=args.candidates,
+        max_evaluations=args.max_evaluations,
         top_k=args.top_k,
         refinement_steps=(0.1, 0.05),
         max_sweeps=args.max_sweeps,

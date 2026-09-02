@@ -12,13 +12,13 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass, field
-from hashlib import sha256
 from pathlib import Path
 from typing import Any, Mapping
 
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .l0_training_evaluation import EVALUATION_SCHEMA_VERSION, PREDICTIONS_SCHEMA_VERSION
 from .layers.l0 import ABSTRACT_GENE_NAMES
+from .validation import file_sha256, required_text, sha256_text
 
 TABLE_SCHEMA_VERSION = "mgba-l0-response-table-0.1"
 
@@ -30,29 +30,10 @@ SCIENTIFIC_BOUNDARY = (
 )
 
 
-def _required_text(value: Any, *, name: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{name} must be a non-empty string")
-    return value.strip()
 
 
-def _sha256_text(value: Any, *, name: str) -> str:
-    result = _required_text(value, name=name).lower()
-    if (
-        len(result) != 64
-        or result != value.strip()
-        or any(char not in "0123456789abcdef" for char in result)
-    ):
-        raise ValueError(f"{name} must be 64 lowercase hexadecimal characters")
-    return result
 
 
-def _file_sha256(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _read_json_object(path: Path, *, name: str) -> dict[str, Any]:
@@ -99,7 +80,7 @@ def build_response_table(
     source = evaluation.get("source")
     if not isinstance(source, dict):
         raise ValueError("evaluation lacks a source block")
-    if source.get("predictions_sha256") != _file_sha256(pred_path):
+    if source.get("predictions_sha256") != file_sha256(pred_path):
         raise ValueError("evaluation does not cover this predictions file")
     if source.get("profile_sha256") != predictions.get("profile_sha256"):
         raise ValueError("predictions/evaluation profile identity mismatch")
@@ -111,7 +92,7 @@ def build_response_table(
     for index, item in enumerate(units_raw):
         if not isinstance(item, dict):
             raise ValueError(f"units[{index}] must be an object")
-        unit = _required_text(item.get("unit"), name=f"units[{index}].unit")
+        unit = required_text(item.get("unit"), name=f"units[{index}].unit")
         if unit in table:
             raise ValueError(f"duplicate unit in predictions: {unit}")
         table[unit] = _vector6(item.get("mlp_pred"), name=f"units[{index}].mlp_pred")
@@ -120,12 +101,12 @@ def build_response_table(
         "schema_version": TABLE_SCHEMA_VERSION,
         "scientific_boundary": SCIENTIFIC_BOUNDARY,
         "source": {
-            "predictions_sha256": _file_sha256(pred_path),
-            "evaluation_sha256": _file_sha256(eval_path),
-            "profile_id": _required_text(
+            "predictions_sha256": file_sha256(pred_path),
+            "evaluation_sha256": file_sha256(eval_path),
+            "profile_id": required_text(
                 predictions.get("profile_id"), name="profile_id"
             ),
-            "evaluation_id": _required_text(
+            "evaluation_id": required_text(
                 evaluation.get("evaluation_id"), name="evaluation_id"
             ),
             "verdict": "passed",
@@ -181,8 +162,8 @@ class EmpiricalResponseTable:
 
 def load_response_table(path: str | Path, *, expected_sha256: str) -> EmpiricalResponseTable:
     table_path = Path(path)
-    digest = _file_sha256(table_path)
-    if digest != _sha256_text(expected_sha256, name="expected table sha256"):
+    digest = file_sha256(table_path)
+    if digest != sha256_text(expected_sha256, name="expected table sha256"):
         raise ValueError("response table SHA-256 disagrees with the layer config")
     raw = _read_json_object(table_path, name="empirical response table")
     if raw.get("schema_version") != TABLE_SCHEMA_VERSION:
@@ -200,12 +181,12 @@ def load_response_table(path: str | Path, *, expected_sha256: str) -> EmpiricalR
         raise ValueError("response table units must be a non-empty object")
     vectors = tuple(
         (
-            _required_text(unit, name="table unit"),
+            required_text(unit, name="table unit"),
             _vector6(vector, name=f"table[{unit}]"),
         )
         for unit, vector in sorted(units_raw.items())
     )
-    table_id = _required_text(raw["table_id"], name="table_id")
+    table_id = required_text(raw["table_id"], name="table_id")
     expected_id = f"l0-response-table-{digest_payload({key: value for key, value in raw.items() if key != 'table_id'})[:16]}"
     if table_id != expected_id:
         raise ValueError("response table id does not match its content")

@@ -73,7 +73,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .runner import MultirateRun
 
 _EPS = 1e-12
@@ -221,6 +221,8 @@ def classify_metric(
     config: E3CriteriaConfig,
 ) -> E3MetricStats:
     """Grade one macro metric against the pre-registered criteria."""
+    if not seed_values:
+        raise ValueError("seed_values must not be empty")
     n = len(seed_values)
     mean = statistics.fmean(seed_values)
     std = statistics.stdev(seed_values) if n >= 2 else 0.0
@@ -230,8 +232,6 @@ def classify_metric(
     decoupling = 1.0 - r_squared
     persistence = (
         sum(1.0 for value in seed_values if value >= config.pattern_threshold) / n
-        if n
-        else 0.0
     )
 
     stable = cv <= config.cv_threshold

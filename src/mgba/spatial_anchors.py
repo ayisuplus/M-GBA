@@ -18,9 +18,11 @@ from pathlib import Path
 from statistics import fmean, pstdev
 from typing import Any, Mapping, Sequence
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .layers import SpatialTissueState
 from .scenarios.carm.scenario import CellRole
+from .validation import finite, required_text, sha256_text
 
 
 OBSERVATION_SCHEMA_VERSION = "mgba-spatial-observation-bundle-0.1"
@@ -60,27 +62,17 @@ NEIGHBORHOOD_METRIC_IDS = tuple(
 )
 
 
-def _is_number(value: Any) -> bool:
-    return not isinstance(value, bool) and isinstance(value, (int, float))
 
 
-def _finite(value: Any, *, name: str) -> float:
-    if not _is_number(value) or not math.isfinite(float(value)):
-        raise ValueError(f"{name} must be a finite number")
-    return float(value)
 
 
 def _unit(value: Any, *, name: str) -> float:
-    number = _finite(value, name=name)
+    number = finite(value, name=name)
     if not 0.0 <= number <= 1.0:
         raise ValueError(f"{name} must be in [0, 1]")
     return number
 
 
-def _required_text(value: Any, *, name: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{name} must be a non-empty string")
-    return value.strip()
 
 
 def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> None:
@@ -91,11 +83,6 @@ def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> Non
         raise ValueError(f"{name} keys differ; missing={missing}, extra={extra}")
 
 
-def _sha256_text(value: Any, *, name: str) -> str:
-    text = _required_text(value, name=name).lower()
-    if len(text) != 64 or any(char not in "0123456789abcdef" for char in text):
-        raise ValueError(f"{name} must be a lowercase SHA-256 hex digest")
-    return text
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,11 +94,11 @@ class SpatialSourceArtifact:
     rights_verified: bool
 
     def __post_init__(self) -> None:
-        _required_text(self.file_id, name="source file_id")
-        _sha256_text(self.sha256, name="source sha256")
+        required_text(self.file_id, name="source file_id")
+        sha256_text(self.sha256, name="source sha256")
         if isinstance(self.bytes, bool) or not isinstance(self.bytes, int) or self.bytes < 1:
             raise ValueError("source bytes must be a positive integer")
-        _required_text(self.license, name="source license")
+        required_text(self.license, name="source license")
         if self.rights_verified is not True:
             raise ValueError("every source artifact needs explicit rights verification")
 
@@ -134,10 +121,10 @@ class FieldObservation:
     channels: tuple[tuple[str, float], ...]
 
     def __post_init__(self) -> None:
-        _required_text(self.observation_id, name="field observation_id")
+        required_text(self.observation_id, name="field observation_id")
         _unit(self.x, name="field x")
         _unit(self.y, name="field y")
-        _required_text(self.region, name="field region")
+        required_text(self.region, name="field region")
         if tuple(name for name, _ in self.channels) != FIELD_CHANNELS:
             raise ValueError("field channels must be stress/resource/signal in order")
         for name, value in self.channels:
@@ -155,7 +142,7 @@ class NeighborhoodObservation:
     label: str
 
     def __post_init__(self) -> None:
-        _required_text(self.observation_id, name="neighborhood observation_id")
+        required_text(self.observation_id, name="neighborhood observation_id")
         _unit(self.x, name="neighborhood x")
         _unit(self.y, name="neighborhood y")
         if self.label not in NEIGHBORHOOD_LABELS:
@@ -169,7 +156,7 @@ class SpatialObservationSample:
     neighborhood_observations: tuple[NeighborhoodObservation, ...] = ()
 
     def __post_init__(self) -> None:
-        _required_text(self.sample_id, name="sample_id")
+        required_text(self.sample_id, name="sample_id")
         populated = bool(self.field_observations), bool(self.neighborhood_observations)
         if populated not in ((True, False), (False, True)):
             raise ValueError("a sample must contain exactly one observation modality")
@@ -192,7 +179,7 @@ class SpatialObservationBundle:
     samples: tuple[SpatialObservationSample, ...]
 
     def __post_init__(self) -> None:
-        _required_text(self.dataset_id, name="dataset_id")
+        required_text(self.dataset_id, name="dataset_id")
         if self.modality not in MODALITIES:
             raise ValueError("bundle modality must be field or neighborhood")
         if not self.source_artifacts:
@@ -270,7 +257,7 @@ def load_spatial_observation_bundle(path: str | Path) -> SpatialObservationBundl
         )
         if raw["schema_version"] != OBSERVATION_SCHEMA_VERSION:
             raise ValueError("unsupported observation bundle schema")
-        modality = _required_text(raw["modality"], name="bundle modality")
+        modality = required_text(raw["modality"], name="bundle modality")
         if not isinstance(raw["source_artifacts"], list):
             raise ValueError("source_artifacts must be a list")
         source_artifacts = []
@@ -368,7 +355,7 @@ class SpatialAnchorProtocol:
 
     def __post_init__(self) -> None:
         for name in ("model_version", "field_dataset_id", "neighborhood_dataset_id", "split_salt"):
-            _required_text(getattr(self, name), name=name)
+            required_text(getattr(self, name), name=name)
         if self.field_dataset_id == self.neighborhood_dataset_id:
             raise ValueError("field and neighborhood dataset ids must differ")
         for name in ("expected_field_samples", "field_calibration_count", "field_knn_k"):
@@ -379,13 +366,13 @@ class SpatialAnchorProtocol:
             raise ValueError("field protocol needs at least one holdout sample")
         if self.field_knn_k < 2:
             raise ValueError("field_knn_k must be at least two")
-        radius_factor = _finite(
+        radius_factor = finite(
             self.neighborhood_radius_factor,
             name="neighborhood_radius_factor",
         )
         if not 1.0 <= radius_factor <= 5.0:
             raise ValueError("neighborhood_radius_factor must be in [1, 5]")
-        region_quantile = _finite(
+        region_quantile = finite(
             self.model_tumor_region_quantile,
             name="model_tumor_region_quantile",
         )
@@ -441,7 +428,7 @@ class SampleMetricRecord:
     metrics: tuple[tuple[str, float], ...]
 
     def __post_init__(self) -> None:
-        _required_text(self.dataset_id, name="metric dataset_id")
+        required_text(self.dataset_id, name="metric dataset_id")
         if not self.sample_alias.startswith("sample-") or len(self.sample_alias) != 19:
             raise ValueError("sample alias must be sample- plus twelve hex characters")
         if self.modality not in MODALITIES or self.role not in SAMPLE_ROLES:
@@ -457,8 +444,8 @@ class SampleMetricRecord:
         if tuple(names) != expected_metrics:
             raise ValueError("sample metrics do not match the frozen modality contract")
         for name, value in self.metrics:
-            _required_text(name, name="metric name")
-            _finite(value, name=f"metric {name}")
+            required_text(name, name="metric name")
+            finite(value, name=f"metric {name}")
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -487,7 +474,7 @@ class MetricDistribution:
     def __post_init__(self) -> None:
         if self.role not in SAMPLE_ROLES:
             raise ValueError("invalid distribution role")
-        _required_text(self.metric_id, name="distribution metric_id")
+        required_text(self.metric_id, name="distribution metric_id")
         if isinstance(self.sample_count, bool) or self.sample_count < 1:
             raise ValueError("distribution sample_count must be positive")
         values = (
@@ -948,13 +935,13 @@ class SpatialModelProjection:
             or self.logical_time < 0
         ):
             raise ValueError("projection logical_time must be non-negative")
-        _required_text(self.model_version, name="projection model_version")
-        _required_text(self.source_digest, name="projection source_digest")
+        required_text(self.model_version, name="projection model_version")
+        required_text(self.source_digest, name="projection source_digest")
         expected = tuple(sorted((*FIELD_METRIC_IDS, *NEIGHBORHOOD_METRIC_IDS)))
         if tuple(name for name, _ in self.metrics) != expected:
             raise ValueError("model projection must cover every frozen metric")
         for name, value in self.metrics:
-            _finite(value, name=f"projected metric {name}")
+            finite(value, name=f"projected metric {name}")
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -1080,7 +1067,7 @@ class TargetMetricComparison:
     def __post_init__(self) -> None:
         if self.role not in SAMPLE_ROLES:
             raise ValueError("comparison role is invalid")
-        _required_text(self.metric_id, name="comparison metric_id")
+        required_text(self.metric_id, name="comparison metric_id")
         values = (
             self.model_value,
             self.target_median,
@@ -1189,7 +1176,7 @@ def score_spatial_projection(
 
     if target.get("schema_version") != TARGET_SCHEMA_VERSION:
         raise ValueError("score requires a verified spatial anchor target")
-    target_id = _required_text(target.get("target_id"), name="score target_id")
+    target_id = required_text(target.get("target_id"), name="score target_id")
     target_core = dict(target)
     del target_core["target_id"]
     expected_target_id = f"spatial-anchor-{digest_payload(target_core)[:16]}"
@@ -1269,20 +1256,6 @@ def score_spatial_projection(
     )
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
-            raise ValueError(f"cannot verify existing spatial target: {error}") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different spatial anchor target")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_spatial_anchor_profile(path: str | Path, profile: SpatialAnchorProfile) -> Path:
@@ -1290,7 +1263,7 @@ def save_spatial_anchor_profile(path: str | Path, profile: SpatialAnchorProfile)
     if "raw" in {part.lower() for part in output.parts}:
         raise ValueError("aggregate spatial targets must not be written under a raw directory")
     profile.verify_identity()
-    _write_json_once(output, profile.as_dict())
+    write_json_once(output, profile.as_dict(), artifact="spatial anchor target")
     return output
 
 
@@ -1335,7 +1308,7 @@ def verify_spatial_anchor_target(path: str | Path) -> dict[str, Any]:
         name="target protocol",
     )
     protocol = SpatialAnchorProtocol(**protocol_raw)
-    target_id = _required_text(raw["target_id"], name="target_id")
+    target_id = required_text(raw["target_id"], name="target_id")
     core = dict(raw)
     del core["target_id"]
     expected = f"spatial-anchor-{digest_payload(core)[:16]}"
@@ -1368,7 +1341,7 @@ def verify_spatial_anchor_target(path: str | Path) -> dict[str, Any]:
         seen_modalities.add(modality)
         if source["dataset_id"] != expected_dataset_by_modality[modality]:
             raise ValueError("target source dataset differs from the frozen protocol")
-        _sha256_text(source["input_digest"], name="target source input_digest")
+        sha256_text(source["input_digest"], name="target source input_digest")
         if (
             isinstance(source["sample_count"], bool)
             or not isinstance(source["sample_count"], int)
@@ -1409,8 +1382,8 @@ def verify_spatial_anchor_target(path: str | Path) -> dict[str, Any]:
         if not isinstance(sample["metrics"], dict) or not sample["metrics"]:
             raise ValueError("target sample metrics must be a non-empty object")
         for name, value in sample["metrics"].items():
-            _required_text(name, name="target metric name")
-            _finite(value, name=f"target metric {name}")
+            required_text(name, name="target metric name")
+            finite(value, name=f"target metric {name}")
         sample_records.append(
             SampleMetricRecord(
                 dataset_id=sample["dataset_id"],

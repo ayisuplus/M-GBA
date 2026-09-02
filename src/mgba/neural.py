@@ -40,7 +40,7 @@ import math
 import random
 from typing import Mapping, Sequence
 
-__all__ = ["seeded_matrix", "mlp_forward", "message_passing_step"]
+__all__ = ["message_passing_step", "mlp_forward", "seeded_matrix", "sigmoid"]
 
 
 def _require_positive_int(value: int, field_name: str) -> None:
@@ -62,7 +62,7 @@ def _tanh(value: float) -> float:
     return math.tanh(value)
 
 
-def _sigmoid(value: float) -> float:
+def sigmoid(value: float) -> float:
     # Overflow-safe logistic: exp never sees a positive argument.
     if value >= 0.0:
         return 1.0 / (1.0 + math.exp(-value))
@@ -70,7 +70,7 @@ def _sigmoid(value: float) -> float:
     return exponential / (1.0 + exponential)
 
 
-_ACTIVATIONS = {"tanh": _tanh, "sigmoid": _sigmoid}
+_ACTIVATIONS = {"tanh": _tanh, "sigmoid": sigmoid}
 
 
 def seeded_matrix(
@@ -144,7 +144,7 @@ def mlp_forward(
                 f"weight layer {layer_index} expects {row_width} inputs, "
                 f"got {len(current)}"
             )
-        phi = _sigmoid if layer_index == last_layer else hidden
+        phi = sigmoid if layer_index == last_layer else hidden
         next_values: list[float] = []
         for row in matrix:
             if len(row) != row_width:

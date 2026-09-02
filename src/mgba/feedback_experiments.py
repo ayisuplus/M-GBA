@@ -21,14 +21,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .experiments import (
     CausalComparison,
     CausalRunRecord,
     ConditionKind,
     ConditionSummary,
-    _compare_runs,
-    _summarize_condition,
+    compare_runs,
+    summarize_condition,
 )
 from .feedback import (
     FeedbackControllerConfig,
@@ -295,13 +296,13 @@ class FeedbackExperimentRunner:
             (record.condition_id, record.seed): record for record in records
         }
         comparisons = tuple(
-            _compare_runs(record_map[("no_feedback", seed)], record)
+            compare_runs(record_map[("no_feedback", seed)], record)
             for condition_id in ("fixed_feedback", "state_feedback")
             for seed in self.config.seeds
             for record in (record_map[(condition_id, seed)],)
         )
         summaries = tuple(
-            _summarize_condition(
+            summarize_condition(
                 condition_id,
                 tuple(
                     item
@@ -374,8 +375,8 @@ def save_feedback_artifacts(
         ],
         "records": record_index,
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="feedback artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="feedback artifact")
     return {
         "root": root,
         "manifest": manifest_path,
@@ -384,17 +385,3 @@ def save_feedback_artifacts(
     }
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing feedback artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different feedback artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )

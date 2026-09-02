@@ -16,14 +16,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .experiments import (
     CausalComparison,
     CausalRunRecord,
     ConditionKind,
     ConditionSummary,
-    _compare_runs,
-    _summarize_condition,
+    compare_runs,
+    summarize_condition,
 )
 from .multiscale import MultiscaleScenario
 from .runner import MultirateCrossScaleRunner, save_run_artifact
@@ -261,12 +262,12 @@ class TopologyExperimentRunner:
             (record.condition_id, record.seed): record for record in records
         }
         comparisons = tuple(
-            _compare_runs(record_map[("static_topology", seed)], record)
+            compare_runs(record_map[("static_topology", seed)], record)
             for seed in self.config.seeds
             for record in (record_map[("adaptive_topology", seed)],)
         )
         summaries = (
-            _summarize_condition(
+            summarize_condition(
                 "adaptive_topology",
                 tuple(comparisons),
             ),
@@ -361,8 +362,8 @@ def save_topology_artifacts(
         "records": record_index,
         "topology_stability": [item.as_dict() for item in result.stability],
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="topology artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="topology artifact")
     return {
         "root": root,
         "manifest": manifest_path,
@@ -371,17 +372,3 @@ def save_topology_artifacts(
     }
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing topology artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different topology artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )

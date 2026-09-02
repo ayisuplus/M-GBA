@@ -31,6 +31,7 @@ def _protocol() -> CalibrationProtocol:
         model_version="test-calibration",
         search_seed=7,
         candidate_count=6,
+        max_evaluations=20,
         top_k=2,
         refinement_steps=(0.25,),
         max_sweeps=1,
@@ -59,6 +60,7 @@ class BoxMappingTests(unittest.TestCase):
             CONFIGS / "experiments" / "carm_spatial_calibration.json"
         )
         self.assertEqual(24, protocol.candidate_count)
+        self.assertEqual(89, protocol.max_evaluations)
         self.assertEqual(4, len(protocol.parameter_names))
         with tempfile.TemporaryDirectory() as tmp:
             bad = Path(tmp) / "bad.json"
@@ -130,6 +132,14 @@ class CalibrationRunTests(unittest.TestCase):
 
 
 class CalibrateCliTests(unittest.TestCase):
+    def test_cli_refuses_consumed_confirmation_target(self) -> None:
+        argv = ["mgba", "carm-spatial-calibrate"]
+        with mock.patch("sys.argv", argv), mock.patch(
+            "mgba.cli.verify_spatial_anchor_target",
+            return_value={"target_id": "spatial-anchor-29c87ba1411d4fc8"},
+        ), self.assertRaisesRegex(ValueError, "already consumed"):
+            cli_main()
+
     def test_cli_dispatch_with_stubbed_search(self) -> None:
         from mgba.spatial_calibration import SpatialCalibrationOutcome
         from mgba.calibration import CalibrationEvaluation, CalibrationResult

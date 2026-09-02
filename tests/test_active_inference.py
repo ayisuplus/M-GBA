@@ -14,7 +14,7 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.layers import (
     CellPhase,
     CellState,

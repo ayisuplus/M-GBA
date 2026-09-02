@@ -60,7 +60,7 @@ import random
 from pathlib import Path
 from typing import Any, Mapping
 
-from ..experiment import digest_payload
+from ..hashing import digest_payload
 from ..models import Genome
 from .contracts import (
     GenomeStepResult,

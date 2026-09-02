@@ -13,7 +13,7 @@ from statistics import fmean
 from unittest import mock
 
 from mgba.cli import main as cli_main
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.layers.l0 import ABSTRACT_GENE_NAMES
 from mgba.ocellus_anchors import REQUIRED_HALLMARK_SETS
 from mgba.perturbation_anchors import (

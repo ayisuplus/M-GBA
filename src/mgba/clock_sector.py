@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .layers import SpatialTissueState, TranscriptState
 from .layers.l0 import ABSTRACT_GENE_NAMES
 

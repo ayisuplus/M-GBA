@@ -13,7 +13,6 @@ import gzip
 import json
 import math
 from collections import defaultdict
-from hashlib import sha256
 from pathlib import Path
 from statistics import fmean, pstdev
 from typing import Any, Iterable, Mapping, TextIO
@@ -22,6 +21,7 @@ from .spatial_anchors import (
     OBSERVATION_SCHEMA_VERSION,
     load_spatial_observation_bundle,
 )
+from .validation import file_sha256, finite, required_text, sha256_text
 
 
 SOURCE_PROTOCOL_SCHEMA_VERSION = "mgba-spatial-source-protocol-0.1"
@@ -38,10 +38,6 @@ def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> Non
         )
 
 
-def _text(value: Any, *, name: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{name} must be a non-empty string")
-    return value.strip()
 
 
 def _positive_int(value: Any, *, name: str) -> int:
@@ -50,20 +46,8 @@ def _positive_int(value: Any, *, name: str) -> int:
     return value
 
 
-def _finite(value: Any, *, name: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{name} must be a finite number")
-    result = float(value)
-    if not math.isfinite(result):
-        raise ValueError(f"{name} must be a finite number")
-    return result
 
 
-def _sha256_text(value: Any, *, name: str) -> str:
-    result = _text(value, name=name).lower()
-    if len(result) != 64 or any(char not in "0123456789abcdef" for char in result):
-        raise ValueError(f"{name} must be a lowercase SHA-256 hex digest")
-    return result
 
 
 def _read_object(path: Path, *, name: str) -> dict[str, Any]:
@@ -77,7 +61,7 @@ def _read_object(path: Path, *, name: str) -> dict[str, Any]:
 
 
 def _local_path(root: Path, value: Any, *, name: str) -> Path:
-    relative = Path(_text(value, name=name))
+    relative = Path(required_text(value, name=name))
     if relative.is_absolute():
         raise ValueError(f"{name} must be relative to its manifest")
     resolved_root = root.resolve()
@@ -91,12 +75,6 @@ def _local_path(root: Path, value: Any, *, name: str) -> Path:
     return resolved
 
 
-def _file_sha256(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _verified_artifacts(
@@ -122,14 +100,14 @@ def _verified_artifacts(
             },
             name=f"source_artifacts[{index}]",
         )
-        file_id = _text(item["file_id"], name=f"source_artifacts[{index}].file_id")
-        digest = _sha256_text(
+        file_id = required_text(item["file_id"], name=f"source_artifacts[{index}].file_id")
+        digest = sha256_text(
             item["sha256"], name=f"source_artifacts[{index}].sha256"
         )
         byte_count = _positive_int(
             item["bytes"], name=f"source_artifacts[{index}].bytes"
         )
-        license_name = _text(
+        license_name = required_text(
             item["license"], name=f"source_artifacts[{index}].license"
         )
         if item["rights_verified"] is not True:
@@ -139,7 +117,7 @@ def _verified_artifacts(
         )
         if source_path.stat().st_size != byte_count:
             raise ValueError(f"source artifact byte count mismatch: {file_id}")
-        if _file_sha256(source_path) != digest:
+        if file_sha256(source_path) != digest:
             raise ValueError(f"source artifact SHA-256 mismatch: {file_id}")
         if file_id in file_ids or source_path in paths:
             raise ValueError("source artifact ids and local paths must be unique")
@@ -236,10 +214,10 @@ def load_spatial_source_protocol(path: str | Path) -> dict[str, Any]:
     )
     if raw["schema_version"] != SOURCE_PROTOCOL_SCHEMA_VERSION:
         raise ValueError("unsupported spatial source protocol schema")
-    _text(raw["model_version"], name="model_version")
-    _text(raw["field_dataset_id"], name="field_dataset_id")
-    _text(raw["neighborhood_dataset_id"], name="neighborhood_dataset_id")
-    scale = _finite(raw["library_size_scale"], name="library_size_scale")
+    required_text(raw["model_version"], name="model_version")
+    required_text(raw["field_dataset_id"], name="field_dataset_id")
+    required_text(raw["neighborhood_dataset_id"], name="neighborhood_dataset_id")
+    scale = finite(raw["library_size_scale"], name="library_size_scale")
     if scale <= 0.0:
         raise ValueError("library_size_scale must be positive")
     feature_column = raw["feature_symbol_column"]
@@ -254,7 +232,7 @@ def load_spatial_source_protocol(path: str | Path) -> dict[str, Any]:
         genes = channels[channel]
         if not isinstance(genes, list):
             raise ValueError(f"field_channels.{channel} must be a list")
-        cleaned = [_text(gene, name=f"field_channels.{channel} gene").upper() for gene in genes]
+        cleaned = [required_text(gene, name=f"field_channels.{channel} gene").upper() for gene in genes]
         if len(cleaned) != len(set(cleaned)) or len(cleaned) < minimum:
             raise ValueError(f"field_channels.{channel} is duplicate or too small")
         normalized_channels[channel] = cleaned
@@ -299,8 +277,8 @@ def _read_positions(
         if not barcode or barcode in result:
             raise ValueError(f"blank or duplicate barcode in {path.name}")
         result[barcode] = (
-            _finite(float(_column(record, x_column, table=path.name)), name="position x"),
-            _finite(float(_column(record, y_column, table=path.name)), name="position y"),
+            finite(float(_column(record, x_column, table=path.name)), name="position x"),
+            finite(float(_column(record, y_column, table=path.name)), name="position y"),
         )
     if not result:
         raise ValueError(f"positions file has no in-tissue spots: {path.name}")
@@ -317,7 +295,7 @@ def _read_regions(
     rows = _read_csv(path)
     mapped: dict[str, str] = {}
     normalized_map = {
-        _text(source, name="region_map key"): _text(target, name="region_map value")
+        required_text(source, name="region_map key"): required_text(target, name="region_map value")
         for source, target in region_map.items()
     }
     if len(set(normalized_map.values())) < 2:
@@ -400,7 +378,7 @@ def _read_10x_scores(
             if len(columns) != 3:
                 raise ValueError("MatrixMarket entry must have three fields")
             row_index, column_index = int(columns[0]), int(columns[1])
-            value = _finite(float(columns[2]), name="MatrixMarket count")
+            value = finite(float(columns[2]), name="MatrixMarket count")
             if value < 0.0:
                 raise ValueError("MatrixMarket counts must be non-negative")
             barcode = retained_columns.get(column_index)
@@ -496,7 +474,7 @@ def adapt_wu_visium_source(
             },
             name=f"samples[{index}]",
         )
-        sample_id = _text(item["sample_id"], name=f"samples[{index}].sample_id")
+        sample_id = required_text(item["sample_id"], name=f"samples[{index}].sample_id")
         if not isinstance(item["region_map"], dict):
             raise ValueError(f"samples[{index}].region_map must be an object")
         positions_path = _local_path(
@@ -519,15 +497,15 @@ def adapt_wu_visium_source(
         )
         positions = _read_positions(
             positions_path,
-            barcode_column=_text(item["position_barcode_column"], name="position_barcode_column"),
-            in_tissue_column=_text(item["position_in_tissue_column"], name="position_in_tissue_column"),
-            x_column=_text(item["position_x_column"], name="position_x_column"),
-            y_column=_text(item["position_y_column"], name="position_y_column"),
+            barcode_column=required_text(item["position_barcode_column"], name="position_barcode_column"),
+            in_tissue_column=required_text(item["position_in_tissue_column"], name="position_in_tissue_column"),
+            x_column=required_text(item["position_x_column"], name="position_x_column"),
+            y_column=required_text(item["position_y_column"], name="position_y_column"),
         )
         regions = _read_regions(
             regions_path,
-            barcode_column=_text(item["region_barcode_column"], name="region_barcode_column"),
-            region_column=_text(item["region_value_column"], name="region_value_column"),
+            barcode_column=required_text(item["region_barcode_column"], name="region_barcode_column"),
+            region_column=required_text(item["region_value_column"], name="region_value_column"),
             region_map=item["region_map"],
         )
         retained = set(positions).intersection(regions)
@@ -619,11 +597,11 @@ def adapt_jackson_imc_source(
             },
             name=f"tables[{index}]",
         )
-        table_id = _text(item["table_id"], name=f"tables[{index}].table_id")
+        table_id = required_text(item["table_id"], name=f"tables[{index}].table_id")
         if not isinstance(item["label_map"], dict) or not item["label_map"]:
             raise ValueError(f"tables[{index}].label_map must be a non-empty object")
         label_map = {
-            _text(source, name="label_map key"): _text(target, name="label_map value")
+            required_text(source, name="label_map key"): required_text(target, name="label_map value")
             for source, target in item["label_map"].items()
         }
         if not set(label_map.values()).issubset({"immune", "other", "tumor"}):
@@ -638,11 +616,11 @@ def adapt_jackson_imc_source(
         labels: dict[tuple[str, str], str] = {}
         for row in _read_csv(labels_path):
             key = (
-                _column(row, _text(item["label_sample_column"], name="label_sample_column"), table=labels_path.name),
-                _column(row, _text(item["label_cell_column"], name="label_cell_column"), table=labels_path.name),
+                _column(row, required_text(item["label_sample_column"], name="label_sample_column"), table=labels_path.name),
+                _column(row, required_text(item["label_cell_column"], name="label_cell_column"), table=labels_path.name),
             )
             raw_label = _column(
-                row, _text(item["label_column"], name="label_column"), table=labels_path.name
+                row, required_text(item["label_column"], name="label_column"), table=labels_path.name
             )
             if key in labels:
                 raise ValueError(f"duplicate Jackson label key: {key}")
@@ -652,10 +630,10 @@ def adapt_jackson_imc_source(
         used: set[tuple[str, str]] = set()
         for row in _read_csv(locations_path):
             raw_sample = _column(
-                row, _text(item["location_sample_column"], name="location_sample_column"), table=locations_path.name
+                row, required_text(item["location_sample_column"], name="location_sample_column"), table=locations_path.name
             )
             cell_id = _column(
-                row, _text(item["location_cell_column"], name="location_cell_column"), table=locations_path.name
+                row, required_text(item["location_cell_column"], name="location_cell_column"), table=locations_path.name
             )
             key = (raw_sample, cell_id)
             if key not in labels:
@@ -667,8 +645,8 @@ def adapt_jackson_imc_source(
             grouped[sample_id].append(
                 (
                     cell_id,
-                    _finite(float(_column(row, _text(item["x_column"], name="x_column"), table=locations_path.name)), name="Jackson x"),
-                    _finite(float(_column(row, _text(item["y_column"], name="y_column"), table=locations_path.name)), name="Jackson y"),
+                    finite(float(_column(row, required_text(item["x_column"], name="x_column"), table=locations_path.name)), name="Jackson x"),
+                    finite(float(_column(row, required_text(item["y_column"], name="y_column"), table=locations_path.name)), name="Jackson y"),
                     labels[key],
                 )
             )

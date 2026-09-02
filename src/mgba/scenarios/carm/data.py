@@ -1,9 +1,9 @@
 from __future__ import annotations
+from ...validation import file_sha256
 
 import json
 import math
 from dataclasses import dataclass
-from hashlib import sha256
 from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping
@@ -151,8 +151,6 @@ def _read_json(path: Path) -> Any:
         raise ValueError(f"cannot read valid JSON from {path}") from error
 
 
-def _file_digest(path: Path) -> str:
-    return sha256(path.read_bytes()).hexdigest()
 
 
 def _legacy_data_root(legacy_root: str | Path) -> Path:
@@ -259,7 +257,7 @@ def build_carm_profile(
     source_artifacts = tuple(
         sorted(
             (
-                SourceArtifact(path.name, _file_digest(path))
+                SourceArtifact(path.name, file_sha256(path))
                 for path in (predictions_path, graph_path, scenarios_path)
             ),
             key=lambda item: item.name,

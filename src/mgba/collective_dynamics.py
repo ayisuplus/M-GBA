@@ -10,13 +10,13 @@ or clinical predictions.
 from __future__ import annotations
 
 import json
-import math
 import statistics
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
-from .experiment import canonical_json, digest_payload
+from .hashing import digest_payload
+from .validation import finite
 from .runner import MultirateRun
 
 
@@ -57,13 +57,6 @@ _TRAJECTORY_CLASSES = (
 _CELL_ARCHETYPES = ("stable", "single_switch", "intermittent", "oscillatory")
 
 
-def _finite(value: Any, name: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{name} must be numeric")
-    result = float(value)
-    if not math.isfinite(result):
-        raise ValueError(f"{name} must be finite")
-    return result
 
 
 def _rounded(value: float) -> float:
@@ -96,7 +89,7 @@ class CollectiveDynamicsConfig:
             "high_intensity_threshold",
             "population_split_threshold",
         ):
-            value = _finite(getattr(self, name), name)
+            value = finite(getattr(self, name), name=name)
             if not 0.0 < value <= 1.0:
                 raise ValueError(f"{name} must be in (0, 1]")
         if self.low_intensity_threshold >= self.high_intensity_threshold:
@@ -106,7 +99,7 @@ class CollectiveDynamicsConfig:
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name} must be a positive integer")
         for name in ("persistent_fraction", "low_activity_fraction"):
-            value = _finite(getattr(self, name), name)
+            value = finite(getattr(self, name), name=name)
             if not 0.0 < value <= 1.0:
                 raise ValueError(f"{name} must be in (0, 1]")
 
@@ -131,28 +124,28 @@ class CollectiveDynamicsConfig:
                 raise ValueError(f"{name} must be an integer")
         return cls(
             schema_version=str(raw["schema_version"]),
-            cell_direction_threshold=_finite(
-                raw["cell_direction_threshold"], "cell_direction_threshold"
+            cell_direction_threshold=finite(
+                raw["cell_direction_threshold"], name="cell_direction_threshold"
             ),
-            group_direction_threshold=_finite(
-                raw["group_direction_threshold"], "group_direction_threshold"
+            group_direction_threshold=finite(
+                raw["group_direction_threshold"], name="group_direction_threshold"
             ),
-            low_intensity_threshold=_finite(
-                raw["low_intensity_threshold"], "low_intensity_threshold"
+            low_intensity_threshold=finite(
+                raw["low_intensity_threshold"], name="low_intensity_threshold"
             ),
-            high_intensity_threshold=_finite(
-                raw["high_intensity_threshold"], "high_intensity_threshold"
+            high_intensity_threshold=finite(
+                raw["high_intensity_threshold"], name="high_intensity_threshold"
             ),
-            population_split_threshold=_finite(
-                raw["population_split_threshold"], "population_split_threshold"
+            population_split_threshold=finite(
+                raw["population_split_threshold"], name="population_split_threshold"
             ),
             minimum_dwell_ticks=raw["minimum_dwell_ticks"],
             endpoint_window_ticks=raw["endpoint_window_ticks"],
-            persistent_fraction=_finite(
-                raw["persistent_fraction"], "persistent_fraction"
+            persistent_fraction=finite(
+                raw["persistent_fraction"], name="persistent_fraction"
             ),
-            low_activity_fraction=_finite(
-                raw["low_activity_fraction"], "low_activity_fraction"
+            low_activity_fraction=finite(
+                raw["low_activity_fraction"], name="low_activity_fraction"
             ),
         )
 
@@ -295,10 +288,10 @@ class CollectiveDynamicsComparison:
 
 def _l4_payload(raw: Any) -> dict[str, float]:
     if isinstance(raw, Mapping):
-        values = {name: _finite(raw[name], f"L4 {name}") for name in _L4_FIELDS}
+        values = {name: finite(raw[name], name=f"L4 {name}") for name in _L4_FIELDS}
     else:
         values = {
-            name: _finite(getattr(raw, name), f"L4 {name}") for name in _L4_FIELDS
+            name: finite(getattr(raw, name), name=f"L4 {name}") for name in _L4_FIELDS
         }
     return {name: _rounded(value) for name, value in values.items()}
 
@@ -312,8 +305,8 @@ def _view_from_run(run: MultirateRun) -> _RunView:
             cells=tuple(
                 _CellView(
                     state.cell_id,
-                    _finite(state.activation, "activation"),
-                    _finite(state.stress_load, "stress_load"),
+                    finite(state.activation, name="activation"),
+                    finite(state.stress_load, name="stress_load"),
                 )
                 for state in tick.l2
             ),
@@ -361,8 +354,8 @@ def _view_from_raw_mapping(raw: Mapping[str, Any]) -> _RunView:
             cells = tuple(
                 _CellView(
                     str(cell["cell_id"]),
-                    _finite(cell["activation"], "activation"),
-                    _finite(cell["stress_load"], "stress_load"),
+                    finite(cell["activation"], name="activation"),
+                    finite(cell["stress_load"], name="stress_load"),
                 )
                 for cell in raw_tick["l2"]
             )
@@ -409,8 +402,8 @@ def _view_from_lab_condition(condition: Mapping[str, Any]) -> _RunView:
             cells = tuple(
                 _CellView(
                     str(cell_id),
-                    _finite(cell["activation"], "activation"),
-                    _finite(cell["stress_load"], "stress_load"),
+                    finite(cell["activation"], name="activation"),
+                    finite(cell["stress_load"], name="stress_load"),
                 )
                 for cell_id, cell in sorted(raw_tick["cells"].items())
             )
@@ -482,9 +475,9 @@ def classify_collective_state(
 ) -> str:
     """Classify one group tick in the frozen, ordered decision ladder."""
 
-    direction = _finite(direction, "direction")
-    intensity = _finite(intensity, "intensity")
-    polarization = _finite(polarization, "polarization")
+    direction = finite(direction, name="direction")
+    intensity = finite(intensity, name="intensity")
+    polarization = finite(polarization, name="polarization")
     if intensity < config.low_intensity_threshold:
         return "low_activity"
     if direction >= config.group_direction_threshold:
@@ -642,12 +635,14 @@ def _analyze_view(
 ) -> CollectiveDynamicsReport:
     cell_ids = _validate_view(view)
     cohorts = _cohorts(cell_ids, cohort_map)
+    # One dict per tick instead of two linear scans per (cell, tick) pair;
+    # _validate_view guarantees every tick carries exactly these cell ids.
+    per_tick = [
+        {cell.cell_id: cell.activation - cell.stress_load for cell in tick.cells}
+        for tick in view.ticks
+    ]
     cell_series = {
-        cell_id: [
-            next(cell for cell in tick.cells if cell.cell_id == cell_id).activation
-            - next(cell for cell in tick.cells if cell.cell_id == cell_id).stress_load
-            for tick in view.ticks
-        ]
+        cell_id: [tick_values[cell_id] for tick_values in per_tick]
         for cell_id in cell_ids
     }
     reports: list[CollectiveCohortReport] = []
@@ -960,4 +955,4 @@ def load_raw_run_mapping(path: str | Path) -> dict[str, Any]:
 def collective_response(activation: Any, stress_load: Any) -> float:
     """Public display helper for the frozen per-Cell response proxy."""
 
-    return _rounded(_finite(activation, "activation") - _finite(stress_load, "stress_load"))
+    return _rounded(finite(activation, name="activation") - finite(stress_load, name="stress_load"))

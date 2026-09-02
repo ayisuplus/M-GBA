@@ -82,7 +82,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .layers.contracts import (
     FeedbackConstraint,
     OrganismState,
@@ -206,12 +206,16 @@ class HomeostaticFeedbackController:
         if not isinstance(config, FeedbackControllerConfig):
             raise TypeError("HomeostaticFeedbackController requires a config")
         self.config = config
+        # Pure function of the frozen config; hash it once, not per observe.
+        self._model_version = (
+            f"{config.model_version}+{digest_payload(config)[:12]}"
+        )
         self._integral: float = 0.0
         self._last_time: int | None = None
 
     @property
     def model_version(self) -> str:
-        return f"{self.config.model_version}+{digest_payload(self.config)[:12]}"
+        return self._model_version
 
     def reset(self) -> None:
         """Restore the pristine integrator so the policy is reusable."""
@@ -322,6 +326,13 @@ class FixedConstraintPolicy:
         self._resource_ceiling = resource_ceiling
         self._stress_floor = stress_floor
         self._model_version = model_version
+        # Constant payload: precompute the constraint source digest once.
+        self._source_digest = digest_payload(
+            {
+                "resource_ceiling": resource_ceiling,
+                "stress_floor": stress_floor,
+            }
+        )
         self._last_time: int | None = None
 
     @property
@@ -349,12 +360,7 @@ class FixedConstraintPolicy:
             metadata=StateMetadata(
                 logical_time=logical_time,
                 model_version=self._model_version,
-                source_digest=digest_payload(
-                    {
-                        "resource_ceiling": self._resource_ceiling,
-                        "stress_floor": self._stress_floor,
-                    }
-                ),
+                source_digest=self._source_digest,
             ),
             resource_ceiling=self._resource_ceiling,
             stress_floor=self._stress_floor,

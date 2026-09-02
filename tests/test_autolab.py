@@ -25,7 +25,7 @@ from mgba.autolab_planning import (
     verify_autolab_plan,
     verify_autolab_result,
 )
-from mgba.experiments import ConditionKind, CausalRunRecord, _compare_runs
+from mgba.experiments import ConditionKind, CausalRunRecord, compare_runs
 from mgba.layers.l0 import DiscreteGrnModel, load_grn_config
 from mgba.layers.l1 import (
     CoarseMolecularModel,
@@ -363,7 +363,7 @@ class AutolabRealRunnerTests(unittest.TestCase):
             seeded = replace(self.scenario, seed=seed)
             baseline_run = baseline_runner.run(seeded, ticks=ticks)
             condition_run = condition_runner.run(seeded, ticks=ticks)
-            comparison = _compare_runs(
+            comparison = compare_runs(
                 CausalRunRecord(
                     condition_id="baseline",
                     condition_kind=ConditionKind.BASELINE,

@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, Mapping
 
 from . import __version__
-from .experiment import (
-    ExperimentManifest,
-    LayerTransitionEvent,
-    canonical_json,
-    digest_payload,
-)
+from .experiment import ExperimentManifest, LayerTransitionEvent, write_json_once
+from .hashing import jsonable, canonical_json, digest_payload
 from .layers import (
     CellAction,
     CellAgent,
@@ -166,7 +163,11 @@ class MultiscaleTickTrace:
             raise ValueError("tick event_count does not match emitted events")
 
     def as_dict(self) -> dict[str, Any]:
-        result = _json_dict(self)
+        result = {
+            field.name: jsonable(getattr(self, field.name))
+            for field in fields(self)
+            if field.name != "transitions"
+        }
         result["transitions"] = [event.as_dict() for event in self.transitions]
         return result
 
@@ -252,8 +253,13 @@ class RunnerCheckpoint:
         return f"checkpoint-{digest_payload(self)[:16]}"
 
     def as_dict(self) -> dict[str, Any]:
-        result = _json_dict(self)
-        result["checkpoint_id"] = self.checkpoint_id
+        # Serialize once: the canonical string feeds both the JSON body and
+        # the checkpoint identity digest.
+        encoded = canonical_json(self)
+        result = json.loads(encoded)
+        result["checkpoint_id"] = (
+            f"checkpoint-{sha256(encoded.encode('utf-8')).hexdigest()[:16]}"
+        )
         return result
 
 
@@ -336,24 +342,27 @@ class MultirateCrossScaleRunner:
                 "feedback_policy must implement the FeedbackPolicy protocol"
             )
         self.feedback_policy = feedback_policy
+        # Model version strings are pure functions of frozen configs; snapshot
+        # them once instead of re-serializing and re-hashing every tick.
+        self._model_version = (
+            f"{config.model_version}+{digest_payload(config)[:12]}"
+        )
+        self._layer_versions = {
+            "L0": genome_model.model_version,
+            "L1": molecular_model.model_version,
+            "L2": cell_model.model_version,
+            "L3": tissue_model.model_version,
+            "L4": phenotype_model.model_version,
+        }
 
     @property
     def model_version(self) -> str:
-        return f"{self.config.model_version}+{digest_payload(self.config)[:12]}"
+        return self._model_version
 
     @property
     def model_versions(self) -> tuple[tuple[str, str], ...]:
         return tuple(
-            sorted(
-                {
-                    "runner": self.model_version,
-                    "L0": self.genome_model.model_version,
-                    "L1": self.molecular_model.model_version,
-                    "L2": self.cell_model.model_version,
-                    "L3": self.tissue_model.model_version,
-                    "L4": self.phenotype_model.model_version,
-                }.items()
-            )
+            sorted({"runner": self._model_version, **self._layer_versions}.items())
         )
 
     def run(
@@ -748,7 +757,7 @@ class MultirateCrossScaleRunner:
                     "molecular_inputs": l1_inputs,
                 },
                 l1,
-                self.molecular_model.model_version,
+                self._layer_versions["L1"],
                 "current transcript state advanced molecular dynamics",
                 "fast-tick",
                 logical_time,
@@ -762,7 +771,7 @@ class MultirateCrossScaleRunner:
                     "previous_cell_states": previous_l2,
                 },
                 {"states": l2, "actions": l2_actions},
-                self.cell_model.model_version,
+                self._layer_versions["L2"],
                 "molecular state and local environment advanced Cell state",
                 "fast-tick",
                 logical_time,
@@ -780,7 +789,7 @@ class MultirateCrossScaleRunner:
                     "edges": edges,
                 },
                 l3,
-                self.tissue_model.model_version,
+                self._layer_versions["L3"],
                 "Cell actions advanced tissue environment",
                 "fast-tick",
                 logical_time,
@@ -793,7 +802,7 @@ class MultirateCrossScaleRunner:
                     LayerId.L4,
                     l3,
                     l4,
-                    self.phenotype_model.model_version,
+                    self._layer_versions["L4"],
                     "scheduled tissue observation produced organism phenotype",
                     "macro-window",
                     logical_time,
@@ -998,34 +1007,15 @@ def load_checkpoint(path: str | Path) -> RunnerCheckpoint:
         raise ValueError(f"invalid runner checkpoint: {error}") from error
 
 
-def _write_json_once(path: str | Path, payload: dict[str, Any]) -> None:
-    target = Path(path)
-    if target.exists():
-        try:
-            existing = json.loads(target.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing artifact is not valid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different artifact")
-        return
-    target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_name(f"{target.name}.tmp")
-    if temporary.exists():
-        raise ValueError("temporary artifact path already exists")
-    temporary.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    temporary.replace(target)
 
 
 def save_checkpoint(path: str | Path, checkpoint: RunnerCheckpoint) -> None:
     if not isinstance(checkpoint, RunnerCheckpoint):
         raise TypeError("save_checkpoint requires a RunnerCheckpoint")
-    _write_json_once(path, checkpoint.as_dict())
+    write_json_once(path, checkpoint.as_dict())
 
 
 def save_run_artifact(path: str | Path, run: MultirateRun) -> None:
     if not isinstance(run, MultirateRun):
         raise TypeError("save_run_artifact requires a MultirateRun")
-    _write_json_once(path, run.as_dict())
+    write_json_once(path, run.as_dict())

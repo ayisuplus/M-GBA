@@ -118,7 +118,7 @@ S1 与 S2 修正后的五文件合计为 **241,284,013 bytes（230.11 MiB）**�
   --artifact-root artifacts/carm-spatial-anchor
 ```
 
-第三条命令把正式 `SpatialTissueState` 投影到同一 24 个指标，并输出 calibration 15、holdout 15、external validation 9 共 39 个对照及完整 raw run。当前没有这两个 bundle 和 target；命令示例是已测试接口，不表示外部数据已接入或模型已获验证。
+第三条命令把正式 `SpatialTissueState` 投影到同一 24 个指标，并输出 calibration 15、holdout 15、external validation 9 共 39 个对照及完整 raw run。两个 bundle 与 target 已于 2026-08-28 生成并登记，首次评估为未锚定；后续标定结果因 ADR-0044 所述预算偏差仅作探索性记录，不表示模型已获生物验证。
 
 ## 6. 明确不下载/不实施
 

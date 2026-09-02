@@ -16,7 +16,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from .demo import BOUNDARY_NOTE, _build_layout, _condition_ticks
+from .demo import BOUNDARY_NOTE, build_layout, condition_ticks
 from .collective_dynamics import (
     COLLECTIVE_DYNAMICS_SCHEMA,
     COLLECTIVE_OBSERVER_VERSION,
@@ -25,8 +25,8 @@ from .collective_dynamics import (
     collective_response,
     compare_collective_dynamics,
 )
-from .experiment import canonical_json, digest_payload
-from .experiments import CausalRunRecord, ConditionKind, _compare_runs
+from .hashing import canonical_json, digest_payload
+from .experiments import CausalRunRecord, ConditionKind, compare_runs
 from .intervention_experiments import build_carm_intervention_runner
 from .runner import MultirateRun, load_runner_config
 from .scenarios.carm import (
@@ -47,7 +47,7 @@ _PROTOCOL_ID = "state_conditioned_signal_expression"
 _DOSES = (0.0, 0.7, 1.0)
 _ONSETS = ("early", "late")
 _EXPOSURES = ("short", "long")
-_L0_FIELDS = (
+L0_FIELDS = (
     "damage_response",
     "signal_expression",
     "repair_expression",
@@ -55,7 +55,7 @@ _L0_FIELDS = (
     "death_expression",
     "negative_feedback_expression",
 )
-_L1_FIELDS = (
+L1_FIELDS = (
     "damage_receptor",
     "signal_protein",
     "repair_protein",
@@ -63,7 +63,7 @@ _L1_FIELDS = (
     "death_effector",
     "feedback_inhibitor",
 )
-_L3_FIELDS = (
+L3_FIELDS = (
     "edge_density",
     "mean_activation",
     "mean_viability",
@@ -74,7 +74,7 @@ _L3_FIELDS = (
     "coordinated_signal",
     "tissue_damage",
 )
-_L4_FIELDS = (
+L4_FIELDS = (
     "vitality",
     "damage_burden",
     "inflammation",
@@ -200,7 +200,7 @@ class LabExperimentRequest:
 
 
 def _terminal_l4(raw: Mapping[str, Any]) -> dict[str, float]:
-    return {name: _round4(raw[name]) for name in _L4_FIELDS}
+    return {name: _round4(raw[name]) for name in L4_FIELDS}
 
 
 def _display_condition(
@@ -239,7 +239,7 @@ def _condition_from_run(
             history_digest=run.history_digest,
             outcome=run.phenotype_window.outcome.value,
             terminal_observation=asdict(run.terminal_observation),
-            ticks=_condition_ticks(run),
+            ticks=condition_ticks(run),
         )
     )
 
@@ -328,7 +328,7 @@ def _comparison_payload(
         seed=42,
         run=comparison,
     )
-    return json.loads(canonical_json(_compare_runs(left, right)))
+    return json.loads(canonical_json(compare_runs(left, right)))
 
 
 def _finish_bundle(payload: dict[str, Any]) -> dict[str, Any]:
@@ -453,7 +453,7 @@ def run_lab_experiment(
             "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定，ADR-0043 calibration 确认 improved。",
             "seed": 42,
             "roles": role_map,
-            "layout": _build_layout(role_map),
+            "layout": build_layout(role_map),
             "reference_condition": "baseline",
             "default_comparison_condition": request.condition_id,
             "conditions": conditions,
@@ -497,8 +497,8 @@ def _raw_tick_to_display(raw: Mapping[str, Any]) -> dict[str, Any]:
             "collective_response": collective_response(
                 cell["activation"], cell["stress_load"]
             ),
-            "l0": {name: _round4(l0[cell_id][name]) for name in _L0_FIELDS},
-            "l1": {name: _round4(l1[cell_id][name]) for name in _L1_FIELDS},
+            "l0": {name: _round4(l0[cell_id][name]) for name in L0_FIELDS},
+            "l1": {name: _round4(l1[cell_id][name]) for name in L1_FIELDS},
             "node": {
                 "resource_level": _round4(node["resource_level"]),
                 "signal": _round4(node["signal"]),
@@ -519,7 +519,7 @@ def _raw_tick_to_display(raw: Mapping[str, Any]) -> dict[str, Any]:
             ],
         },
         "cells": cells,
-        "l3": {name: _round4(l3[name]) for name in _L3_FIELDS},
+        "l3": {name: _round4(l3[name]) for name in L3_FIELDS},
         "l4": None if raw["l4"] is None else _terminal_l4(raw["l4"]),
         "edges": [[str(source), str(target)] for source, target in l3["edges"]],
     }
@@ -595,7 +595,7 @@ def _bundle_from_playbook(playbook: Mapping[str, Any]) -> dict[str, Any]:
             "terminal_deltas": {
                 item["condition_id"]: {
                     name: _round4(item["terminal_l4"][name] - baseline[name])
-                    for name in _L4_FIELDS
+                    for name in L4_FIELDS
                 }
                 for item in conditions[1:]
             }
@@ -661,7 +661,7 @@ def _bundle_from_raw_set(
         reference_condition=raw_conditions[0][0],
         default_cohort=default_cohort,
     )
-    layout = _build_layout(roles)
+    layout = build_layout(roles)
     spatial = next(
         (
             condition

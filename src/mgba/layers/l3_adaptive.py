@@ -82,7 +82,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ..experiment import digest_payload
+from ..hashing import digest_payload
 from .contracts import (
     CellAction,
     CellPhase,

@@ -11,26 +11,27 @@ a reference-model-grade empirical description, not a validation result.
 from __future__ import annotations
 
 import json
-import math
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping, Sequence
 
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .layers.l0 import ABSTRACT_GENE_NAMES
 from .ocellus_anchors import (
     HALLMARK_BRIDGE,
     HALLMARK_BRIDGE_DIGEST,
     HALLMARK_BRIDGE_VERSION,
     REQUIRED_HALLMARK_SETS,
-    _mean_metrics,
-    _sign,
-    _spearman,
-    _vector_metrics,
+    VectorMetrics,
     aggregate_hallmark_bridge,
+    mean_metrics,
+    sign,
+    spearman,
+    vector_metrics,
 )
+from .validation import file_sha256, finite, required_text, sha256_text
 
 EMPIRICAL_BUNDLE_SCHEMA_VERSION = "mgba-aivc-empirical-log2fc-0.1"
 PROFILE_SCHEMA_VERSION = "mgba-aivc-perturbation-profile-0.1"
@@ -85,30 +86,10 @@ SCIENTIFIC_BOUNDARY = (
 )
 
 
-def _required_text(value: Any, *, name: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{name} must be a non-empty string")
-    return value.strip()
 
 
-def _sha256_text(value: Any, *, name: str) -> str:
-    result = _required_text(value, name=name).lower()
-    if (
-        len(result) != 64
-        or result != value.strip()
-        or any(char not in "0123456789abcdef" for char in result)
-    ):
-        raise ValueError(f"{name} must be 64 lowercase hexadecimal characters")
-    return result
 
 
-def _finite(value: Any, *, name: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise TypeError(f"{name} must be a finite number")
-    result = float(value)
-    if not math.isfinite(result):
-        raise ValueError(f"{name} must be finite")
-    return result
 
 
 def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> None:
@@ -119,12 +100,6 @@ def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> Non
         raise ValueError(f"{name} keys mismatch; missing={missing} extra={extra}")
 
 
-def _file_sha256(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _read_json_object(path: Path, *, name: str) -> dict[str, Any]:
@@ -146,10 +121,10 @@ def _source_identity(raw: Any, *, name: str, extra_keys: set[str]) -> dict[str, 
         name=name,
     )
     identity = {
-        "path": _required_text(raw["path"], name=f"{name}.path"),
-        "sha256": _sha256_text(raw["sha256"], name=f"{name}.sha256"),
+        "path": required_text(raw["path"], name=f"{name}.path"),
+        "sha256": sha256_text(raw["sha256"], name=f"{name}.sha256"),
         "bytes": 0,
-        "license": _required_text(raw["license"], name=f"{name}.license"),
+        "license": required_text(raw["license"], name=f"{name}.license"),
         "rights_verified": raw["rights_verified"],
     }
     if isinstance(raw["bytes"], bool) or not isinstance(raw["bytes"], int) or raw["bytes"] < 1:
@@ -158,7 +133,7 @@ def _source_identity(raw: Any, *, name: str, extra_keys: set[str]) -> dict[str, 
     if identity["rights_verified"] is not True:
         raise ValueError(f"{name} needs explicit rights verification")
     for key in extra_keys:
-        identity[key] = _required_text(raw[key], name=f"{name}.{key}")
+        identity[key] = required_text(raw[key], name=f"{name}.{key}")
     return identity
 
 
@@ -229,13 +204,13 @@ def load_empirical_bundle(path: str | Path) -> EmpiricalBundle:
             raise ValueError("auxiliary_sources must be an object")
         _exact_keys(aux, set(AUXILIARY_SOURCE_KEYS), name="auxiliary_sources")
         for key in AUXILIARY_SOURCE_KEYS:
-            _sha256_text(aux[key], name=f"auxiliary_sources.{key}")
+            sha256_text(aux[key], name=f"auxiliary_sources.{key}")
     if raw["schema_version"] != EMPIRICAL_BUNDLE_SCHEMA_VERSION:
         raise ValueError("unsupported empirical bundle schema")
     parameters = raw["parameters"]
     if not isinstance(parameters, dict):
         raise ValueError("parameters must be an object")
-    dataset_id = _required_text(raw["dataset_id"], name="dataset_id")
+    dataset_id = required_text(raw["dataset_id"], name="dataset_id")
     expected_parameters = FROZEN_PARAMETERS_BY_DATASET.get(dataset_id)
     if expected_parameters is None:
         raise ValueError(f"empirical bundle dataset_id not in the frozen allowlist: {dataset_id}")
@@ -249,11 +224,11 @@ def load_empirical_bundle(path: str | Path) -> EmpiricalBundle:
     if not isinstance(universe_raw, dict):
         raise ValueError("gene_universe must be an object")
     _exact_keys(universe_raw, {"description", "genes"}, name="gene_universe")
-    _required_text(universe_raw["description"], name="gene_universe.description")
+    required_text(universe_raw["description"], name="gene_universe.description")
     genes = universe_raw["genes"]
     if not isinstance(genes, list):
         raise ValueError("gene_universe.genes must be a list")
-    universe = tuple(_required_text(gene, name="universe gene") for gene in genes)
+    universe = tuple(required_text(gene, name="universe gene") for gene in genes)
     units_raw = raw["units"]
     if not isinstance(units_raw, list) or not units_raw:
         raise ValueError("units must be a non-empty list")
@@ -270,10 +245,10 @@ def load_empirical_bundle(path: str | Path) -> EmpiricalBundle:
             raise ValueError(f"units[{index}].cells must be an integer")
         units.append(
             EmpiricalUnit(
-                unit=_required_text(item["unit"], name=f"units[{index}].unit"),
+                unit=required_text(item["unit"], name=f"units[{index}].unit"),
                 cells=cells,
                 log2fc=tuple(
-                    _finite(value, name=f"units[{index}].log2fc") for value in log2fc_raw
+                    finite(value, name=f"units[{index}].log2fc") for value in log2fc_raw
                 ),
             )
         )
@@ -290,7 +265,7 @@ def load_empirical_bundle(path: str | Path) -> EmpiricalBundle:
         universe_genes=universe,
         control_cells=control_cells,
         units=tuple(units),
-        bundle_digest=_file_sha256(bundle_path),
+        bundle_digest=file_sha256(bundle_path),
     )
 
 
@@ -299,7 +274,7 @@ def load_hallmark_memberships(
 ) -> dict[str, tuple[str, ...]]:
     """Parse the Hallmark GMT and return the frozen bridge's ten memberships."""
     path = Path(gmt_path)
-    if _file_sha256(path) != _sha256_text(expected_sha256, name="expected gmt sha256"):
+    if file_sha256(path) != sha256_text(expected_sha256, name="expected gmt sha256"):
         raise ValueError("Hallmark GMT SHA-256 disagrees with the bundle identity")
     memberships: dict[str, tuple[str, ...]] = {}
     with path.open("r", encoding="utf-8") as handle:
@@ -429,8 +404,11 @@ def build_perturbation_profile(
     )
     centroid = tuple(zip(ABSTRACT_GENE_NAMES, centroid_values, strict=True))
 
+    metrics_by_unit: dict[str, VectorMetrics] = {}
+
     def _metrics_for(unit: EmpiricalUnit) -> dict[str, float]:
-        result = _vector_metrics(centroid, projections[unit.unit])
+        result = vector_metrics(centroid, projections[unit.unit])
+        metrics_by_unit[unit.unit] = result
         return {
             "six_node_mae": result.six_node_mae,
             "sign_agreement": result.sign_agreement,
@@ -449,8 +427,9 @@ def build_perturbation_profile(
     )
 
     def _summary(units: Sequence[EmpiricalUnit]) -> dict[str, float]:
-        metrics = [_vector_metrics(centroid, projections[unit.unit]) for unit in units]
-        mean = _mean_metrics(metrics)
+        # Reuse the per-unit metrics already computed for the profiles instead
+        # of evaluating the same (centroid, projection) pairs a second time.
+        mean = mean_metrics([metrics_by_unit[unit.unit] for unit in units])
         return {
             "six_node_mae": mean.six_node_mae,
             "sign_agreement": mean.sign_agreement,
@@ -524,8 +503,8 @@ def load_profile_for_crosscheck(path: str | Path) -> dict[str, Any]:
         if tuple(vector.keys()) != ABSTRACT_GENE_NAMES:
             raise ValueError(f"profile units[{index}] node order disagrees with frozen order")
         for node, value in vector.items():
-            _finite(value, name=f"{unit['unit']}.{node}")
-    raw["_file_sha256"] = _file_sha256(profile_path)
+            finite(value, name=f"{unit['unit']}.{node}")
+    raw["_file_sha256"] = file_sha256(profile_path)
     return raw
 
 
@@ -552,16 +531,16 @@ def compare_profiles(
                 "unit": unit,
                 "mae": fmean(abs(x - y) for x, y in zip(vector_a, vector_b, strict=True)),
                 "sign_agreement": fmean(
-                    float(_sign(x) == _sign(y)) for x, y in zip(vector_a, vector_b, strict=True)
+                    float(sign(x) == sign(y)) for x, y in zip(vector_a, vector_b, strict=True)
                 ),
             }
         )
-    spearman = _spearman(flat_a, flat_b)
+    spearman_value = spearman(flat_a, flat_b)
     mean_mae = fmean(item["mae"] for item in per_unit)
     mean_sign = fmean(item["sign_agreement"] for item in per_unit)
     verdict = (
         "consistent"
-        if spearman > CROSSCHECK_MIN_SPEARMAN and mean_sign > CROSSCHECK_MIN_SIGN
+        if spearman_value > CROSSCHECK_MIN_SPEARMAN and mean_sign > CROSSCHECK_MIN_SIGN
         else "inconsistent"
     )
     content: dict[str, Any] = {
@@ -580,7 +559,7 @@ def compare_profiles(
         "metrics": {
             "mean_mae": mean_mae,
             "mean_sign_agreement": mean_sign,
-            "flattened_spearman": spearman,
+            "flattened_spearman": spearman_value,
         },
         "per_unit": per_unit,
         "verdict": verdict,

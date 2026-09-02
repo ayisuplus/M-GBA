@@ -15,13 +15,14 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping
 
-from .carm_spatial_experiments import _spatial_metrics
-from .experiment import digest_payload
+from .carm_spatial_experiments import spatial_metrics
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .experiments import (
     CausalComparison,
     CausalRunRecord,
     ConditionKind,
-    _compare_runs,
+    compare_runs,
 )
 from .layers import LayerId
 from .layers.l0 import DiscreteGrnModel, load_grn_config
@@ -296,24 +297,27 @@ class CarmSpatialAblationRunner:
             "fixed_graph",
             *(item.condition_id for item in _FACTORIAL_MECHANISMS),
         )
-        records = tuple(
-            CausalRunRecord(
-                condition_id=condition_id,
-                condition_kind=(
-                    ConditionKind.BASELINE
-                    if condition_id == "fixed_graph"
-                    else ConditionKind.ABLATION
-                ),
-                seed=self.config.scenario_seed,
-                run=self.runners[condition_id].run(
-                    scenario, ticks=self.config.ticks
-                ),
+        record_list: list[CausalRunRecord] = []
+        for condition_id in condition_order:
+            run = self.runners[condition_id].run(scenario, ticks=self.config.ticks)
+            if len(run.ticks) != self.config.ticks:
+                raise RuntimeError("E0 failed: run did not produce every tick")
+            record_list.append(
+                CausalRunRecord(
+                    condition_id=condition_id,
+                    condition_kind=(
+                        ConditionKind.BASELINE
+                        if condition_id == "fixed_graph"
+                        else ConditionKind.ABLATION
+                    ),
+                    seed=self.config.scenario_seed,
+                    run=run,
+                )
             )
-            for condition_id in condition_order
-        )
+        records = tuple(record_list)
         record_map = {item.condition_id: item for item in records}
         comparisons = tuple(
-            _compare_runs(
+            compare_runs(
                 record_map["fixed_graph"], record_map[item.condition_id]
             )
             for item in _FACTORIAL_MECHANISMS
@@ -348,7 +352,7 @@ class CarmSpatialAblationRunner:
 def _diagnostics(
     record: CausalRunRecord, mechanisms: CarmSpatialMechanisms
 ) -> SpatialMechanismDiagnostics:
-    metrics = _spatial_metrics(record)
+    metrics = spatial_metrics(record)
     return SpatialMechanismDiagnostics(
         condition_id=record.condition_id,
         mechanisms=mechanisms,
@@ -368,7 +372,7 @@ def _factor_effect(
             continue
         on = replace(off, **{mechanism: True})
         pairs.append(
-            _compare_runs(records[off.condition_id], records[on.condition_id])
+            compare_runs(records[off.condition_id], records[on.condition_id])
         )
     return SpatialFactorEffect(
         mechanism=mechanism,
@@ -385,17 +389,6 @@ def _factor_effect(
     )
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        existing = json.loads(path.read_text(encoding="utf-8"))
-        if existing != payload:
-            raise ValueError("refusing to overwrite different spatial ablation artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_carm_spatial_ablation_artifacts(
@@ -418,7 +411,7 @@ def save_carm_spatial_ablation_artifacts(
         )
     manifest = root / "manifest.json"
     summary = root / "derived" / "summary.json"
-    _write_json_once(
+    write_json_once(
         manifest,
         {
             "schema_version": "mgba-carm-spatial-ablation-0.1",
@@ -430,7 +423,8 @@ def save_carm_spatial_ablation_artifacts(
             ],
             "records": record_index,
         },
+        artifact="spatial ablation artifact",
     )
-    _write_json_once(summary, result.summary_dict())
+    write_json_once(summary, result.summary_dict(), artifact="spatial ablation artifact")
     return {"root": root, "manifest": manifest, "summary": summary}
 

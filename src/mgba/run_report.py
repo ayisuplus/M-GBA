@@ -16,21 +16,21 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping
 
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .layers import CellPhase
 from .reporting import (
-    _COLORS,
-    _history_digest,
-    _label,
-    _sha256,
-    _svg_document,
-    _validate_experiment,
-    _write_csv,
+    COLORS,
+    history_digest,
+    label,
+    svg_document,
+    validate_experiment,
+    write_csv,
 )
+from .validation import file_sha256
 
 _RUN_REPORT_SCHEMA = "mgba-run-report-files-0.1"
 
-_L0_FIELDS = (
+L0_FIELDS = (
     "damage_response",
     "signal_expression",
     "repair_expression",
@@ -38,7 +38,7 @@ _L0_FIELDS = (
     "death_expression",
     "negative_feedback_expression",
 )
-_L1_FIELDS = (
+L1_FIELDS = (
     "damage_receptor",
     "signal_protein",
     "repair_protein",
@@ -46,8 +46,8 @@ _L1_FIELDS = (
     "death_effector",
     "feedback_inhibitor",
 )
-_L2_FIELDS = ("viability", "activation", "stress_load")
-_L3_FIELDS = (
+L2_FIELDS = ("viability", "activation", "stress_load")
+L3_FIELDS = (
     "mean_resource",
     "tissue_damage",
     "repair_activity",
@@ -55,7 +55,7 @@ _L3_FIELDS = (
     "mean_signal",
     "dead_fraction",
 )
-_L4_FIELDS = (
+L4_FIELDS = (
     "vitality",
     "damage_burden",
     "inflammation",
@@ -126,7 +126,7 @@ class RunReportPaths:
 def _validate_run_document(run: Any) -> dict[str, Any]:
     if not isinstance(run, dict) or set(run) != _RUN_KEYS:
         raise ValueError("run artifact fields do not match the run artifact schema")
-    _validate_experiment(run["experiment"])
+    validate_experiment(run["experiment"])
     start = run["start_tick"]
     end = run["end_tick"]
     if (
@@ -156,7 +156,7 @@ def _validate_run_document(run: Any) -> dict[str, Any]:
             raise ValueError("run artifact tick transitions are missing")
     if tuple(times) != tuple(range(1, end + 1)):
         raise ValueError("run artifact tick times are incomplete or unordered")
-    if _history_digest(run) != run["history_digest"]:
+    if history_digest(run) != run["history_digest"]:
         raise ValueError("run artifact history hash chain is invalid")
     checkpoint = dict(run["checkpoint"])
     checkpoint_id = checkpoint.pop("checkpoint_id", None)
@@ -200,7 +200,7 @@ def _l3_rows(run: Mapping[str, Any]) -> list[dict[str, Any]]:
     return [
         {
             "tick": tick["logical_time"],
-            **{field: tick["l3"][field] for field in _L3_FIELDS},
+            **{field: tick["l3"][field] for field in L3_FIELDS},
         }
         for tick in run["ticks"]
     ]
@@ -210,7 +210,7 @@ def _l4_rows(run: Mapping[str, Any]) -> list[dict[str, Any]]:
     return [
         {
             "tick": tick["logical_time"],
-            **{field: tick["l4"][field] for field in _L4_FIELDS},
+            **{field: tick["l4"][field] for field in L4_FIELDS},
         }
         for tick in run["ticks"]
         if tick["l4"] is not None
@@ -248,14 +248,14 @@ def _series_chart(
     for index, field in enumerate(fields):
         legend_x = 80 + index * 155
         parts.append(
-            f'<circle cx="{legend_x}" cy="86" r="5" fill="{_COLORS[index % len(_COLORS)]}"/>'
+            f'<circle cx="{legend_x}" cy="86" r="5" fill="{COLORS[index % len(COLORS)]}"/>'
             f'<text x="{legend_x + 10}" y="90">{field}</text>'
         )
     for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
         py = y(fraction * y_max)
         parts.append(
             f'<line class="grid" x1="{left}" y1="{py:.2f}" x2="{width - right}" y2="{py:.2f}"/>'
-            f'<text x="{left - 10}" y="{py + 4:.2f}" text-anchor="end">{_label(fraction * y_max)}</text>'
+            f'<text x="{left - 10}" y="{py + 4:.2f}" text-anchor="end">{label(fraction * y_max)}</text>'
         )
     tick_marks = sorted(
         {first_tick, last_tick}
@@ -272,11 +272,11 @@ def _series_chart(
         points = " ".join(
             f"{x(row['tick']):.2f},{y(row[field]):.2f}" for row in rows
         )
-        first = _label(rows[0][field])
-        last = _label(rows[-1][field])
+        first = label(rows[0][field])
+        last = label(rows[-1][field])
         parts.append(
             f'<polyline points="{points}" fill="none" '
-            f'stroke="{_COLORS[index % len(_COLORS)]}" stroke-width="2.5">'
+            f'stroke="{COLORS[index % len(COLORS)]}" stroke-width="2.5">'
             f"<title>{field}: first={first}, last={last}</title></polyline>"
         )
     parts.extend(
@@ -286,7 +286,7 @@ def _series_chart(
             f'<text x="{left + plot_width / 2:.2f}" y="{height - 20}" text-anchor="middle">logical tick</text>',
         )
     )
-    return _svg_document(
+    return svg_document(
         width=width,
         height=height,
         title=title,
@@ -386,30 +386,30 @@ def build_run_report(
         l4_chart=output / "l4-phenotype.svg",
         html=output / "run-report.html",
     )
-    l0_rows = _mean_series(run, "l0", _L0_FIELDS)
-    l1_rows = _mean_series(run, "l1", _L1_FIELDS)
-    l2_rows = _mean_series(run, "l2", _L2_FIELDS)
+    l0_rows = _mean_series(run, "l0", L0_FIELDS)
+    l1_rows = _mean_series(run, "l1", L1_FIELDS)
+    l2_rows = _mean_series(run, "l2", L2_FIELDS)
     phase_rows = _phase_rows(run)
     l3_rows = _l3_rows(run)
     l4_rows = _l4_rows(run)
     cell_count = len(run["ticks"][0]["l2"])
-    _write_csv(paths.l0_csv, ("tick", *_L0_FIELDS), l0_rows)
-    _write_csv(paths.l1_csv, ("tick", *_L1_FIELDS), l1_rows)
-    _write_csv(paths.l2_csv, ("tick", *_L2_FIELDS), l2_rows)
-    _write_csv(
+    write_csv(paths.l0_csv, ("tick", *L0_FIELDS), l0_rows)
+    write_csv(paths.l1_csv, ("tick", *L1_FIELDS), l1_rows)
+    write_csv(paths.l2_csv, ("tick", *L2_FIELDS), l2_rows)
+    write_csv(
         paths.l2_phase_csv,
         ("tick", *(f"phase_{phase.value}" for phase in CellPhase)),
         phase_rows,
     )
-    _write_csv(paths.l3_csv, ("tick", *_L3_FIELDS), l3_rows)
-    _write_csv(paths.l4_csv, ("tick", *_L4_FIELDS), l4_rows)
+    write_csv(paths.l3_csv, ("tick", *L3_FIELDS), l3_rows)
+    write_csv(paths.l4_csv, ("tick", *L4_FIELDS), l4_rows)
     paths.l0_chart.write_text(
         _series_chart(
             title="L0 abstract gene expression",
             subtitle="Mean across cells; abstract regulatory variables, not real DNA",
             description="Line chart of six mean L0 gene expression series over logical ticks.",
             rows=l0_rows,
-            fields=_L0_FIELDS,
+            fields=L0_FIELDS,
         ),
         encoding="utf-8",
     )
@@ -419,7 +419,7 @@ def build_run_report(
             subtitle="Mean across cells; coarse-grained proxies, not all-atom dynamics",
             description="Line chart of six mean L1 molecular species over logical ticks.",
             rows=l1_rows,
-            fields=_L1_FIELDS,
+            fields=L1_FIELDS,
         ),
         encoding="utf-8",
     )
@@ -429,7 +429,7 @@ def build_run_report(
             subtitle="Mean across cells",
             description="Line chart of mean L2 viability, activation, and stress load over logical ticks.",
             rows=l2_rows,
-            fields=_L2_FIELDS,
+            fields=L2_FIELDS,
         ),
         encoding="utf-8",
     )
@@ -450,7 +450,7 @@ def build_run_report(
             subtitle="Local environment fields on the fixed reference graph",
             description="Line chart of six L3 tissue field series over logical ticks.",
             rows=l3_rows,
-            fields=_L3_FIELDS,
+            fields=L3_FIELDS,
         ),
         encoding="utf-8",
     )
@@ -460,7 +460,7 @@ def build_run_report(
             subtitle="Scheduled slow-clock observations only",
             description="Line chart of five L4 phenotype metrics at scheduled observation ticks.",
             rows=l4_rows,
-            fields=_L4_FIELDS,
+            fields=L4_FIELDS,
         ),
         encoding="utf-8",
     )
@@ -472,9 +472,9 @@ def build_run_report(
         "experiment_id": run["experiment"]["experiment_id"],
         "history_digest": run["history_digest"],
         "source_run_file": source.name,
-        "source_run_sha256": _sha256(source),
+        "source_run_sha256": file_sha256(source),
         "files": {
-            path.name: _sha256(path)
+            path.name: file_sha256(path)
             for path in sorted(paths.generated_files, key=lambda item: item.name)
         },
     }

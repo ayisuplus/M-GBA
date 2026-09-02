@@ -23,10 +23,9 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from .experiment import digest_payload
-from .experiments import load_causal_config
-from .reporting import _sha256
-from .run_report import _L0_FIELDS, _L1_FIELDS, _L2_FIELDS, _L3_FIELDS, _L4_FIELDS
+from .experiments import CausalMatrixResult, load_causal_config
+from .hashing import digest_payload
+from .run_report import L0_FIELDS, L1_FIELDS, L3_FIELDS, L4_FIELDS
 from .runner import MultirateRun, load_runner_config
 from .scenarios.carm import (
     CompiledCarmScenario,
@@ -35,7 +34,7 @@ from .scenarios.carm import (
     load_carm_scenario_config,
     run_carm_matrix,
 )
-from .experiments import CausalMatrixResult
+from .validation import file_sha256
 
 DEMO_PLAYBOOK_SCHEMA = "mgba-demo-playbook-0.2"
 _DEMO_FILES_SCHEMA = "mgba-demo-files-0.1"
@@ -75,7 +74,7 @@ def _round4(value: float) -> float:
     return 0.0 if rounded == 0.0 else rounded
 
 
-def _build_layout(role_map: dict[str, str]) -> dict[str, list[float]]:
+def build_layout(role_map: dict[str, str]) -> dict[str, list[float]]:
     layout: dict[str, list[float]] = {}
     for ring_index, (role, radius) in enumerate(
         zip(_ROLE_RING_ORDER, _ROLE_RADII)
@@ -93,7 +92,7 @@ def _build_layout(role_map: dict[str, str]) -> dict[str, list[float]]:
     return layout
 
 
-def _condition_ticks(run: MultirateRun) -> list[dict[str, Any]]:
+def condition_ticks(run: MultirateRun) -> list[dict[str, Any]]:
     ticks: list[dict[str, Any]] = []
     for tick in run.ticks:
         if (tick.l4 is not None) != tick.l4_observed:
@@ -107,8 +106,8 @@ def _condition_ticks(run: MultirateRun) -> list[dict[str, Any]]:
                 "viability": _round4(l2.viability),
                 "activation": _round4(l2.activation),
                 "stress_load": _round4(l2.stress_load),
-                "l0": {field: _round4(getattr(l0, field)) for field in _L0_FIELDS},
-                "l1": {field: _round4(getattr(l1, field)) for field in _L1_FIELDS},
+                "l0": {field: _round4(getattr(l0, field)) for field in L0_FIELDS},
+                "l1": {field: _round4(getattr(l1, field)) for field in L1_FIELDS},
                 "node": {
                     "resource_level": _round4(node.resource_level),
                     "signal": _round4(node.signal),
@@ -130,14 +129,14 @@ def _condition_ticks(run: MultirateRun) -> list[dict[str, Any]]:
                 },
                 "cells": cells,
                 "l3": {
-                    field: _round4(getattr(tick.l3, field)) for field in _L3_FIELDS
+                    field: _round4(getattr(tick.l3, field)) for field in L3_FIELDS
                 },
                 "l4": (
                     None
                     if tick.l4 is None
                     else {
                         field: _round4(getattr(tick.l4, field))
-                        for field in _L4_FIELDS
+                        for field in L4_FIELDS
                     }
                 ),
                 "edges": [
@@ -178,10 +177,10 @@ def build_demo_playbook(
                 # where the frozen matrix compares final L4 metrics.
                 "terminal_l4": {
                     field: _round4(getattr(run.terminal_observation, field))
-                    for field in _L4_FIELDS
+                    for field in L4_FIELDS
                 },
                 "outcome": run.phenotype_window.outcome.value,
-                "ticks": _condition_ticks(run),
+                "ticks": condition_ticks(run),
             }
         )
     playbook: dict[str, Any] = {
@@ -190,7 +189,7 @@ def build_demo_playbook(
         "boundary_note": BOUNDARY_NOTE,
         "seed": seed,
         "roles": role_map,
-        "layout": _build_layout(role_map),
+        "layout": build_layout(role_map),
         "edges": [[source, target] for source, target in compiled.scenario.edges],
         "observer": {
             "reference_condition": "baseline",
@@ -504,7 +503,7 @@ def export_carm_demo(
     manifest_payload = {
         "schema_version": _DEMO_FILES_SCHEMA,
         "files": {
-            path.name: _sha256(path) for path in (paths.html, paths.playbook)
+            path.name: file_sha256(path) for path in (paths.html, paths.playbook)
         },
         "playbook_digest": playbook["playbook_digest"],
     }

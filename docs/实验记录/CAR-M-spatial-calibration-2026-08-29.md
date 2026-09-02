@@ -1,11 +1,15 @@
-# CAR-M 空间 L3 calibration 参数选择记录（ADR-0043）：improved
+# CAR-M 空间 L3 calibration 参数选择记录（ADR-0043）：协议偏差，探索性
 
 - 日期：2026-08-29
 - 契约：`docs/决策记录/ADR-0043-CAR-M空间L3标定契约.md`（搜索前预注册）
 - Target：`spatial-anchor-29c87ba1411d4fc8`（真实 Wu/Jackson 锚定 target）
 - 标定 artifact：`artifacts/carm-spatial-calibration/calibration-summary.json`，calibration_id `carm-spatial-calibration-d234af7af4172305`
 - 确认评估：`carm-spatial-anchor-eval-2f1ead4bb7705f96`（完整 39 距离，一次确认）
-- 模型级别：`reference model`（参数诊断，不改任何冻结配置）
+- 模型级别：探索性 `reference model` 参数诊断（不改任何冻结配置）
+
+## 0. 2026-09-01 后审计
+
+ADR-0043 冻结上限为 89 次，实际 artifact 记录 105 次，构成协议偏差。下文的 `improved` 是历史程序输出，科研解释已按 ADR-0044 降级为探索性；不能据此声称确认改善或泛化。该 target 的 holdout 已查看并消费，禁止用同一 target 重跑确认。
 
 ## 1. 冻结设置回顾
 
@@ -32,7 +36,7 @@
 
 ## 3. 判读（reference-model 级）
 
-- calibration 子集学到的参数化**泛化到了 holdout**（两个 Visium 留出样本，一次确认无回流）——按 ADR-0025 §4.3 结论从"未锚定"翻转为"improved"：当前空间 reference rules 存在逼近真实场统计的参数化。
+- calibration 子集学到的参数化在两个已消费 Visium holdout 上也降低了误差；但因评估次数超过预注册上限，这只是探索性信号，不能将"未锚定"翻转为确认性的 `improved`，也不能称为泛化证据。
 - 场物理形状变化方向一致：更低扩散 + 更高保持（更锐利、更持久的局部场）+ 更弱节点耦合。
 - `field_retention` 顶到盒上界（0.98）——按 ADR-0018 先例记录，扩盒属下一轮预注册协议，本次不外推。
 - 邻域指标略升提示场参数与邻域定义存在此消彼长；external_validation 不参与拟合，该上升不改变判定。
@@ -40,6 +44,6 @@
 
 ## 4. 下一步候选
 
-- 采纳标定配置的 ADR（若采纳：固定图 vs reference-空间 vs 标定-空间三条件矩阵重跑）。
+- 新建未查看的空间 target，重新预注册 split、89 次硬预算与一次确认；在此之前不采纳标定配置。
 - B1 Tahoe 药物扰动锚定协议。
 - OCellus 权重公开后的 ADR-0034 真实对照。

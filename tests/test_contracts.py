@@ -1,7 +1,8 @@
 import unittest
 from pathlib import Path
 
-from mgba.experiment import LayerTransitionEvent, digest_payload
+from mgba.experiment import LayerTransitionEvent
+from mgba.hashing import digest_payload
 from mgba.layers import (
     LayerId,
     LocalEnvironment,

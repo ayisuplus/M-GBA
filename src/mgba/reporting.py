@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import html
 import json
 import math
@@ -10,8 +9,10 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any, Iterable, Mapping
 
-from .experiment import ExperimentManifest, digest_payload
+from .experiment import ExperimentManifest
+from .hashing import digest_payload
 from .layers import LayerId, OrganismOutcome
+from .validation import file_sha256
 
 
 _REPORT_SCHEMA = "mgba-causal-report-files-0.1"
@@ -23,7 +24,7 @@ _L4_METRICS = (
     "homeostasis",
     "recovery_capacity",
 )
-_COLORS = (
+COLORS = (
     "#2563eb",
     "#ea580c",
     "#16a34a",
@@ -115,7 +116,7 @@ def _validated_relative_path(root: Path, raw_path: str) -> Path:
     return resolved
 
 
-def _validate_experiment(raw: Mapping[str, Any]) -> None:
+def validate_experiment(raw: Mapping[str, Any]) -> None:
     try:
         manifest = ExperimentManifest(
             schema_version=str(raw["schema_version"]),
@@ -129,6 +130,9 @@ def _validate_experiment(raw: Mapping[str, Any]) -> None:
                     for layer, version in raw["model_versions"].items()
                 )
             ),
+            source_digest=(
+                str(raw["source_digest"]) if "source_digest" in raw else None
+            ),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError("raw run has an invalid experiment manifest") from error
@@ -136,7 +140,7 @@ def _validate_experiment(raw: Mapping[str, Any]) -> None:
         raise ValueError("raw run experiment_id does not match its manifest")
 
 
-def _history_digest(run: Mapping[str, Any]) -> str:
+def history_digest(run: Mapping[str, Any]) -> str:
     history = digest_payload(
         {"phase": "initial", "manifest": run["experiment"]}
     )
@@ -167,7 +171,7 @@ def _validate_raw_run(
     }
     if set(run) != required:
         raise ValueError("raw run fields do not match the run artifact schema")
-    _validate_experiment(run["experiment"])
+    validate_experiment(run["experiment"])
     if run["experiment"]["experiment_id"] != record["experiment_id"]:
         raise ValueError("raw run experiment_id differs from matrix manifest")
     if run["experiment"]["seed"] != record["seed"]:
@@ -184,7 +188,7 @@ def _validate_raw_run(
     observed_times = tuple(tick["logical_time"] for tick in run["ticks"])
     if observed_times != tuple(range(1, expected_ticks + 1)):
         raise ValueError("raw run tick times are incomplete or unordered")
-    computed_history = _history_digest(run)
+    computed_history = history_digest(run)
     if computed_history != run["history_digest"]:
         raise ValueError("raw run history hash chain is invalid")
     checkpoint = dict(run["checkpoint"])
@@ -542,7 +546,7 @@ def _csv_value(value: Any) -> str | int:
     return value
 
 
-def _write_csv(path: Path, fieldnames: tuple[str, ...], rows: list[dict[str, Any]]) -> None:
+def write_csv(path: Path, fieldnames: tuple[str, ...], rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=fieldnames, lineterminator="\n")
@@ -567,7 +571,7 @@ text { font-family: system-ui, sans-serif; fill: #1f2937; font-size: 12px; }
 </style>"""
 
 
-def _svg_document(
+def svg_document(
     *, width: int, height: int, title: str, description: str, body: str
 ) -> str:
     return (
@@ -579,7 +583,7 @@ def _svg_document(
     )
 
 
-def _label(value: float) -> str:
+def label(value: float) -> str:
     if value == 0.0:
         return "0"
     if abs(value) < 0.001:
@@ -617,7 +621,7 @@ def _layer_effects_svg(
     for index, layer in enumerate(_LAYER_ORDER):
         legend_x = 200 + index * 145
         parts.append(
-            f'<circle cx="{legend_x}" cy="77" r="5" fill="{_COLORS[index]}"/>'
+            f'<circle cx="{legend_x}" cy="77" r="5" fill="{COLORS[index]}"/>'
             f'<text x="{legend_x + 10}" y="81">{layer}</text>'
         )
     tick_values = (1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0)
@@ -641,8 +645,8 @@ def _layer_effects_svg(
             px = x(value)
             py = center_y + offsets[layer_index]
             parts.append(
-                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="5" fill="{_COLORS[layer_index]}">'
-                f'<title>{html.escape(condition)} {layer}: {_label(value)}</title></circle>'
+                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="5" fill="{COLORS[layer_index]}">'
+                f'<title>{html.escape(condition)} {layer}: {label(value)}</title></circle>'
             )
     parts.extend(
         (
@@ -650,7 +654,7 @@ def _layer_effects_svg(
             f'<text x="{left + plot_width / 2:.2f}" y="{height - 18}" text-anchor="middle">Mean absolute effect (unit interval, log10 display)</text>',
         )
     )
-    return _svg_document(
+    return svg_document(
         width=width,
         height=height,
         title="Layer effects by condition",
@@ -686,15 +690,15 @@ def _repair_path_svg(rows: list[dict[str, Any]], condition_id: str) -> str:
     parts = [
         f'<text class="title" x="20" y="32">{html.escape(condition_id)} propagation path</text>',
         '<text class="subtitle" x="20" y="54">Mean absolute effect across the frozen L0→L4 state vectors</text>',
-        f'<polyline points="{points}" fill="none" stroke="{_COLORS[0]}" stroke-width="3"/>',
+        f'<polyline points="{points}" fill="none" stroke="{COLORS[0]}" stroke-width="3"/>',
     ]
     for index, (layer, value) in enumerate(zip(_LAYER_ORDER, effects, strict=True)):
         px, py = x(index), y(value)
         parts.extend(
             (
-                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="6" fill="{_COLORS[0]}"/>',
+                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="6" fill="{COLORS[0]}"/>',
                 f'<text x="{px:.2f}" y="{height-bottom+25}" text-anchor="middle">{layer}</text>',
-                f'<text x="{px:.2f}" y="{py-12:.2f}" text-anchor="middle">{_label(value)}</text>',
+                f'<text x="{px:.2f}" y="{py-12:.2f}" text-anchor="middle">{label(value)}</text>',
             )
         )
     for tick in (1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0):
@@ -706,7 +710,7 @@ def _repair_path_svg(rows: list[dict[str, Any]], condition_id: str) -> str:
     parts.append(
         f'<text transform="translate(18 {top + (height-top-bottom)/2:.2f}) rotate(-90)" text-anchor="middle">Mean absolute effect (log10)</text>'
     )
-    return _svg_document(
+    return svg_document(
         width=width,
         height=height,
         title=f"{condition_id} propagation path",
@@ -740,7 +744,7 @@ def _tissue_damage_svg(
     for index, condition in enumerate(condition_order):
         legend_x = 30 + (index % 4) * 250
         legend_y = 76 + (index // 4) * 22
-        color = _COLORS[index % len(_COLORS)]
+        color = COLORS[index % len(COLORS)]
         parts.append(
             f'<line x1="{legend_x}" y1="{legend_y}" x2="{legend_x+24}" y2="{legend_y}" stroke="{color}" stroke-width="3"/>'
             f'<text x="{legend_x+32}" y="{legend_y+4}">{html.escape(condition)}</text>'
@@ -775,7 +779,7 @@ def _tissue_damage_svg(
             f'<text transform="translate(18 {top+(height-top-bottom)/2:.2f}) rotate(-90)" text-anchor="middle">Tissue damage (unit interval)</text>',
         )
     )
-    return _svg_document(
+    return svg_document(
         width=width,
         height=height,
         title=f"Tissue damage trajectories for seed {selected_seed}",
@@ -812,7 +816,7 @@ def _metric_effects_svg(
     for index, metric in enumerate(_L4_METRICS):
         legend_x = 120 + index * 180
         parts.append(
-            f'<circle cx="{legend_x}" cy="78" r="5" fill="{_COLORS[index]}"/>'
+            f'<circle cx="{legend_x}" cy="78" r="5" fill="{COLORS[index]}"/>'
             f'<text x="{legend_x+10}" y="82">{html.escape(metric)}</text>'
         )
     plot_bottom = height - bottom
@@ -838,13 +842,13 @@ def _metric_effects_svg(
             px = x(value)
             py = center_y + offsets[metric_index]
             parts.append(
-                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="5" fill="{_COLORS[metric_index]}">'
-                f'<title>{html.escape(condition)} {html.escape(metric)}: {_label(value)}</title></circle>'
+                f'<circle cx="{px:.2f}" cy="{py:.2f}" r="5" fill="{COLORS[metric_index]}">'
+                f'<title>{html.escape(condition)} {html.escape(metric)}: {label(value)}</title></circle>'
             )
     parts.append(
         f'<text x="{left+(width-left-right)/2:.2f}" y="{height-18}" text-anchor="middle">Final metric difference (condition − baseline)</text>'
     )
-    return _svg_document(
+    return svg_document(
         width=width,
         height=height,
         title="Final L4 metric effects",
@@ -922,8 +926,6 @@ code {{ font-family: ui-monospace, monospace; }}
 """
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def build_causal_report(
@@ -960,7 +962,7 @@ def build_causal_report(
     condition_rows, layer_rows, metric_rows, tissue_rows, l4_rows = _derive_rows(
         matrix
     )
-    _write_csv(
+    write_csv(
         paths.condition_summary_csv,
         (
             "condition_id",
@@ -974,7 +976,7 @@ def build_causal_report(
         ),
         condition_rows,
     )
-    _write_csv(
+    write_csv(
         paths.layer_effects_csv,
         (
             "condition_id",
@@ -986,12 +988,12 @@ def build_causal_report(
         ),
         layer_rows,
     )
-    _write_csv(
+    write_csv(
         paths.metric_effects_csv,
         ("condition_id", "condition_kind", "seed", "metric", "effect"),
         metric_rows,
     )
-    _write_csv(
+    write_csv(
         paths.tissue_timeseries_csv,
         (
             "condition_id",
@@ -1004,7 +1006,7 @@ def build_causal_report(
         ),
         tissue_rows,
     )
-    _write_csv(
+    write_csv(
         paths.l4_observations_csv,
         (
             "condition_id",
@@ -1045,7 +1047,7 @@ def build_causal_report(
         "matrix_id": matrix.matrix_id,
         "source_manifest_digest": digest_payload(matrix.manifest),
         "files": {
-            path.name: _sha256(path)
+            path.name: file_sha256(path)
             for path in sorted(paths.generated_files, key=lambda item: item.name)
         },
     }

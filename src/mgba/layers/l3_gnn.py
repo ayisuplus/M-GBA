@@ -74,8 +74,8 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any
 
-from ..experiment import digest_payload
-from ..neural import message_passing_step, seeded_matrix
+from ..hashing import digest_payload
+from ..neural import message_passing_step, seeded_matrix, sigmoid
 from .contracts import (
     CellAction,
     CellState,
@@ -84,7 +84,6 @@ from .contracts import (
     TissueNodeState,
     TissueState,
 )
-from .l0 import _sigmoid
 from .l3 import _build_tissue_state, _clamp, _validated_inputs
 
 #: Frozen L4 damage aggregation weights inherited from ADR-0005 / TissueConfig.
@@ -207,7 +206,7 @@ class GnnTissueModel:
             message = messages[cell_id]
             updated = tuple(
                 _clamp(
-                    _sigmoid(
+                    sigmoid(
                         math.fsum(
                             weight * value
                             for weight, value in zip(row_self, node_features)

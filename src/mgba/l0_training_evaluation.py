@@ -10,16 +10,15 @@ influence the verdict: it only supplies numbers; this module re-derives them.
 from __future__ import annotations
 
 import json
-import math
 from dataclasses import dataclass
-from hashlib import sha256
 from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping, Sequence
 
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .layers.l0 import ABSTRACT_GENE_NAMES
-from .ocellus_anchors import _mean_metrics, _vector_metrics
+from .ocellus_anchors import mean_metrics, vector_metrics
+from .validation import file_sha256, finite, required_text, sha256_text
 
 PREDICTIONS_SCHEMA_VERSION = "mgba-l0-response-predictions-0.1"
 EVALUATION_SCHEMA_VERSION = "mgba-l0-training-evaluation-0.1"
@@ -61,30 +60,10 @@ SCIENTIFIC_BOUNDARY = (
 )
 
 
-def _required_text(value: Any, *, name: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{name} must be a non-empty string")
-    return value.strip()
 
 
-def _sha256_text(value: Any, *, name: str) -> str:
-    result = _required_text(value, name=name).lower()
-    if (
-        len(result) != 64
-        or result != value.strip()
-        or any(char not in "0123456789abcdef" for char in result)
-    ):
-        raise ValueError(f"{name} must be 64 lowercase hexadecimal characters")
-    return result
 
 
-def _finite(value: Any, *, name: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise TypeError(f"{name} must be a finite number")
-    result = float(value)
-    if not math.isfinite(result):
-        raise ValueError(f"{name} must be finite")
-    return result
 
 
 def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> None:
@@ -95,18 +74,12 @@ def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> Non
         raise ValueError(f"{name} keys mismatch; missing={missing} extra={extra}")
 
 
-def _file_sha256(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _vector6(value: Any, *, name: str) -> tuple[float, ...]:
     if not isinstance(value, list) or len(value) != 6:
         raise ValueError(f"{name} must be a six-element list")
-    return tuple(_finite(item, name=name) for item in value)
+    return tuple(finite(item, name=name) for item in value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,22 +167,22 @@ def load_response_predictions(path: str | Path) -> ResponsePredictions:
             raise ValueError(
                 f"frozen training parameter {key} disagrees: {training[key]!r} != {expected!r}"
             )
-    _required_text(training["torch_version"], name="training.torch_version")
-    _finite(training["final_train_loss_mse"], name="training.final_train_loss_mse")
+    required_text(training["torch_version"], name="training.torch_version")
+    finite(training["final_train_loss_mse"], name="training.final_train_loss_mse")
     if encoding == ENCODING_ONEHOT:
         for key in ("component_vocab_size", "combo_units"):
             value = training[key]
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise ValueError(f"training.{key} must be a non-negative integer")
     else:
-        _sha256_text(
+        sha256_text(
             training["embedding_table_sha256"], name="training.embedding_table_sha256"
         )
         for key in ("embedding_dim", "covered_units", "excluded_units"):
             value = training[key]
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise ValueError(f"training.{key} must be a non-negative integer")
-        _finite(
+        finite(
             training["centroid_drift_vs_profile"],
             name="training.centroid_drift_vs_profile",
         )
@@ -217,21 +190,21 @@ def load_response_predictions(path: str | Path) -> ResponsePredictions:
     if not isinstance(weights, dict):
         raise ValueError("weights must be an object")
     _exact_keys(weights, {"path", "sha256", "bytes"}, name="weights")
-    _required_text(weights["path"], name="weights.path")
-    _sha256_text(weights["sha256"], name="weights.sha256")
+    required_text(weights["path"], name="weights.path")
+    sha256_text(weights["sha256"], name="weights.sha256")
     if isinstance(weights["bytes"], bool) or not isinstance(weights["bytes"], int) or weights["bytes"] < 1:
         raise ValueError("weights.bytes must be a positive integer")
     split = raw["split"]
     if not isinstance(split, dict):
         raise ValueError("split must be an object")
     _exact_keys(split, {"salt", "train_units", "holdout_units"}, name="split")
-    _required_text(split["salt"], name="split.salt")
+    required_text(split["salt"], name="split.salt")
     for key in ("train_units", "holdout_units"):
         value = split[key]
         if isinstance(value, bool) or not isinstance(value, int) or value < 1:
             raise ValueError(f"split.{key} must be a positive integer")
     if encoding == ENCODING_ONEHOT:
-        crosscheck = _finite(
+        crosscheck = finite(
             raw["centroid_crosscheck_max_abs_diff"], name="centroid_crosscheck_max_abs_diff"
         )
         if crosscheck >= PASS_EPSILON:
@@ -240,7 +213,7 @@ def load_response_predictions(path: str | Path) -> ResponsePredictions:
         # Embedding arms exclude unmapped units, so the all-units profile centroid
         # is not the right reference; the covered-train centroid is recomputed and
         # enforced inside evaluate_training. The reported drift is carried through.
-        crosscheck = _finite(
+        crosscheck = finite(
             training["centroid_drift_vs_profile"],
             name="training.centroid_drift_vs_profile",
         )
@@ -258,8 +231,8 @@ def load_response_predictions(path: str | Path) -> ResponsePredictions:
         )
         units.append(
             PredictedUnit(
-                unit=_required_text(item["unit"], name=f"units[{index}].unit"),
-                role=_required_text(item["role"], name=f"units[{index}].role"),
+                unit=required_text(item["unit"], name=f"units[{index}].unit"),
+                role=required_text(item["role"], name=f"units[{index}].role"),
                 target=_vector6(item["target"], name=f"units[{index}].target"),
                 predictions=(
                     _vector6(item["centroid_pred"], name=f"units[{index}].centroid_pred"),
@@ -271,14 +244,14 @@ def load_response_predictions(path: str | Path) -> ResponsePredictions:
     training = dict(training)
     training["feature_encoding"] = encoding
     return ResponsePredictions(
-        profile_id=_required_text(raw["profile_id"], name="profile_id"),
-        profile_sha256=_sha256_text(raw["profile_sha256"], name="profile_sha256"),
+        profile_id=required_text(raw["profile_id"], name="profile_id"),
+        profile_sha256=sha256_text(raw["profile_sha256"], name="profile_sha256"),
         training=dict(training),
         weights=dict(weights),
         split=dict(split),
         centroid_crosscheck_max_abs_diff=crosscheck,
         units=tuple(units),
-        predictions_digest=_file_sha256(predictions_path),
+        predictions_digest=file_sha256(predictions_path),
     )
 
 
@@ -295,10 +268,10 @@ def _role_metrics(
     summary: dict[str, dict[str, float]] = {}
     for predictor_index, predictor_id in enumerate(PREDICTOR_IDS):
         metrics = [
-            _vector_metrics(_named(unit.predictions[predictor_index]), _named(unit.target))
+            vector_metrics(_named(unit.predictions[predictor_index]), _named(unit.target))
             for unit in selected
         ]
-        mean = _mean_metrics(metrics)
+        mean = mean_metrics(metrics)
         summary[predictor_id] = {
             "six_node_mae": mean.six_node_mae,
             "sign_agreement": mean.sign_agreement,
@@ -313,7 +286,7 @@ def evaluate_training(
 ) -> dict[str, Any]:
     """Recompute every metric and apply the frozen ADR-0037 pass rule."""
     path = Path(profile_path)
-    if _file_sha256(path) != predictions.profile_sha256:
+    if file_sha256(path) != predictions.profile_sha256:
         raise ValueError("profile SHA-256 disagrees with the predictions identity")
     profile = json.loads(path.read_text(encoding="utf-8"))
     if profile.get("profile_id") != predictions.profile_id:
@@ -331,7 +304,7 @@ def evaluate_training(
             raise ValueError("covered_units count disagrees with the unit list")
     if encoding == ENCODING_ONEHOT:
         centroid_vector = tuple(
-            _finite(profile["centroid_train_only"][node], name="profile centroid")
+            finite(profile["centroid_train_only"][node], name="profile centroid")
             for node in ABSTRACT_GENE_NAMES
         )
     else:
@@ -345,14 +318,14 @@ def evaluate_training(
             raise ValueError("no covered train units to recompute the centroid")
         centroid_vector = tuple(
             fmean(
-                _finite(profile_units[name]["six_node_vector"][node], name="target")
+                finite(profile_units[name]["six_node_vector"][node], name="target")
                 for name in covered_train
             )
             for node in ABSTRACT_GENE_NAMES
         )
     for unit in predictions.units:
         expected = tuple(
-            _finite(profile_units[unit.unit]["six_node_vector"][node], name="target")
+            finite(profile_units[unit.unit]["six_node_vector"][node], name="target")
             for node in ABSTRACT_GENE_NAMES
         )
         if unit.target != expected:

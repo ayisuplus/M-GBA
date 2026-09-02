@@ -210,6 +210,66 @@
         "proxy_notice": "Reproducibility evidence across source formats; not a biological validation."
       },
       "notes": "crosscheck_id aivc-crosscheck-0a62229c8d964655；**verdict consistent**：234 共享单元，展平 Spearman 0.99993、方向一致率 0.9986、MAE 2.98e-05（远超冻结阈值 0.8/0.8）；未共享单元为 _1/_2 技术重复命名差异（6 个，已记录）。"
+    },
+    {
+      "dataset_id": "aivc-replogle-kd-hallmark-target",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/replogle-kd-hallmark-target.json",
+      "sha256": "539d5d8c6c7d4eb2614d7de969bf042a402d3e474148a744dde7eecab884a98f",
+      "provenance": {
+        "source": "ADR-0046 结构化靶标构建段（replogle-kd bundle + 同名 Stage 1 profile + MSigDB v2026.1 Hallmark 全 50 集合；核心纯 stdlib）",
+        "date": "2026-09-02",
+        "license": "随源数据（scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款）",
+        "deidentified": true,
+        "proxy_notice": "Structured Hallmark-set + six-node-head supervised target over public CRISPRi aggregate log2FC; offline training target only, not a biological fit or efficacy predictor."
+      },
+      "notes": "target_id replogle-kd-hallmark-target-33eba3f656c18adb；56 维（50 Hallmark 集合 + 冻结六节点并集头，零集合被剔除）；1,832 单元，角色逐字继承 replogle-kd-perturbation-profile；构建期六节点头 1e-12 门禁逐单元通过。"
+    },
+    {
+      "dataset_id": "aivc-norman-hallmark-target",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/norman-hallmark-target.json",
+      "sha256": "1cce32b4ce55edd065ba8dd757a455b07012f8cc905fdae2eba2de55077078a2",
+      "provenance": {
+        "source": "ADR-0046 结构化靶标构建段（norman bundle + 同名 Stage 1 profile + MSigDB v2026.1 Hallmark 全 50 集合；核心纯 stdlib）",
+        "date": "2026-09-02",
+        "license": "随源数据（scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款）",
+        "deidentified": true,
+        "proxy_notice": "Structured Hallmark-set + six-node-head supervised target over public CRISPRa aggregate log2FC; offline training target only, not a biological fit or efficacy predictor."
+      },
+      "notes": "target_id norman-hallmark-target-7046ba6157559791；56 维（50 Hallmark 集合 + 冻结六节点并集头，零集合被剔除）；236 单元，角色逐字继承 norman-perturbation-profile；构建期六节点头 1e-12 门禁逐单元通过。"
+    },
+    {
+      "dataset_id": "aivc-replogle-kd-hallmark-training-evaluation",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/replogle-kd-hallmark-training-evaluation.json",
+      "sha256": "1c0237fb3cd244cffd2ebeeebdfdd5affebfe349930e99e2346813f87e1ca473",
+      "provenance": {
+        "source": "ADR-0046 KD 结构化目标重训（1,780 覆盖单元；与 ADR-0039/0040 同盐、同冻结超参；.venv-train CPU 单线程 + 核心核验段）",
+        "date": "2026-09-02",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Offline KD perturbation-response evaluation; predictions do not enter the runtime chain."
+      },
+      "notes": "evaluation_id hallmark-training-eval-d6549b41f73ad50c；**verdict failed**：holdout 六节点头 MLP MAE 0.014219 vs centroid 0.014819（margin +6.0e-04）vs ridge 0.014181（margin −3.7e-05）；结构化监督未恢复 KD 可学性（MLP 仍不优于 ridge）。"
+    },
+    {
+      "dataset_id": "aivc-norman-hallmark-training-evaluation",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/derived/norman-hallmark-training-evaluation.json",
+      "sha256": "f1f87b1427acbd03576921494face497882f5f8b31283d725a8200a78c79ed5d",
+      "provenance": {
+        "source": "ADR-0046 OE 描述臂（Norman hallmark target 同盐；仅描述性，不进通过判定）",
+        "date": "2026-09-02",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Descriptive arm; does not amend the ADR-0037 passed identity."
+      },
+      "notes": "evaluation_id hallmark-training-eval-30997ad89ff86614；verdict descriptive；holdout 六节点头 MLP 0.011287 vs centroid 0.012572（+1.3e-03）vs ridge 0.010691（−6.0e-04）；描述性参考，不产生 pass 主张。"
     }
   ]
 }

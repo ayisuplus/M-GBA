@@ -7,7 +7,8 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .layers import SpatialTissueState
 from .runner import MultirateCrossScaleRunner, MultirateRun, save_run_artifact
 from .scenarios.carm.scenario import CompiledCarmScenario
@@ -175,20 +176,6 @@ class SpatialAnchorEvaluator:
         )
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
-            raise ValueError(f"cannot verify existing evaluation artifact: {error}") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite different spatial evaluation artifacts")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_spatial_anchor_evaluation_artifacts(
@@ -202,7 +189,7 @@ def save_spatial_anchor_evaluation_artifacts(
     manifest_path = root / "manifest.json"
     summary_path = root / "derived" / "summary.json"
     save_run_artifact(run_path, result.run)
-    _write_json_once(
+    write_json_once(
         manifest_path,
         {
             "schema_version": EVALUATION_SCHEMA_VERSION,
@@ -218,8 +205,9 @@ def save_spatial_anchor_evaluation_artifacts(
             "projection_source_digest": result.projection.source_digest,
             "score_id": result.score.score_id,
         },
+        artifact="spatial evaluation artifact",
     )
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(summary_path, result.summary_dict(), artifact="spatial evaluation artifact")
     return {
         "root": root,
         "run": run_path,

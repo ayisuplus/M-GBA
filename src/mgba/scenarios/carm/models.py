@@ -3,7 +3,7 @@ from __future__ import annotations
 from statistics import fmean
 from typing import Any
 
-from ...experiment import digest_payload
+from ...hashing import digest_payload
 from ...layers import (
     CellAction,
     CellPhase,

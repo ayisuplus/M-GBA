@@ -52,7 +52,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 
 #: Scalar ``CellConfig`` fields searched by the L2 calibration, in
 #: declaration order.  ``model_version`` and ``secretion_multipliers``
@@ -89,6 +90,7 @@ class CalibrationProtocol:
     model_version: str
     search_seed: int
     candidate_count: int
+    max_evaluations: int
     top_k: int
     refinement_steps: tuple[float, ...]
     max_sweeps: int
@@ -102,7 +104,13 @@ class CalibrationProtocol:
             raise TypeError("search_seed must be an int")
         if self.search_seed < 0:
             raise ValueError("search_seed must be non-negative")
-        for name in ("candidate_count", "top_k", "max_sweeps", "ticks"):
+        for name in (
+            "candidate_count",
+            "max_evaluations",
+            "top_k",
+            "max_sweeps",
+            "ticks",
+        ):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int):
                 raise TypeError(f"{name} must be an int")
@@ -110,6 +118,8 @@ class CalibrationProtocol:
                 raise ValueError(f"{name} must be a positive integer")
         if self.top_k > self.candidate_count + 1:
             raise ValueError("top_k cannot exceed candidate_count plus the incumbent")
+        if self.max_evaluations < self.candidate_count:
+            raise ValueError("max_evaluations cannot be less than candidate_count")
         if not self.refinement_steps:
             raise ValueError("refinement_steps must not be empty")
         if any(
@@ -152,6 +162,8 @@ class CalibrationResult:
     def __post_init__(self) -> None:
         if not self.evaluations:
             raise ValueError("calibration result requires evaluations")
+        if len(self.evaluations) > self.protocol.max_evaluations:
+            raise ValueError("calibration result exceeds max_evaluations")
         if len(self.best_point) != len(self.protocol.parameter_names):
             raise ValueError("best point dimension must match parameter_names")
         if not math.isfinite(self.best_score):
@@ -177,6 +189,7 @@ class CalibrationResult:
                 "model_version": self.protocol.model_version,
                 "search_seed": self.protocol.search_seed,
                 "candidate_count": self.protocol.candidate_count,
+                "max_evaluations": self.protocol.max_evaluations,
                 "top_k": self.protocol.top_k,
                 "refinement_steps": list(self.protocol.refinement_steps),
                 "max_sweeps": self.protocol.max_sweeps,
@@ -201,6 +214,7 @@ def load_calibration_protocol(path: str | Path) -> CalibrationProtocol:
             model_version=str(raw["model_version"]),
             search_seed=int(raw["search_seed"]),
             candidate_count=int(raw["candidate_count"]),
+            max_evaluations=int(raw["max_evaluations"]),
             top_k=int(raw["top_k"]),
             refinement_steps=tuple(float(v) for v in raw["refinement_steps"]),
             max_sweeps=int(raw["max_sweeps"]),
@@ -246,14 +260,20 @@ def run_search(
             raise ValueError("incumbent dimension must match parameter_names")
         if any(not 0.0 <= value <= 1.0 for value in incumbent):
             raise ValueError("incumbents must lie in the unit box")
+    if len(incumbents) + protocol.candidate_count > protocol.max_evaluations:
+        raise ValueError(
+            "max_evaluations must cover incumbents and random candidates"
+        )
 
     evaluations: list[CalibrationEvaluation] = []
     seen: dict[tuple[float, ...], float] = {}
 
-    def evaluate(point: Sequence[float], phase: str) -> float:
+    def evaluate(point: Sequence[float], phase: str) -> float | None:
         key = tuple(float(value) for value in point)
         if key in seen:
             return seen[key]
+        if len(evaluations) >= protocol.max_evaluations:
+            return None
         score = objective(key)
         if isinstance(score, bool) or not isinstance(score, (int, float)):
             raise TypeError("objective must return a real number")
@@ -267,9 +287,13 @@ def run_search(
     seeded: list[tuple[tuple[float, ...], float]] = []
     for incumbent in incumbents:
         point = tuple(float(value) for value in incumbent)
-        seeded.append((point, evaluate(point, "incumbent")))
+        score = evaluate(point, "incumbent")
+        assert score is not None
+        seeded.append((point, score))
     for candidate in sample_candidates(protocol):
-        seeded.append((candidate, evaluate(candidate, "random")))
+        score = evaluate(candidate, "random")
+        assert score is not None
+        seeded.append((candidate, score))
 
     # Deterministic ranking: score descending, point tuple ascending on ties.
     seeded.sort(key=lambda item: (-item[1], item[0]))
@@ -293,7 +317,7 @@ def run_search(
 
 def _coordinate_refine(
     protocol: CalibrationProtocol,
-    evaluate: Callable[[Sequence[float], str], float],
+    evaluate: Callable[[Sequence[float], str], float | None],
     start_point: tuple[float, ...],
     start_score: float,
 ) -> tuple[tuple[float, ...], float]:
@@ -313,6 +337,8 @@ def _coordinate_refine(
                     if candidate_point == best_point:
                         continue
                     score = evaluate(candidate_point, "refine")
+                    if score is None:
+                        return best_point, best_score
                     if score > best_score + _OBJECTIVE_EPSILON:
                         best_point, best_score = candidate_point, score
                         improved = True
@@ -336,22 +362,6 @@ def save_calibration_artifacts(
         "protocol": result.summary_dict()["protocol"],
         "evaluation_count": len(result.evaluations),
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="calibration artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="calibration artifact")
     return {"root": root, "manifest": manifest_path, "summary": summary_path}
-
-
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing calibration artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different calibration artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )

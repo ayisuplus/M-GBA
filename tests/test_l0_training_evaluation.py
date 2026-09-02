@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest import mock
 
 from mgba.cli import main as cli_main
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.l0_training_evaluation import (
     ENCODING_EMBEDDING,
     ENCODING_ONEHOT,

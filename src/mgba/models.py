@@ -47,6 +47,10 @@ class SemanticMessage:
     def __post_init__(self) -> None:
         if not self.message_id or not self.source or not self.target:
             raise ValueError("message id, source, and target are required")
+        for name in ("tick", "priority", "ttl"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"{name} must be an int")
         if self.tick < 0 or not 0 <= self.priority <= 100 or self.ttl < 1:
             raise ValueError("invalid tick, priority, or ttl")
         json.dumps(self.payload, ensure_ascii=False, allow_nan=False)
@@ -66,5 +70,7 @@ class TopologyProposal:
     tick: int
 
     def __post_init__(self) -> None:
+        if isinstance(self.tick, bool) or not isinstance(self.tick, int):
+            raise TypeError("tick must be an int")
         if not self.actor or not self.peer or not self.reason.strip() or self.tick < 0:
             raise ValueError("invalid topology proposal")

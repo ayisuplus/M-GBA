@@ -72,7 +72,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ..experiment import digest_payload
+from ..hashing import digest_payload
 from ..neural import seeded_matrix
 from .contracts import (
     CellAction,

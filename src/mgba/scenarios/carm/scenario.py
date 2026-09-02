@@ -7,7 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Mapping
 
-from ...experiment import digest_payload
+from ...hashing import digest_payload
 from ...layers.l0 import ABSTRACT_GENE_NAMES
 from ...models import Genome
 from ...multiscale import MultiscaleScenario

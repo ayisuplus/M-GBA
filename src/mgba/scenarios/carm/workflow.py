@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from ...experiment import canonical_json, digest_payload
+from ...experiment import write_json_once
+from ...hashing import canonical_json, digest_payload
 from ...experiments import (
     CausalArtifactPaths,
     CausalExperimentConfig,
@@ -112,19 +113,6 @@ def run_carm_matrix(
     )
 
 
-def _write_json_once(path: Path, payload: dict[str, object]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing CAR-M provenance is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite different CAR-M provenance")
-        return
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_carm_artifacts(
@@ -154,5 +142,5 @@ def save_carm_artifacts(
             "viability and immune-cell injury; it is not a clinical endpoint."
         ),
     }
-    _write_json_once(provenance, payload)
+    write_json_once(provenance, payload, artifact="CAR-M provenance")
     return CarmExperimentArtifacts(causal=causal, provenance=provenance)

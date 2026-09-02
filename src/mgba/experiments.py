@@ -9,7 +9,8 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping
 
-from .experiment import canonical_json, digest_payload
+from .experiment import write_json_once
+from .hashing import canonical_json, digest_payload
 from .layers import LayerId, OrganismOutcome
 from .multiscale import MultiscaleScenario
 from .runner import (
@@ -410,7 +411,7 @@ def _l4_distance_from_states(left: Any, right: Any) -> float:
     )
 
 
-def _tick_layer_distance(
+def tick_layer_distance(
     layer: LayerId,
     baseline: MultiscaleTickTrace,
     condition: MultiscaleTickTrace,
@@ -428,7 +429,7 @@ def _tick_layer_distance(
     return _l4_distance_from_states(baseline.l4, condition.l4)
 
 
-def _compare_runs(
+def compare_runs(
     baseline: CausalRunRecord, condition: CausalRunRecord
 ) -> CausalComparison:
     if baseline.seed != condition.seed:
@@ -445,7 +446,7 @@ def _compare_runs(
             )
             layer_effects.append((layer, terminal_distance))
         else:
-            distance = _tick_layer_distance(layer, baseline_end, condition_end)
+            distance = tick_layer_distance(layer, baseline_end, condition_end)
             assert distance is not None
             layer_effects.append((layer, distance))
 
@@ -453,7 +454,7 @@ def _compare_runs(
         for left_tick, right_tick in zip(
             baseline.run.ticks, condition.run.ticks, strict=True
         ):
-            distance = _tick_layer_distance(layer, left_tick, right_tick)
+            distance = tick_layer_distance(layer, left_tick, right_tick)
             if distance is not None and distance > 1e-12:
                 first_difference = left_tick.logical_time
                 break
@@ -489,7 +490,7 @@ def _compare_runs(
     )
 
 
-def _summarize_condition(
+def summarize_condition(
     condition_id: str,
     comparisons: tuple[CausalComparison, ...],
 ) -> ConditionSummary:
@@ -641,14 +642,14 @@ class CausalExperimentRunner:
             (record.condition_id, record.seed): record for record in records
         }
         comparisons = tuple(
-            _compare_runs(record_map[("baseline", seed)], record)
+            compare_runs(record_map[("baseline", seed)], record)
             for condition_id, kind, _, _ in conditions
             if kind is not ConditionKind.BASELINE
             for seed in self.config.seeds
             for record in (record_map[(condition_id, seed)],)
         )
         summaries = tuple(
-            _summarize_condition(
+            summarize_condition(
                 condition_id,
                 tuple(
                     item
@@ -684,20 +685,6 @@ class CausalArtifactPaths:
     summary: Path
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing causal artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different causal artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_causal_artifacts(
@@ -735,8 +722,8 @@ def save_causal_artifacts(
         "runner_model_versions": _json_value(result.runner_model_versions),
         "records": record_index,
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="causal artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="causal artifact")
     return CausalArtifactPaths(
         root=root,
         manifest=manifest_path,

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.lab import (
     LAB_BUNDLE_SCHEMA,
     LAB_CATALOG_SCHEMA,

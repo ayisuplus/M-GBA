@@ -22,15 +22,14 @@ from mgba.spatial_anchors import (
     save_spatial_anchor_profile,
     verify_spatial_anchor_target,
 )
+from mgba.validation import finite, sha256_text
 from mgba.spatial_source_adapters import (
     JACKSON_MANIFEST_SCHEMA_VERSION,
     WU_MANIFEST_SCHEMA_VERSION,
-    _finite,
     _local_path,
     _normalize,
     _positive_int,
     _read_object,
-    _sha256_text,
     adapt_jackson_imc_source,
     adapt_wu_visium_source,
     load_spatial_source_protocol,
@@ -291,11 +290,11 @@ class SpatialSourceHelperTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _normalize([3.0, 3.0], name="intensity")
         with self.assertRaises(ValueError):
-            _sha256_text("not-a-digest", name="digest")
+            sha256_text("not-a-digest", name="digest")
         with self.assertRaises(ValueError):
-            _finite("1", name="count")
+            finite("1", name="count")
         with self.assertRaises(ValueError):
-            _finite(float("nan"), name="count")
+            finite(float("nan"), name="count")
         with self.assertRaises(ValueError):
             _positive_int(True, name="count")
 

@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from mgba.carm_spatial_experiments import (
     CarmSpatialExperimentRunner,
     SpatialRunMetrics,
-    _spatial_metrics,
+    spatial_metrics,
     build_carm_spatial_runners,
     load_carm_spatial_experiment_config,
     save_carm_spatial_artifacts,
@@ -313,7 +313,7 @@ class CarmSpatialTests(unittest.TestCase):
             run=run,
         )
         with self.assertRaises(TypeError):
-            _spatial_metrics(record)
+            spatial_metrics(record)
 
     def test_artifacts_persist_and_refuse_conflicts(self) -> None:
         config = replace(

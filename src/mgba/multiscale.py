@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .experiment import ExperimentManifest, LayerTransitionEvent, digest_payload
+from .experiment import ExperimentManifest, LayerTransitionEvent
+from .hashing import digest_payload
 from .layers import (
     CellAction,
     CellModel,

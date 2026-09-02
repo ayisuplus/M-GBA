@@ -26,8 +26,10 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping, Sequence
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .layers.l0 import ABSTRACT_GENE_NAMES
+from .validation import finite, required_text, sha256_text
 
 
 OCELLUS_ANCHOR_SCHEMA_VERSION = "mgba-ocellus-perturbation-anchor-0.1"
@@ -104,26 +106,10 @@ _GENE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]*$")
 _EPSILON = 1e-12
 
 
-def _required_text(value: Any, *, name: str) -> str:
-    if not isinstance(value, str) or not value.strip() or value != value.strip():
-        raise ValueError(f"{name} must be a non-empty trimmed string")
-    return value
 
 
-def _sha256_text(value: Any, *, name: str) -> str:
-    text = _required_text(value, name=name)
-    if len(text) != 64 or any(character not in "0123456789abcdef" for character in text):
-        raise ValueError(f"{name} must be a lowercase SHA-256 hex digest")
-    return text
 
 
-def _finite(value: Any, *, name: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise TypeError(f"{name} must be a real number")
-    number = float(value)
-    if not math.isfinite(number):
-        raise ValueError(f"{name} must be finite")
-    return number
 
 
 def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> None:
@@ -136,7 +122,7 @@ def _exact_keys(raw: Mapping[str, Any], expected: set[str], *, name: str) -> Non
 
 
 def _gene_name(value: Any, *, name: str) -> str:
-    gene = _required_text(value, name=name)
+    gene = required_text(value, name=name)
     if not _GENE_NAME.fullmatch(gene):
         raise ValueError(f"{name} is not a canonical gene identifier")
     return gene
@@ -158,7 +144,7 @@ def _canonical_gene_effects(
         if not isinstance(item, Sequence) or isinstance(item, (str, bytes)) or len(item) != 2:
             raise TypeError(f"{name}[{index}] must be a gene/value pair")
         gene = _gene_name(item[0], name=f"{name}[{index}] gene")
-        normalized.append((gene, _finite(item[1], name=f"{name}[{gene}]")))
+        normalized.append((gene, finite(item[1], name=f"{name}[{gene}]")))
     genes = [gene for gene, _ in normalized]
     if len(genes) != len(set(genes)):
         raise ValueError(f"{name} gene identifiers must be unique")
@@ -180,10 +166,10 @@ class SourceIdentity:
     rights_verified: bool
 
     def __post_init__(self) -> None:
-        _required_text(self.dataset_id, name="source dataset_id")
-        _required_text(self.version, name="source version")
-        _sha256_text(self.sha256, name="source sha256")
-        _required_text(self.license, name="source license")
+        required_text(self.dataset_id, name="source dataset_id")
+        required_text(self.version, name="source version")
+        sha256_text(self.sha256, name="source sha256")
+        required_text(self.license, name="source license")
         if self.rights_verified is not True:
             raise ValueError("source rights must be explicitly verified")
 
@@ -210,10 +196,10 @@ class OfflineModelIdentity:
     network_used: bool = False
 
     def __post_init__(self) -> None:
-        _required_text(self.model_id, name="model_id")
-        _required_text(self.version, name="model version")
-        _sha256_text(self.weights_sha256, name="model weights_sha256")
-        _required_text(self.license, name="model license")
+        required_text(self.model_id, name="model_id")
+        required_text(self.version, name="model version")
+        sha256_text(self.weights_sha256, name="model weights_sha256")
+        required_text(self.license, name="model license")
         if self.rights_verified is not True:
             raise ValueError("model rights must be explicitly verified")
         if self.offline_inference is not True or self.network_used is not False:
@@ -242,10 +228,10 @@ class HallmarkLibraryIdentity:
     rights_verified: bool
 
     def __post_init__(self) -> None:
-        _required_text(self.collection_id, name="Hallmark collection_id")
-        _required_text(self.version, name="Hallmark version")
-        _sha256_text(self.sha256, name="Hallmark sha256")
-        _required_text(self.license, name="Hallmark license")
+        required_text(self.collection_id, name="Hallmark collection_id")
+        required_text(self.version, name="Hallmark version")
+        sha256_text(self.sha256, name="Hallmark sha256")
+        required_text(self.license, name="Hallmark license")
         if self.rights_verified is not True:
             raise ValueError("Hallmark collection rights must be explicitly verified")
 
@@ -275,7 +261,7 @@ class PerturbationContext:
             "dose",
             "timepoint",
         ):
-            _required_text(getattr(self, field_name), name=f"context {field_name}")
+            required_text(getattr(self, field_name), name=f"context {field_name}")
 
     def as_dict(self) -> dict[str, str]:
         return {
@@ -299,7 +285,7 @@ class PerturbationObservation:
     empirical_gene_log2fc: tuple[tuple[str, float], ...]
 
     def __post_init__(self) -> None:
-        _required_text(self.observation_id, name="observation_id")
+        required_text(self.observation_id, name="observation_id")
         if self.split not in SPLITS:
             raise ValueError("observation split must be train or holdout")
         if not isinstance(self.context, PerturbationContext):
@@ -360,7 +346,7 @@ class SixNodeProjection:
         if tuple(name for name, _, _ in self.coverage) != ABSTRACT_GENE_NAMES:
             raise ValueError("six-node coverage must use the frozen L0 order")
         for name, value in self.values:
-            _finite(value, name=f"six-node projection {name}")
+            finite(value, name=f"six-node projection {name}")
         for name, genes, digest in self.coverage:
             if (
                 not genes
@@ -374,7 +360,7 @@ class SixNodeProjection:
                 _gene_name(gene, name=f"six-node coverage {name} gene")
             if digest != digest_payload(genes):
                 raise ValueError(f"six-node coverage {name} digest mismatch")
-            _sha256_text(digest, name=f"six-node coverage {name} digest")
+            sha256_text(digest, name=f"six-node coverage {name} digest")
 
     @property
     def value_map(self) -> dict[str, float]:
@@ -398,11 +384,11 @@ class VectorMetrics:
     spearman: float
 
     def __post_init__(self) -> None:
-        _finite(self.six_node_mae, name="six_node_mae")
+        finite(self.six_node_mae, name="six_node_mae")
         if self.six_node_mae < 0.0:
             raise ValueError("six_node_mae must be non-negative")
         for name in ("sign_agreement", "spearman"):
-            value = _finite(getattr(self, name), name=name)
+            value = finite(getattr(self, name), name=name)
             lower = 0.0 if name == "sign_agreement" else -1.0
             if not lower <= value <= 1.0:
                 raise ValueError(f"{name} is outside its valid range")
@@ -479,8 +465,8 @@ class AnchorDecision:
     def __post_init__(self) -> None:
         if not isinstance(self.passed, bool):
             raise TypeError("anchor passed flag must be bool")
-        _finite(self.holdout_mae_improvement, name="holdout_mae_improvement")
-        _required_text(self.reason, name="anchor decision reason")
+        finite(self.holdout_mae_improvement, name="holdout_mae_improvement")
+        required_text(self.reason, name="anchor decision reason")
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -504,7 +490,7 @@ class OCellusPerturbationAnchor:
     decision: AnchorDecision
 
     def __post_init__(self) -> None:
-        _sha256_text(
+        sha256_text(
             self.hallmark_membership_digest, name="hallmark_membership_digest"
         )
         if tuple(name for name, _, _ in self.hallmark_set_summaries) != REQUIRED_HALLMARK_SETS:
@@ -512,7 +498,7 @@ class OCellusPerturbationAnchor:
         for name, count, digest in self.hallmark_set_summaries:
             if isinstance(count, bool) or not isinstance(count, int) or count < 1:
                 raise ValueError(f"Hallmark set {name} must contain at least one gene")
-            _sha256_text(digest, name=f"Hallmark set {name} digest")
+            sha256_text(digest, name=f"Hallmark set {name} digest")
         if not self.records:
             raise ValueError("anchor must contain records")
         if tuple(item.observation.observation_id for item in self.records) != tuple(
@@ -638,7 +624,7 @@ def _average_ranks(values: Sequence[float]) -> tuple[float, ...]:
     return tuple(output)
 
 
-def _spearman(predicted: Sequence[float], empirical: Sequence[float]) -> float:
+def spearman(predicted: Sequence[float], empirical: Sequence[float]) -> float:
     left = _average_ranks(predicted)
     right = _average_ranks(empirical)
     left_mean = fmean(left)
@@ -654,11 +640,11 @@ def _spearman(predicted: Sequence[float], empirical: Sequence[float]) -> float:
     return 0.0 if denominator == 0.0 else numerator / denominator
 
 
-def _sign(value: float) -> int:
+def sign(value: float) -> int:
     return 1 if value > 0.0 else (-1 if value < 0.0 else 0)
 
 
-def _vector_metrics(
+def vector_metrics(
     predicted: Sequence[tuple[str, float]], empirical: Sequence[tuple[str, float]]
 ) -> VectorMetrics:
     if tuple(name for name, _ in predicted) != ABSTRACT_GENE_NAMES:
@@ -670,13 +656,13 @@ def _vector_metrics(
     return VectorMetrics(
         six_node_mae=fmean(abs(x - y) for x, y in zip(left, right, strict=True)),
         sign_agreement=fmean(
-            float(_sign(x) == _sign(y)) for x, y in zip(left, right, strict=True)
+            float(sign(x) == sign(y)) for x, y in zip(left, right, strict=True)
         ),
-        spearman=_spearman(left, right),
+        spearman=spearman(left, right),
     )
 
 
-def _mean_metrics(items: Sequence[VectorMetrics]) -> VectorMetrics:
+def mean_metrics(items: Sequence[VectorMetrics]) -> VectorMetrics:
     if not items:
         raise ValueError("cannot summarize an empty metric group")
     return VectorMetrics(
@@ -765,8 +751,8 @@ def build_ocellus_perturbation_anchor(
                 empirical_six_node_log2fc=empirical.values,
                 baseline_six_node_log2fc=centroid,
                 bridge_coverage=predicted.coverage,
-                model_metrics=_vector_metrics(predicted.values, empirical.values),
-                baseline_metrics=_vector_metrics(centroid, empirical.values),
+                model_metrics=vector_metrics(predicted.values, empirical.values),
+                baseline_metrics=vector_metrics(centroid, empirical.values),
             )
         )
 
@@ -774,8 +760,8 @@ def build_ocellus_perturbation_anchor(
         SplitComparison(
             split=split,
             record_count=len(group),
-            model_metrics=_mean_metrics([item.model_metrics for item in group]),
-            baseline_metrics=_mean_metrics([item.baseline_metrics for item in group]),
+            model_metrics=mean_metrics([item.model_metrics for item in group]),
+            baseline_metrics=mean_metrics([item.baseline_metrics for item in group]),
         )
         for split in SPLITS
         for group in [[item for item in evaluated if item.observation.split == split]]
@@ -812,16 +798,16 @@ def build_ocellus_perturbation_anchor(
 def _metrics_from_raw(raw: Mapping[str, Any], *, name: str) -> VectorMetrics:
     _exact_keys(raw, {"six_node_mae", "sign_agreement", "spearman"}, name=name)
     return VectorMetrics(
-        six_node_mae=_finite(raw["six_node_mae"], name=f"{name}.six_node_mae"),
-        sign_agreement=_finite(raw["sign_agreement"], name=f"{name}.sign_agreement"),
-        spearman=_finite(raw["spearman"], name=f"{name}.spearman"),
+        six_node_mae=finite(raw["six_node_mae"], name=f"{name}.six_node_mae"),
+        sign_agreement=finite(raw["sign_agreement"], name=f"{name}.sign_agreement"),
+        spearman=finite(raw["spearman"], name=f"{name}.spearman"),
     )
 
 
 def _six_vector_from_raw(raw: Mapping[str, Any], *, name: str) -> tuple[tuple[str, float], ...]:
     _exact_keys(raw, set(ABSTRACT_GENE_NAMES), name=name)
     return tuple(
-        (node, _finite(raw[node], name=f"{name}.{node}"))
+        (node, finite(raw[node], name=f"{name}.{node}"))
         for node in ABSTRACT_GENE_NAMES
     )
 
@@ -907,7 +893,7 @@ def verify_ocellus_anchor_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
         license=hallmark_raw["license"],
         rights_verified=hallmark_raw["rights_verified"],
     )
-    _sha256_text(hallmark_raw["membership_digest"], name="membership_digest")
+    sha256_text(hallmark_raw["membership_digest"], name="membership_digest")
     summaries = hallmark_raw["set_summaries"]
     if not isinstance(summaries, Mapping):
         raise ValueError("Hallmark set_summaries must be an object")
@@ -922,7 +908,7 @@ def verify_ocellus_anchor_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
             or summary["gene_count"] < 1
         ):
             raise ValueError("Hallmark set gene_count must be positive")
-        _sha256_text(summary["gene_digest"], name=f"summary {set_name} digest")
+        sha256_text(summary["gene_digest"], name=f"summary {set_name} digest")
 
     protocol = raw["protocol"]
     expected_protocol = {
@@ -967,7 +953,7 @@ def verify_ocellus_anchor_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
         if not isinstance(record, Mapping):
             raise ValueError(f"anchor record {index} must be an object")
         _exact_keys(record, expected_record_keys, name=f"anchor record {index}")
-        observation_id = _required_text(record["observation_id"], name="observation_id")
+        observation_id = required_text(record["observation_id"], name="observation_id")
         observation_ids.append(observation_id)
         split = record["split"]
         if split not in SPLITS:
@@ -1036,7 +1022,7 @@ def verify_ocellus_anchor_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
                 or coverage["gene_count"] != len(genes)
             ):
                 raise ValueError("bridge coverage count must match its gene list")
-            coverage_digest = _sha256_text(
+            coverage_digest = sha256_text(
                 coverage["gene_digest"], name=f"coverage {node} digest"
             )
             if coverage_digest != digest_payload(genes):
@@ -1052,9 +1038,9 @@ def verify_ocellus_anchor_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
         baseline_metrics = _metrics_from_raw(
             record["baseline_metrics"], name="baseline_metrics"
         )
-        if not _metrics_equal(model_metrics, _vector_metrics(predicted, empirical)):
+        if not _metrics_equal(model_metrics, vector_metrics(predicted, empirical)):
             raise ValueError("record model metrics do not match stored six-node vectors")
-        if not _metrics_equal(baseline_metrics, _vector_metrics(baseline, empirical)):
+        if not _metrics_equal(baseline_metrics, vector_metrics(baseline, empirical)):
             raise ValueError("record baseline metrics do not match stored six-node vectors")
         verified_records.append(
             {
@@ -1109,12 +1095,12 @@ def verify_ocellus_anchor_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
             item["baseline_metrics"], name="split baseline metrics"
         )
         if not _metrics_equal(
-            model_metrics, _mean_metrics([record["model_metrics"] for record in group])
+            model_metrics, mean_metrics([record["model_metrics"] for record in group])
         ):
             raise ValueError("split model metrics mismatch")
         if not _metrics_equal(
             baseline_metrics,
-            _mean_metrics([record["baseline_metrics"] for record in group]),
+            mean_metrics([record["baseline_metrics"] for record in group]),
         ):
             raise ValueError("split baseline metrics mismatch")
         verified_comparisons.append((expected_split, model_metrics, baseline_metrics))
@@ -1136,7 +1122,7 @@ def verify_ocellus_anchor_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     if raw["decision"] != expected_decision:
         raise ValueError("anchor decision does not match the frozen holdout rule")
 
-    digest = _sha256_text(raw["anchor_digest"], name="anchor_digest")
+    digest = sha256_text(raw["anchor_digest"], name="anchor_digest")
     core = {
         key: value
         for key, value in raw.items()
@@ -1158,21 +1144,6 @@ def verify_ocellus_perturbation_anchor(path: str | Path) -> dict[str, Any]:
     return verify_ocellus_anchor_payload(raw)
 
 
-def _write_json_once(path: Path, payload: dict[str, Any], *, artifact_name: str) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
-            raise ValueError(f"cannot verify existing {artifact_name}: {error}") from error
-        if existing != payload:
-            raise ValueError(f"refusing to overwrite a different {artifact_name}")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
-        + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_ocellus_perturbation_anchor(
@@ -1185,7 +1156,7 @@ def save_ocellus_perturbation_anchor(
     payload = anchor.as_dict()
     verify_ocellus_anchor_payload(payload)
     output = Path(path)
-    _write_json_once(output, payload, artifact_name="OCellus perturbation anchor")
+    write_json_once(output, payload, artifact="OCellus perturbation anchor")
     return output
 
 
@@ -1197,9 +1168,9 @@ class HumanAnchorApproval:
     approved: bool
 
     def __post_init__(self) -> None:
-        _sha256_text(self.reviewed_anchor_digest, name="reviewed_anchor_digest")
-        _required_text(self.reviewer_id, name="reviewer_id")
-        _required_text(self.decision_note, name="decision_note")
+        sha256_text(self.reviewed_anchor_digest, name="reviewed_anchor_digest")
+        required_text(self.reviewer_id, name="reviewer_id")
+        required_text(self.decision_note, name="decision_note")
         if not isinstance(self.approved, bool):
             raise TypeError("approved must be bool")
 
@@ -1213,7 +1184,7 @@ class PerturbationScheduleCandidateSpec:
     clamp_value: float
 
     def __post_init__(self) -> None:
-        _required_text(self.evidence_observation_id, name="evidence_observation_id")
+        required_text(self.evidence_observation_id, name="evidence_observation_id")
         if self.abstract_node not in ABSTRACT_GENE_NAMES:
             raise ValueError("abstract_node must be one of the six frozen L0 nodes")
         if (
@@ -1223,7 +1194,7 @@ class PerturbationScheduleCandidateSpec:
         ):
             raise ValueError("target_cell_ids must be non-empty, unique, and sorted")
         for cell_id in self.target_cell_ids:
-            _required_text(cell_id, name="target cell_id")
+            required_text(cell_id, name="target cell_id")
         if (
             not self.l0_update_ticks
             or self.l0_update_ticks != tuple(sorted(self.l0_update_ticks))
@@ -1234,7 +1205,7 @@ class PerturbationScheduleCandidateSpec:
             )
         ):
             raise ValueError("l0_update_ticks must be positive, unique, and sorted")
-        value = _finite(self.clamp_value, name="clamp_value")
+        value = finite(self.clamp_value, name="clamp_value")
         if not 0.0 <= value <= 1.0:
             raise ValueError("clamp_value must be in [0, 1]")
 
@@ -1254,18 +1225,18 @@ class PerturbationScheduleReviewCandidate:
     approval_note: str
 
     def __post_init__(self) -> None:
-        _required_text(self.anchor_id, name="candidate anchor_id")
-        digest = _sha256_text(self.anchor_digest, name="candidate anchor_digest")
+        required_text(self.anchor_id, name="candidate anchor_id")
+        digest = sha256_text(self.anchor_digest, name="candidate anchor_digest")
         if self.anchor_id != f"ocellus-anchor-{digest[:16]}":
             raise ValueError("candidate anchor_id does not match anchor_digest")
-        _required_text(
+        required_text(
             self.evidence_observation_id, name="candidate evidence_observation_id"
         )
         if self.evidence_split != HOLDOUT_SPLIT:
             raise ValueError("review candidates require held-out evidence")
         if self.abstract_node not in ABSTRACT_GENE_NAMES:
             raise ValueError("candidate abstract_node is not a frozen L0 node")
-        _finite(self.predicted_node_log2fc, name="candidate predicted_node_log2fc")
+        finite(self.predicted_node_log2fc, name="candidate predicted_node_log2fc")
         PerturbationScheduleCandidateSpec(
             evidence_observation_id=self.evidence_observation_id,
             abstract_node=self.abstract_node,
@@ -1273,8 +1244,8 @@ class PerturbationScheduleReviewCandidate:
             l0_update_ticks=self.l0_update_ticks,
             clamp_value=self.clamp_value,
         )
-        _required_text(self.reviewer_id, name="candidate reviewer_id")
-        _required_text(self.approval_note, name="candidate approval_note")
+        required_text(self.reviewer_id, name="candidate reviewer_id")
+        required_text(self.approval_note, name="candidate approval_note")
 
     @property
     def perturbation_schedule(self) -> dict[int, dict[str, dict[str, float]]]:
@@ -1382,5 +1353,5 @@ def save_perturbation_schedule_candidate(
     if payload["executed"] is not False:
         raise ValueError("review candidates must remain unexecuted")
     output = Path(path)
-    _write_json_once(output, payload, artifact_name="L0 perturbation review candidate")
+    write_json_once(output, payload, artifact="L0 perturbation review candidate")
     return output

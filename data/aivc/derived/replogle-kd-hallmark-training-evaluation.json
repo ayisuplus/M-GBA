@@ -1,0 +1,182 @@
+{
+  "arm": "primary",
+  "dataset_id": "replogle-2022-k562-essential-scperturb",
+  "dims": [
+    "HALLMARK_ADIPOGENESIS",
+    "HALLMARK_ALLOGRAFT_REJECTION",
+    "HALLMARK_ANDROGEN_RESPONSE",
+    "HALLMARK_ANGIOGENESIS",
+    "HALLMARK_APICAL_JUNCTION",
+    "HALLMARK_APICAL_SURFACE",
+    "HALLMARK_APOPTOSIS",
+    "HALLMARK_BILE_ACID_METABOLISM",
+    "HALLMARK_CHOLESTEROL_HOMEOSTASIS",
+    "HALLMARK_COAGULATION",
+    "HALLMARK_COMPLEMENT",
+    "HALLMARK_DNA_REPAIR",
+    "HALLMARK_E2F_TARGETS",
+    "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION",
+    "HALLMARK_ESTROGEN_RESPONSE_EARLY",
+    "HALLMARK_ESTROGEN_RESPONSE_LATE",
+    "HALLMARK_FATTY_ACID_METABOLISM",
+    "HALLMARK_G2M_CHECKPOINT",
+    "HALLMARK_GLYCOLYSIS",
+    "HALLMARK_HEDGEHOG_SIGNALING",
+    "HALLMARK_HEME_METABOLISM",
+    "HALLMARK_HYPOXIA",
+    "HALLMARK_IL2_STAT5_SIGNALING",
+    "HALLMARK_IL6_JAK_STAT3_SIGNALING",
+    "HALLMARK_INFLAMMATORY_RESPONSE",
+    "HALLMARK_INTERFERON_ALPHA_RESPONSE",
+    "HALLMARK_INTERFERON_GAMMA_RESPONSE",
+    "HALLMARK_KRAS_SIGNALING_DN",
+    "HALLMARK_KRAS_SIGNALING_UP",
+    "HALLMARK_MITOTIC_SPINDLE",
+    "HALLMARK_MTORC1_SIGNALING",
+    "HALLMARK_MYC_TARGETS_V1",
+    "HALLMARK_MYC_TARGETS_V2",
+    "HALLMARK_MYOGENESIS",
+    "HALLMARK_NOTCH_SIGNALING",
+    "HALLMARK_OXIDATIVE_PHOSPHORYLATION",
+    "HALLMARK_P53_PATHWAY",
+    "HALLMARK_PANCREAS_BETA_CELLS",
+    "HALLMARK_PEROXISOME",
+    "HALLMARK_PI3K_AKT_MTOR_SIGNALING",
+    "HALLMARK_PROTEIN_SECRETION",
+    "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY",
+    "HALLMARK_SPERMATOGENESIS",
+    "HALLMARK_TGF_BETA_SIGNALING",
+    "HALLMARK_TNFA_SIGNALING_VIA_NFKB",
+    "HALLMARK_UNFOLDED_PROTEIN_RESPONSE",
+    "HALLMARK_UV_RESPONSE_DN",
+    "HALLMARK_UV_RESPONSE_UP",
+    "HALLMARK_WNT_BETA_CATENIN_SIGNALING",
+    "HALLMARK_XENOBIOTIC_METABOLISM",
+    "damage_response",
+    "signal_expression",
+    "repair_expression",
+    "metabolic_expression",
+    "death_expression",
+    "negative_feedback_expression"
+  ],
+  "evaluation_id": "hallmark-training-eval-d6549b41f73ad50c",
+  "metrics": {
+    "set_dims": {
+      "holdout": {
+        "centroid": {
+          "mean_mae": 0.016997895521073864,
+          "unit_count": 354
+        },
+        "mlp": {
+          "mean_mae": 0.016515620521252238,
+          "unit_count": 354
+        },
+        "ridge": {
+          "mean_mae": 0.016873800537194332,
+          "unit_count": 354
+        }
+      },
+      "set_dim_count": 50,
+      "train": {
+        "centroid": {
+          "mean_mae": 0.019058076851385164,
+          "unit_count": 1426
+        },
+        "mlp": {
+          "mean_mae": 0.01799399121551079,
+          "unit_count": 1426
+        },
+        "ridge": {
+          "mean_mae": 0.015424691438012714,
+          "unit_count": 1426
+        }
+      }
+    },
+    "six_node_head": {
+      "holdout": {
+        "centroid": {
+          "mae": 0.014819327207889445,
+          "sign_agreement": 0.626647834274953,
+          "spearman": 0.3351089588377724,
+          "unit_count": 354
+        },
+        "mlp": {
+          "mae": 0.014218806562719039,
+          "sign_agreement": 0.635593220338983,
+          "spearman": 0.3325262308313156,
+          "unit_count": 354
+        },
+        "ridge": {
+          "mae": 0.014181388150748738,
+          "sign_agreement": 0.628060263653484,
+          "spearman": 0.31719128329297824,
+          "unit_count": 354
+        }
+      },
+      "train": {
+        "centroid": {
+          "mae": 0.017165619613800483,
+          "sign_agreement": 0.6409537166900421,
+          "spearman": 0.343778801843318,
+          "unit_count": 1426
+        },
+        "mlp": {
+          "mae": 0.015847116208396746,
+          "sign_agreement": 0.6538101916783544,
+          "spearman": 0.35980765377679824,
+          "unit_count": 1426
+        },
+        "ridge": {
+          "mae": 0.01345304053166855,
+          "sign_agreement": 0.6957690509583917,
+          "spearman": 0.46736125025045083,
+          "unit_count": 1426
+        }
+      }
+    }
+  },
+  "pass_rule": {
+    "margin_vs_centroid": 0.0006005206451704069,
+    "margin_vs_ridge": -3.7418411970300755e-05,
+    "reasons": [
+      "mlp does not beat ridge on holdout"
+    ],
+    "rule": "holdout mlp six-node-head MAE strictly below centroid AND ridge, margins > 1e-12",
+    "verdict": "failed"
+  },
+  "schema_version": "mgba-l0-hallmark-training-evaluation-0.1",
+  "scientific_boundary": "Offline evaluation of a small perturbation-response predictor against the ADR-0046 Hallmark structured target (covered Hallmark sets plus the frozen six-node union head). Predictions do not enter the runtime chain and are not a biological fit, a virtual-cell claim, or an efficacy predictor. Reference-model grade.",
+  "source": {
+    "predictions_sha256": "ec6fc23f260d189041e4b5201bdfc065576799bf7e127f20bc111c7a16555633",
+    "target_sha256": "539d5d8c6c7d4eb2614d7de969bf042a402d3e474148a744dde7eecab884a98f",
+    "weights": {
+      "bytes": 106830,
+      "path": "replogle_kd_hallmark_mlp.npz",
+      "sha256": "6516f046764455f192b65412b6cd14c4b3b06bd85f8ac26a6d051ce5b515e46a"
+    }
+  },
+  "split": {
+    "holdout_units": 354,
+    "salt": "mgba-aivc-replogle-kd-anchor-2026-08-29",
+    "train_units": 1426
+  },
+  "target_id": "replogle-kd-hallmark-target-33eba3f656c18adb",
+  "training": {
+    "centroid_crosscheck_max_abs_diff": 6.245004513516506e-17,
+    "covered_units": 1780,
+    "device": "cpu-single-thread",
+    "embedding_dim": 768,
+    "embedding_table_sha256": "34785e7ace44c91652a9cd5e5d381772e5a49d3108b3f37db8c36806f5d66791",
+    "epochs": 3000,
+    "excluded_units": 52,
+    "final_train_loss_mse": 0.000759237795136869,
+    "hidden": 32,
+    "input_dim": 768,
+    "learning_rate": 0.001,
+    "output_dim": 56,
+    "ridge_lambda": 1.0,
+    "seed": 42,
+    "torch_version": "2.7.0+cu128",
+    "weight_decay": 0.0001
+  }
+}

@@ -1,43 +1,39 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, fields, is_dataclass
-from enum import Enum
+from dataclasses import dataclass
+from functools import lru_cache
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Mapping
 
+from .hashing import jsonable, canonical_json, digest_payload
 from .layers import LayerId
 
 
-def _jsonable(value: Any) -> Any:
-    if is_dataclass(value) and not isinstance(value, type):
-        return {field.name: _jsonable(getattr(value, field.name)) for field in fields(value)}
-    if isinstance(value, Enum):
-        return value.value
-    if isinstance(value, Mapping):
-        return {str(key): _jsonable(item) for key, item in value.items()}
-    if isinstance(value, (tuple, list)):
-        return [_jsonable(item) for item in value]
-    if isinstance(value, (set, frozenset)):
-        return sorted(_jsonable(item) for item in value)
-    if isinstance(value, Path):
-        return str(value)
-    return value
-
-
-def canonical_json(value: Any) -> str:
-    return json.dumps(
-        _jsonable(value),
-        allow_nan=False,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
+def source_tree_digest(root: str | Path) -> str:
+    """Hash Python source paths and contents below ``root``."""
+    source_root = Path(root)
+    files = sorted(
+        source_root.rglob("*.py"),
+        key=lambda path: path.relative_to(source_root).as_posix(),
+    )
+    if not files:
+        raise ValueError("source tree contains no Python files")
+    return digest_payload(
+        tuple(
+            (
+                path.relative_to(source_root).as_posix(),
+                sha256(path.read_bytes()).hexdigest(),
+            )
+            for path in files
+        )
     )
 
 
-def digest_payload(value: Any) -> str:
-    return sha256(canonical_json(value).encode("utf-8")).hexdigest()
+@lru_cache(maxsize=1)
+def package_source_digest() -> str:
+    return source_tree_digest(Path(__file__).resolve().parent)
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +44,7 @@ class ExperimentManifest:
     code_version: str
     config_digest: str
     model_versions: tuple[tuple[str, str], ...]
+    source_digest: str | None = None
 
     def __post_init__(self) -> None:
         if not self.schema_version.strip() or not self.experiment_name.strip():
@@ -62,6 +59,15 @@ class ExperimentManifest:
             raise ValueError("model layer and version names must not be empty")
         if len({layer for layer, _ in self.model_versions}) != len(self.model_versions):
             raise ValueError("model layer names must be unique")
+        if (
+            self.schema_version == "mgba-manifest-0.1"
+            and self.source_digest is not None
+        ):
+            raise ValueError("legacy manifests must not define source_digest")
+        if self.schema_version == "mgba-manifest-0.2" and not _is_sha256(
+            self.source_digest
+        ):
+            raise ValueError("source_digest must be a lowercase SHA-256 digest")
 
     @classmethod
     def create(
@@ -72,22 +78,36 @@ class ExperimentManifest:
         code_version: str,
         config: Any,
         model_versions: Mapping[str, str],
+        source_digest: str | None = None,
     ) -> ExperimentManifest:
         return cls(
-            schema_version="mgba-manifest-0.1",
+            schema_version="mgba-manifest-0.2",
             experiment_name=experiment_name,
             seed=seed,
             code_version=code_version,
             config_digest=digest_payload(config),
             model_versions=tuple(sorted(model_versions.items())),
+            source_digest=(
+                package_source_digest() if source_digest is None else source_digest
+            ),
         )
 
     @property
     def experiment_id(self) -> str:
-        return f"mgba-{digest_payload(self)[:16]}"
+        payload: dict[str, Any] = {
+            "schema_version": self.schema_version,
+            "experiment_name": self.experiment_name,
+            "seed": self.seed,
+            "code_version": self.code_version,
+            "config_digest": self.config_digest,
+            "model_versions": self.model_versions,
+        }
+        if self.source_digest is not None:
+            payload["source_digest"] = self.source_digest
+        return f"mgba-{digest_payload(payload)[:16]}"
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        result = {
             "schema_version": self.schema_version,
             "experiment_id": self.experiment_id,
             "experiment_name": self.experiment_name,
@@ -96,6 +116,17 @@ class ExperimentManifest:
             "config_digest": self.config_digest,
             "model_versions": dict(self.model_versions),
         }
+        if self.source_digest is not None:
+            result["source_digest"] = self.source_digest
+        return result
+
+
+def _is_sha256(value: str | None) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
 
 
 _NEXT_LAYER = {
@@ -137,7 +168,7 @@ class LayerTransitionEvent:
         return f"transition-{digest_payload(self)[:16]}"
 
     def as_dict(self) -> dict[str, Any]:
-        result = _jsonable(self)
+        result = jsonable(self)
         result["event_id"] = self.event_id
         return result
 
@@ -189,3 +220,35 @@ def append_transition_event(
 ) -> None:
     with paths.events.open("a", encoding="utf-8", newline="\n") as stream:
         stream.write(canonical_json(event.as_dict()) + "\n")
+
+
+def write_json_once(
+    path: str | Path, payload: Mapping[str, Any], *, artifact: str = "artifact"
+) -> Path:
+    """Write ``payload`` as canonical JSON unless ``path`` holds different content.
+
+    Shared append-only artifact protocol (previously copied per experiment
+    module as ``_write_json_once``): rewriting identical content is a no-op,
+    a corrupt or different existing file is refused, and the write is atomic
+    (temporary file + replace) so a crash cannot leave a truncated artifact.
+    """
+    target = Path(path)
+    encoded = (
+        json.dumps(
+            payload, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False
+        )
+        + "\n"
+    )
+    if target.exists():
+        try:
+            existing = target.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            raise ValueError(f"cannot verify existing {artifact}: {error}") from error
+        if existing != encoded:
+            raise ValueError(f"refusing to overwrite a different {artifact}")
+        return target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f"{target.name}.tmp")
+    temporary.write_text(encoded, encoding="utf-8")
+    temporary.replace(target)
+    return target

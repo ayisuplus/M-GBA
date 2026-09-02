@@ -1,7 +1,8 @@
 {
-  "model_version": "carm-spatial-calibration-0.1",
+  "model_version": "carm-spatial-calibration-0.2",
   "search_seed": 20260829,
   "candidate_count": 24,
+  "max_evaluations": 89,
   "top_k": 4,
   "refinement_steps": [0.25, 0.125],
   "max_sweeps": 2,

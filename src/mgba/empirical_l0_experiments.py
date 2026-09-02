@@ -16,14 +16,15 @@ from dataclasses import asdict, dataclass, is_dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .experiments import (
     CausalComparison,
     CausalRunRecord,
     ConditionKind,
     ConditionSummary,
-    _compare_runs,
-    _summarize_condition,
+    compare_runs,
+    summarize_condition,
 )
 from .layers.l0 import ABSTRACT_GENE_NAMES
 from .multiscale import MultiscaleScenario
@@ -282,12 +283,12 @@ class EmpiricalL0ComparisonRunner:
                     right = record_map[("empirical_response", seed)]
                 comparisons.append(
                     replace(
-                        _compare_runs(left, right),
+                        compare_runs(left, right),
                         condition_id=comparison_id,
                     )
                 )
         summaries = tuple(
-            _summarize_condition(
+            summarize_condition(
                 comparison_id,
                 tuple(
                     comparison
@@ -365,8 +366,8 @@ def save_empirical_l0_artifacts(
         "baseline_identity_verified": result.baseline_identity_verified,
         "records": record_index,
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="empirical L0 artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="empirical L0 artifact")
     return {
         "root": root,
         "manifest": manifest_path,
@@ -632,7 +633,7 @@ class EmpiricalL0ScheduleRunner:
         }
         comparisons = tuple(
             replace(
-                _compare_runs(
+                compare_runs(
                     record_map[(left, seed)], record_map[(right, seed)]
                 ),
                 condition_id=f"{right}_vs_{left}",
@@ -641,7 +642,7 @@ class EmpiricalL0ScheduleRunner:
             for seed in self.config.seeds
         )
         summaries = tuple(
-            _summarize_condition(
+            summarize_condition(
                 f"{right}_vs_{left}",
                 tuple(
                     comparison
@@ -703,8 +704,8 @@ def save_empirical_l0_schedule_artifacts(
         "baseline_identity_verified": result.baseline_identity_verified,
         "records": record_index,
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="empirical L0 artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="empirical L0 artifact")
     return {
         "root": root,
         "manifest": manifest_path,
@@ -713,17 +714,3 @@ def save_empirical_l0_schedule_artifacts(
     }
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing empirical L0 artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different empirical L0 artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )

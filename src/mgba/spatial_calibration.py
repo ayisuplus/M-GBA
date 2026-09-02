@@ -18,7 +18,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 from .calibration import CalibrationProtocol, CalibrationResult, run_search
 from .carm_spatial_experiments import build_carm_spatial_runners
-from .experiment import digest_payload
+from .hashing import digest_payload
 from .scenarios.carm.scenario import CompiledCarmScenario
 from .scenarios.carm.spatial import CarmSpatialConfig
 from .spatial_anchor_evaluation import (
@@ -28,6 +28,7 @@ from .spatial_anchor_evaluation import (
 from .spatial_anchors import SpatialAnchorProtocol
 
 SPATIAL_CALIBRATION_SCHEMA = "mgba-spatial-calibration-0.1"
+CONSUMED_CONFIRMATION_TARGET_IDS = frozenset({"spatial-anchor-29c87ba1411d4fc8"})
 
 # Frozen by ADR-0043 §2 before any search evaluation.
 PARAMETER_BOUNDS: tuple[tuple[str, float, float], ...] = (

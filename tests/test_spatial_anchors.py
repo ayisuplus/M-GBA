@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from mgba.cli import main as cli_main
 from mgba.carm_spatial_experiments import build_carm_spatial_runners
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.runner import load_runner_config
 from mgba.scenarios.carm import (
     compile_carm_scenario,

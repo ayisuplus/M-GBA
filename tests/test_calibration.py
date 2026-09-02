@@ -40,6 +40,7 @@ def _protocol(**overrides) -> CalibrationProtocol:
         model_version="test-calibration",
         search_seed=1234,
         candidate_count=16,
+        max_evaluations=100,
         top_k=2,
         refinement_steps=(0.1, 0.05),
         max_sweeps=2,
@@ -59,6 +60,9 @@ class CalibrationProtocolValidationTests(unittest.TestCase):
             {"search_seed": 1.5},
             {"candidate_count": 0},
             {"candidate_count": True},
+            {"max_evaluations": 0},
+            {"max_evaluations": True},
+            {"max_evaluations": 15},
             {"top_k": 0},
             {"top_k": 99},
             {"refinement_steps": ()},
@@ -129,6 +133,22 @@ class SearchCoreTests(unittest.TestCase):
         result = run_search(protocol, self._objective, incumbents=((0.5,) * 4,))
         points = [item.point for item in result.evaluations]
         self.assertEqual(len(points), len(set(points)))
+
+    def test_search_stops_at_explicit_evaluation_budget(self) -> None:
+        protocol = _protocol(
+            candidate_count=8,
+            max_evaluations=12,
+            top_k=2,
+            max_sweeps=5,
+        )
+        result = run_search(protocol, self._objective, incumbents=((0.5,) * 4,))
+        self.assertEqual(12, len(result.evaluations))
+        self.assertEqual(12, result.summary_dict()["protocol"]["max_evaluations"])
+
+    def test_budget_must_cover_incumbents_and_random_sweep(self) -> None:
+        protocol = _protocol(candidate_count=8, max_evaluations=8)
+        with self.assertRaisesRegex(ValueError, "incumbents and random candidates"):
+            run_search(protocol, self._objective, incumbents=((0.5,) * 4,))
 
     def test_refinement_nearest_neighbor_of_best_random(self) -> None:
         protocol = _protocol(candidate_count=8, top_k=1, max_sweeps=2)

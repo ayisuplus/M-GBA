@@ -18,7 +18,8 @@ L0 基因/转录调控
 
 ## 当前状态
 
-- 空间 L3 calibration 回应"未锚定"（ADR-0043，2026-08-29）：按 ADR-0025 §4.3 冻结框架，只在 calibration 子集搜索 4 个 L3 参数（105 次评估留痕，incumbent 不劣保证），一次确认 holdout 均 NAE 12.15→8.71（−28.3%）→ **improved**；calibration −28.6%，external 1.33→1.54 如实报告不进门控；field_retention 顶到盒上界已记录（扩盒需另行预注册）；标定配置只存 artifact，冻结配置未动，采纳为新 reference 需另行 ADR。
+- 实验源码身份整改完成（ADR-0045，2026-09-01）：新 `mgba-manifest-0.2` 为实际安装的 `mgba/**/*.py` 生成 SHA-256 `source_digest`，并把它纳入新实验 ID/history；历史 0.1 manifest 保持原 ID、可读且不补造指纹。模型数值 trace 与 WP8 matrix 不变。
+- 空间 L3 calibration 后审计（ADR-0044，2026-09-01）：ADR-0043 冻结上限为 89 次，实际执行 105 次，因此历史 `improved` 输出降级为**探索性参数诊断**，不再支持确认改善或 holdout 泛化主张；旧 target 已消费并由 CLI 禁止复用，搜索核心现强制 89 次硬预算。原 artifact 与冻结 reference 配置均不改写，恢复确认性证据需要新的未查看 target。
 - Stage 1 完成双源格式交叉校验（ADR-0042，2026-08-29）：GEO 原生管线（MatrixMarket 流式 + guide 归并）与 scPerturb 调和版在 234 个共享单元上 Spearman **0.99993**、方向一致率 **0.9986**（冻结阈值 0.8/0.8），verdict **consistent**；Stage 1 格式处理获独立复现性证据，scPerturb 版仍是唯一入链主源。
 - OE 链路多单元/组合/调度扩展完成（ADR-0041，2026-08-29）：配置驱动调度配对 runner 跑通冻结五条件 × 3 seed 矩阵 `empirical-l0-schedule-f562ddbcb6d71d44`——多单元并行把两种语义的 L4 差异放大到 3.24e-04（单单元 2.01e-04），经验臂以约 1/55 的 L0 强度达到同量级 L4 效应；晚 onset 时序效应可见；组合单元携带真实组合测量（最弱）；调度不变量逐位保持（onset 前与 baseline 一致）；全部条件 failed 负基线不变。
 - Geneformer 嵌入重训两臂完成（ADR-0040，2026-08-29）：C1 输入 token 嵌入纯查表（1,877 基因，768 维）修复了 KD 的 one-hot 结构退化（ridge 恢复有效基线、两臂均明确优于质心），但 MLP 不优于 ridge（KD −3e-05 / OE −2e-05），两臂按冻结规则均 failed——任务在基因语义空间近似线性；KD 链路继续关闭，负面评估原样登记。结论性对照：OE 可学性来自组合共享成分，KD 单敲低需要新数据维度而非更强特征。
@@ -57,7 +58,7 @@ L0 基因/转录调控
 - 模型—Target 同指标评估已实现（ADR-0027）：`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影为同一 24 个指标，分别报告 calibration 15、holdout 15、external validation 9 共 39 个描述性距离，并保存完整 raw trace；首个真实 target 已评分（2026-08-28，未锚定）；仍无生物验证结论。
 - 空间源格式适配器已实现（ADR-0028）：`mgba spatial-source-adapt-field` 流式读取已登记的 10x MatrixMarket，按下载前冻结的三个透明八基因代理生成单位区间场观察；`mgba spatial-source-adapt-neighborhood` 精确连接 Jackson 位置/cluster 表，所有 cluster 必须显式映射到 `immune|tumor|other`。适配器逐文件复核路径、Rights、bytes 和 SHA-256，真实文件已于 2026-08-28 贯通该边界（三处源格式偏差以机械派生处理，冻结配置与适配器未改）；这仍不是外部验证结论。
 - AIDO 启发的状态条件序列干预已实现并完成首次实验（ADR-0029）：借鉴“初始状态 + perturbation/environment → 后续状态”的任务形状，不引入 AIDO 权重或中央跨层潜状态。`mgba carm-intervention-experiment` 对同一批 15 个 engineered macrophage 施加等剂量/等暴露次数的 early/late L0 signal pulse；晚期条件在 onset 前与 baseline 逐层零差异。60-tick 首次矩阵中 short/long timing contrast 的终末 L4 距离分别为 0.006580/0.020899；晚期干预减轻 vitality/damage 代价但增加 inflammation，所有条件仍为 `RECOVERED`。这是 reference-rule trade-off，不是疗效或真实 virtual cell 证据。
-- 比赛版“跨尺度虚拟实验室”已实现（ADR-0030）：`mgba lab-export` 把三套冻结实验转换为可字节重建的 catalog、按实验延迟加载 bundle 和 SHA-256 manifest；`web/` 提供首页、双轨实验工作台、30 天分享结果页、证据页和离线 Demo。普通首页不加载或渲染黑洞；同源 `event-horizon-visual` Web Component 仅保留为站长显式嵌入或诱捕主题页使用的可选只读展示层，不读取实验数据、不发起网络请求，也不进入 L0–L4 生成链。GitHub Actions 对站点相关 PR/`main` 推送执行锁文件安装、测试、lint、生产构建和 Sites bundle 门禁，并为成功的 `main` 构建保存按 commit 标识的可部署产物；生产发布继续复用现有 Sites 项目，不在 GitHub 保存长期生产凭据。第一版在线入口只接受 CAR-M 状态条件实验的严格枚举，请求与模型版本共同生成确定性 run ID；Cloudflare Worker 负责凭证隔离、R2 保存和显式离线回退，`services/lab-api/` 提供可容器化 Python 执行边界。网站与 API 均在生成链外，不修改 L0–L4 DTO/Protocol 或冻结结果；真实空间 Target 仍明确显示为“尚未生成”。
+- 比赛版“跨尺度虚拟实验室”已实现（ADR-0030）：`mgba lab-export` 把三套冻结实验转换为可字节重建的 catalog、按实验延迟加载 bundle 和 SHA-256 manifest；`web/` 提供首页、双轨实验工作台、30 天分享结果页、证据页和离线 Demo。普通首页不加载或渲染黑洞；同源 `event-horizon-visual` Web Component 仅保留为站长显式嵌入或诱捕主题页使用的可选只读展示层，不读取实验数据、不发起网络请求，也不进入 L0–L4 生成链。GitHub Actions 对站点相关 PR/`main` 推送执行锁文件安装、测试、lint、生产构建和 Sites bundle 门禁，并为成功的 `main` 构建保存按 commit 标识的可部署产物；生产发布继续复用现有 Sites 项目，不在 GitHub 保存长期生产凭据。第一版在线入口只接受 CAR-M 状态条件实验的严格枚举，请求与模型版本共同生成确定性 run ID；Cloudflare Worker 负责凭证隔离、R2 保存和显式离线回退，`services/lab-api/` 提供可容器化 Python 执行边界。网站与 API 均在生成链外，不修改 L0–L4 DTO/Protocol；早期冻结网站 bundle 可能仍显示“空间 Target 尚未生成”，当前数据状态以 registry 与实验记录为准。
 - 群体动力学观察层已实现（ADR-0031）：`CollectiveDynamicsObserver` 和 `mgba collective-analyze` 只从正式 raw trace 重算 activation-stress reference proxy 的 direction、intensity、polarization、edge alignment、冻结状态转换、外部 cohort、Cell archetype 及 L4 时间关联。三套比赛 bundle 与工作台已加入同步双轨相图；旧 bundle 仍可读取。该能力不进入 tick、不改变 E3 阶梯，也不宣称物理相变、涌现或临床预测。
 - OCellus 启发的 Autolab 计划控制面已实现（ADR-0032）：`AutolabPlan` 把冻结注册表编译为 closed-schema DAG，三层 Verifier 分别拒绝 schema/DAG、架构/预算和 manifest/history/科学表述违约；`mgba autolab-plan` 固定 `executed: false`，现有 `mgba autolab` 只有通过前后两道核验才执行和报告。默认计划继续复现原四次评估、`l2-static` leader 和全部 history digest。
 - EvenClock 启发的 `ClockSectorObserver` 已实现（ADR-0033）：它从正式 `SpatialTissueState` 与同 tick 可见 L0 状态生成六方向×三归一化距离环的 `mgba-clock-sector-observation-0.1` write-once artifact，不修改坐标、场、边、Cell、checkpoint 或 trace。Wu/Jackson 真实 Target 到位前不比较或宣称该表示优于半径/网格基线。
@@ -77,7 +78,7 @@ L0 基因/转录调控
 - 分层异构神经网络已作为冻结权重契约演示器接入（ADR-0017）：纯标准库神经基元 + 可选 L0 MLP GRN 与 L3 消息传递 GNN 变体，权重由显式种子确定性派生（非训练模型）；`mgba neural-experiment --layer l0|l3` 运行单层替换配对对照，`scripts/synthetic_neural_benchmark.py` 运行仿真基准。
 - L2 规则参数标定已作为预注册实验接入（ADR-0018）：`mgba.calibration` 纯搜索核心（sha256 种子扫描 + 坐标细化，参考向量恒为首个评估点）+ `scripts/calibrate_l2_cell.py`；首次运行训练 +0.385、四档 holdout 全部提升（calm/injury 结局 `failed → stable`，severe/collapse 仍 `failed`），判定 `generalized`；冻结参考配置不被修改，标定结果不进入任何冻结协议。
 - L2 已增加可选连续潜状态"虚拟细胞"策略（ADR-0019）：AIVC 架构类的层内实例化——冻结种子派生权重（非训练）的嵌入 + 泄漏 tanh 递推 + 非死亡四相读出，潜状态每 tick 从正式 `CellState` 确定性重建（无隐藏记忆）；规则状态机原样保留为默认与永久基线，替换仅隔离"状态表示→相位映射"一个变量。`mgba latent-experiment` 配对对照与 `scripts/synthetic_latent_benchmark.py` 仿真基准可执行；默认场景跨层效应 ≤1e-12、结局一致（`FAILED`），保留为零结果基线。
-- AIVC 真实数据/模型对接的分级下载清单在 **`data/aivc/`**（纯调查，全部待授权未下载；含六抽象节点 ↔ Hallmark 基因集语义桥与 Stage 1–3 资源表）。
+- AIVC 真实数据/模型对接清单在 **`data/aivc/`**：A1/A2/A3/B1/B2/C1 已下载核验，Norman/Replogle 聚合与训练评估已登记；C2/C3 仍待资源公开、预算与授权。
 - 自动实验调度器元层已接入（ADR-0020）：`mgba autolab` 在预注册假设注册表上运行冻结"筛选→确认"确定性闭环（元层，不进 tick 循环），首次会话 4 次评估内自主复现 WP8 结论（L2 最大杠杆点，30→100 tick 稳健）；`mgba autolab-propose` 提供 fail-closed 提案验证通道（永不自动执行），为未来 LLM 假设提出器预留唯一入口。
 - 多数据集存放与多细胞类型约定已固化（ADR-0021）：入库数据集统一登记 **`data/registry.json`**，`mgba data-check` 为 fail-closed 校验门禁；细胞类型只由 L0 `Genome` 模板表达，跨类型交互只经 L3 边与环境场——`configs/multiscale_coculture_demo.json` 用纯配置两种群共培养场景证明了这一点（零契约变更）。
 
@@ -135,6 +136,9 @@ L0 基因/转录调控
 - [ADR-0041：OE 链路多单元与调度扩展契约](docs/决策记录/ADR-0041-OE链路多单元与调度扩展契约.md)
 - [ADR-0042：GEO 原生交叉校验契约](docs/决策记录/ADR-0042-GEO原生交叉校验契约.md)
 - [ADR-0043：CAR-M 空间 L3 标定契约](docs/决策记录/ADR-0043-CAR-M空间L3标定契约.md)
+- [ADR-0044：CAR-M 空间标定协议偏差与复核门禁](docs/决策记录/ADR-0044-CAR-M空间标定协议偏差与复核门禁.md)
+- [ADR-0045：实验源码指纹与 Manifest 迁移](docs/决策记录/ADR-0045-实验源码指纹与Manifest迁移.md)
+- [实验源码指纹复核](docs/复现/实验源码指纹复核.md)
 - [CAR-M 空间 L3 calibration 记录](docs/实验记录/CAR-M-spatial-calibration-2026-08-29.md)
 - [Stage 1 GEO 交叉校验记录](docs/实验记录/Stage1-GEO-native-crosscheck-2026-08-29.md)
 - [OE 多单元/调度扩展实验记录](docs/实验记录/OE-multi-unit-schedule-2026-08-29.md)
@@ -236,8 +240,8 @@ python -m venv .venv
 M-GBA/
 ├── data/carm/                # 去标识化 TCGA 代理聚合 profile
 ├── data/synthetic-feedback/  # 合成压力档场景集（manifest 内逐场景 sha256）
-├── data/aivc/                # 外部资源清单先行区（全部待授权，未下载）
-├── data/spatial-carm/        # CAR-M L3 空间数据锚定清单（已授权；网络阻塞未下载）
+├── data/aivc/                # A1/A2/A3/B1/B2/C1 已核验；C2/C3 待授权/公开
+├── data/spatial-carm/        # S1/S2 五文件、去标识 target 与评估记录已落盘
 ├── data/registry.json        # 入库数据集登记表；mgba data-check 门禁（ADR-0021）
 ├── configs/
 │   ├── layers/              # 版本化层模型配置
@@ -268,7 +272,9 @@ M-GBA/
 │   │   ├── l2.py            # 五态 Cell 模型、静态基线与 Cell 轨迹
 │   │   ├── l3.py            # 固定图微环境模型、静态基线与组织轨迹
 │   │   └── l4.py            # 宏观表型观察器、窗口结局与静态基线
-│   ├── experiment.py        # manifest、实验 ID、事件与 artifact 协议
+│   ├── hashing.py           # canonical JSON 与 sha256 digest 基元（层/编排共享，无依赖）
+│   ├── validation.py        # 数据边界共享校验（文本/digest/有限数/文件哈希，fail-closed）
+│   ├── experiment.py        # manifest、实验 ID、事件与 artifact 协议（含 write_json_once）
 │   ├── experiments.py       # 配对扰动/消融、逐层效应与矩阵 artifact
 │   ├── reporting.py         # raw-only CSV/SVG/HTML 报告重建
 │   ├── run_report.py        # 单 run 逐 tick L0–L4 轨迹可视化记录

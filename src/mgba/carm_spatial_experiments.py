@@ -9,14 +9,15 @@ from pathlib import Path
 from statistics import fmean, pstdev
 from typing import Any, Mapping
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .experiments import (
     CausalComparison,
     CausalRunRecord,
     ConditionKind,
     ConditionSummary,
-    _compare_runs,
-    _summarize_condition,
+    compare_runs,
+    summarize_condition,
 )
 from .layers import SpatialTissueState
 from .layers.l0 import DiscreteGrnModel, load_grn_config
@@ -278,14 +279,14 @@ class CarmSpatialExperimentRunner:
             (record.condition_id, record.seed): record for record in records
         }
         comparisons = tuple(
-            _compare_runs(
+            compare_runs(
                 record_map[("fixed_graph", seed)],
                 record_map[("spatial_field", seed)],
             )
             for seed in self.config.seeds
         )
-        spatial_metrics = tuple(
-            _spatial_metrics(record_map[("spatial_field", seed)])
+        spatial_run_metrics = tuple(
+            spatial_metrics(record_map[("spatial_field", seed)])
             for seed in self.config.seeds
         )
         runner_versions = tuple(
@@ -305,13 +306,13 @@ class CarmSpatialExperimentRunner:
             records=tuple(records),
             comparisons=comparisons,
             summaries=(
-                _summarize_condition("spatial_field", comparisons),
+                summarize_condition("spatial_field", comparisons),
             ),
-            spatial_metrics=spatial_metrics,
+            spatial_metrics=spatial_run_metrics,
         )
 
 
-def _spatial_metrics(record: CausalRunRecord) -> SpatialRunMetrics:
+def spatial_metrics(record: CausalRunRecord) -> SpatialRunMetrics:
     states = tuple(tick.l3 for tick in record.run.ticks)
     if any(not isinstance(state, SpatialTissueState) for state in states):
         raise TypeError("spatial metrics require SpatialTissueState traces")
@@ -362,17 +363,6 @@ def _spatial_metrics(record: CausalRunRecord) -> SpatialRunMetrics:
     )
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        existing = json.loads(path.read_text(encoding="utf-8"))
-        if existing != payload:
-            raise ValueError("refusing to overwrite different spatial artifacts")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_carm_spatial_artifacts(
@@ -394,7 +384,7 @@ def save_carm_spatial_artifacts(
         )
     manifest = root / "manifest.json"
     summary = root / "derived" / "summary.json"
-    _write_json_once(
+    write_json_once(
         manifest,
         {
             "schema_version": "mgba-carm-spatial-artifact-0.1",
@@ -407,7 +397,8 @@ def save_carm_spatial_artifacts(
             "records": records,
             "spatial_metrics": [item.as_dict() for item in result.spatial_metrics],
         },
+        artifact="spatial artifact",
     )
-    _write_json_once(summary, result.summary_dict())
+    write_json_once(summary, result.summary_dict(), artifact="spatial artifact")
     return {"root": root, "manifest": manifest, "summary": summary}
 

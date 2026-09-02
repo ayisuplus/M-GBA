@@ -12,18 +12,18 @@ import json
 import math
 import re
 from dataclasses import dataclass, replace
-from hashlib import sha256
 from pathlib import Path
 from statistics import fmean
-from typing import Any, Mapping
+from typing import Any
 
-from .experiment import canonical_json, digest_payload
+from .experiment import write_json_once
+from .hashing import canonical_json, digest_payload
 from .experiments import (
     CausalComparison,
     CausalRunRecord,
     ConditionKind,
-    _compare_runs,
-    _tick_layer_distance,
+    compare_runs,
+    tick_layer_distance,
 )
 from .layers import LayerId
 from .layers.l0 import ABSTRACT_GENE_NAMES, DiscreteGrnModel, load_grn_config
@@ -32,6 +32,7 @@ from .layers.l4 import PhenotypeObserverModel, load_phenotype_config
 from .runner import MultirateCrossScaleRunner, MultirateRun, RunnerConfig, save_run_artifact
 from .scenarios.carm.models import CarmCellModel, CarmTissueModel
 from .scenarios.carm.scenario import CellRole, CompiledCarmScenario
+from .validation import file_sha256
 
 
 INTERVENTION_SCHEMA_VERSION = "mgba-state-conditioned-intervention-0.1"
@@ -370,7 +371,7 @@ class StateConditionedInterventionRunner:
 
         record_map = {(item.condition_id, item.seed): item for item in records}
         comparisons = tuple(
-            _compare_runs(record_map[("baseline", seed)], record_map[(condition.condition_id, seed)])
+            compare_runs(record_map[("baseline", seed)], record_map[(condition.condition_id, seed)])
             for condition in self.config.conditions
             for seed in self.config.seeds
         )
@@ -385,7 +386,7 @@ class StateConditionedInterventionRunner:
                     if left_tick.logical_time >= onset:
                         break
                     for layer in LayerId:
-                        value = _tick_layer_distance(layer, left_tick, right_tick)
+                        value = tick_layer_distance(layer, left_tick, right_tick)
                         if value is not None:
                             pre_distances.append(value)
                 post_l4 = [
@@ -458,18 +459,8 @@ class StateConditionedInterventionRunner:
         )
 
 
-def _write_once(path: Path, payload: Mapping[str, Any]) -> None:
-    encoded = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"
-    if path.exists():
-        if path.read_text(encoding="utf-8") != encoded:
-            raise ValueError(f"refusing to overwrite different intervention artifact: {path.name}")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(encoded, encoding="utf-8")
 
 
-def _file_sha256(path: Path) -> str:
-    return sha256(path.read_bytes()).hexdigest()
 
 
 def save_state_conditioned_intervention_artifacts(
@@ -485,9 +476,9 @@ def save_state_conditioned_intervention_artifacts(
         path = raw_root / f"{record.condition_id}-seed-{record.seed}.json"
         save_run_artifact(path, record.run)
         raw_paths.append(path)
-    _write_once(summary, result.summary_dict())
+    write_json_once(summary, result.summary_dict(), artifact="intervention artifact")
     files = [*raw_paths, summary]
-    _write_once(
+    write_json_once(
         manifest,
         {
             "schema_version": "mgba-state-conditioned-intervention-manifest-0.1",
@@ -495,11 +486,12 @@ def save_state_conditioned_intervention_artifacts(
             "files": [
                 {
                     "path": path.relative_to(root).as_posix(),
-                    "sha256": _file_sha256(path),
+                    "sha256": file_sha256(path),
                     "bytes": path.stat().st_size,
                 }
                 for path in files
             ],
         },
+        artifact="intervention artifact",
     )
     return {"root": root, "manifest": manifest, "summary": summary}

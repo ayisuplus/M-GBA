@@ -30,7 +30,7 @@ from mgba.autolab_planning import (
     verify_autolab_plan,
     verify_autolab_result,
 )
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.cli import main as cli_main
 
 

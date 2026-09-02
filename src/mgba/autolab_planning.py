@@ -23,7 +23,8 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from .autolab import AutolabConfig, AutolabSessionResult, HypothesisEvaluation
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 
 
 PLAN_SCHEMA_VERSION = "mgba-autolab-plan-0.1"
@@ -1389,20 +1390,6 @@ def load_autolab_plan(path: str | Path) -> AutolabPlan:
         raise ValueError(f"invalid Autolab plan: {error}") from error
 
 
-def _write_json_once(path: Path, payload: Mapping[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing Autolab planning artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different Autolab planning artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def save_autolab_plan(path: str | Path, plan: AutolabPlan) -> Path:
@@ -1410,7 +1397,7 @@ def save_autolab_plan(path: str | Path, plan: AutolabPlan) -> Path:
     if not isinstance(plan, AutolabPlan):
         raise TypeError("save_autolab_plan requires an AutolabPlan")
     target = Path(path)
-    _write_json_once(target, plan.as_dict())
+    write_json_once(target, plan.as_dict(), artifact="Autolab planning artifact")
     return target
 
 
@@ -1421,7 +1408,7 @@ def save_verification_report(
     if not isinstance(report, VerificationReport):
         raise TypeError("save_verification_report requires a VerificationReport")
     target = Path(path)
-    _write_json_once(target, report.summary_dict())
+    write_json_once(target, report.summary_dict(), artifact="Autolab planning artifact")
     return target
 
 

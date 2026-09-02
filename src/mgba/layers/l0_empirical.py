@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..empirical_response import EmpiricalResponseTable
-from ..experiment import digest_payload
+from ..hashing import digest_payload
 from ..models import Genome
 from .contracts import (
     GenomeStepResult,

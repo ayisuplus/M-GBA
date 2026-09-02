@@ -77,7 +77,7 @@ class RealRegistryGateTests(unittest.TestCase):
     def test_repository_registry_loads_and_verifies(self) -> None:
         entries = load_data_registry(ROOT / "data" / "registry.json")
         # Deliberate count guard: bump only when a dataset entry is added/removed.
-        self.assertEqual(14, len(entries))  # 2026-08-29: +GEO-native profile & source crosscheck
+        self.assertEqual(18, len(entries))  # 2026-09-02: +ADR-0046 hallmark targets & evaluations
         verdicts = validate_data_registry(entries, data_root=ROOT)
         failures = [verdict for verdict in verdicts if not verdict.ok]
         self.assertEqual([], [f"{v.dataset_id}: {v.detail}" for v in failures])

@@ -6,7 +6,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from mgba.demo import DEMO_PLAYBOOK_SCHEMA, export_carm_demo
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.experiments import load_causal_config
 from mgba.runner import load_runner_config
 from mgba.scenarios.carm import (

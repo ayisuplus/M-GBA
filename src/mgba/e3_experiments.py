@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from .e3_statistics import (
     E3CriteriaConfig,
@@ -24,9 +24,10 @@ from .e3_statistics import (
     e3_summary_digest,
     evaluate_e3,
 )
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 from .multiscale import MultiscaleScenario
-from .runner import MultirateCrossScaleRunner, save_run_artifact
+from .runner import MultirateCrossScaleRunner
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,8 +195,8 @@ def save_e3_artifacts(
             for seed, experiment_id in result.experiment_ids
         },
     }
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="E3 artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="E3 artifact")
     return {
         "root": root,
         "manifest": manifest_path,
@@ -203,17 +204,3 @@ def save_e3_artifacts(
     }
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing E3 artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different E3 artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )

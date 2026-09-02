@@ -7,7 +7,7 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from mgba.experiment import digest_payload
+from mgba.hashing import digest_payload
 from mgba.layers.l0 import ABSTRACT_GENE_NAMES
 from mgba.ocellus_anchors import (
     HALLMARK_BRIDGE,

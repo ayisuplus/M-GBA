@@ -25,7 +25,7 @@ Design invariants
 3. **Runner-free core.**  The core never imports the runner; the caller
    injects ``evaluate(hypothesis, ticks, seeds)``.  Tests substitute a
    scripted evaluator; the CLI substitutes the real paired-run machinery
-   (WP8 ``_compare_runs``).
+   (WP8 ``compare_runs``).
 4. **Frozen effect scalar.**  Per seed, the effect is the mean absolute
    directed final L4 metric effect (the five WP8 metrics); the
    hypothesis effect is the mean over seeds.  Frozen here so no later
@@ -47,7 +47,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
-from .experiment import digest_payload
+from .experiment import write_json_once
+from .hashing import digest_payload
 
 _SUPPORTED_KINDS = ("layer_static_swap",)
 _SWAPPABLE_LAYERS = ("L1", "L2", "L3")
@@ -431,8 +432,8 @@ def save_autolab_artifacts(
     manifest_path = root / "manifest.json"
     summary_path = root / "derived" / "summary.json"
     manifest = build_autolab_manifest(result)
-    _write_json_once(manifest_path, manifest)
-    _write_json_once(summary_path, result.summary_dict())
+    write_json_once(manifest_path, manifest, artifact="autolab artifact")
+    write_json_once(summary_path, result.summary_dict(), artifact="autolab artifact")
     return {"root": root, "manifest": manifest_path, "summary": summary_path}
 
 
@@ -464,20 +465,6 @@ def build_autolab_manifest(result: AutolabSessionResult) -> dict[str, Any]:
     }
 
 
-def _write_json_once(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError("existing autolab artifact is invalid JSON") from error
-        if existing != payload:
-            raise ValueError("refusing to overwrite a different autolab artifact")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 @dataclass(frozen=True, slots=True)

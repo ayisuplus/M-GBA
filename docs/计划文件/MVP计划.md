@@ -176,10 +176,10 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 实现 CAR-M 因果空间 L3 单层增量（ADR-0023）：`SpatialTissueState` 显式保存归一化坐标、12×12 压力/资源/信号场和空间邻域，checkpoint 落盘/恢复精确；`mgba carm-spatial-experiment` 强制固定图与空间条件只在 L3 不同，并报告位移、边周转、场异质性和梯度。固定图 CAR-M 与冻结 21-run 矩阵不变。
 - [x] 执行首次 2 条件 ×3 seed ×20 tick 空间配对：空间条件在 L3/L4 产生可测差异且两条件均为 `RECOVERED`；三个 seed 数值完全相同，只视为确定性复现而非统计重复。下一轮须先做 L3 内部机制消融和外部空间统计锚定，不据此声称疗效或真实性提升。
 - [x] 完成 movement×field_coupling×spatial_topology 的 2×2×2 L3 内部因子审计（ADR-0024）：全关条件与固定图 L0–L4 零差异；仅移动有位移但 L3/L4 零差异；当前模型内 L4 描述性主效应为场耦合 0.048720、空间邻域 0.025588、移动 0.000898。下一步数据锚定优先局部场异质性和细胞邻域统计。
-- [x] 预注册 CAR-M 空间 L3 外部数据锚定（ADR-0025/0028）：Wu/Swarbrick Visium 三文件负责局部场统计，Jackson 乳腺癌 IMC 位置/聚类两文件负责细胞邻域；冻结指标、calibration/holdout 角色、241,284,013-byte 下载与 ≤2 GB 本地预算。Rights 已核验、用户已授权；当前网络出口无法访问 Zenodo，未下载。
+- [x] 预注册并完成 CAR-M 空间 L3 外部数据锚定（ADR-0025/0028）：Wu/Swarbrick Visium 三文件与 Jackson IMC 两文件共 241,284,013 bytes 已下载核验，已生成去标识 target 并完成首次同指标评估。
 - [x] 完成旧 `D:\car-m-virtual-cell` 空间资产复查：本地 TCGA/Tahoe/OmniPath 缓存均非空间真值；旧 ABM 坐标/十通道手工场只能作为格式与语义参考，缺失其声称的 `trajectories.json` source data，不能伪装成真实 L3 锚点。
-- [x] 实现 ADR-0026 去标识空间锚点聚合契约：两种 observation bundle、4/2 固定摘要划分、15 个场指标、9 个邻域指标、external-validation 隔离、write-once target 与 digest/隐私校验；真实文件到达前已用本地 fixture 验证 CLI 闭环。
-- [x] 实现 ADR-0027 模型—Target 同指标评估：正式 `SpatialTissueState` 投影 24 个同名指标，按 calibration 15 / holdout 15 / external validation 9 生成 39 个描述性对照；`carm-spatial-anchor-evaluate` 保存完整 raw trace、manifest 和 derived score。当前只用合成 fixture 验证管线，不产生生物结论。
+- [x] 实现 ADR-0026 去标识空间锚点聚合契约：两种 observation bundle、4/2 固定摘要划分、15 个场指标、9 个邻域指标、external-validation 隔离、write-once target 与 digest/隐私校验；真实文件已贯通 CLI 并生成登记 target。
+- [x] 实现并执行 ADR-0027 模型—Target 同指标评估：正式 `SpatialTissueState` 投影 24 个同名指标，按 calibration 15 / holdout 15 / external validation 9 生成 39 个描述性对照；首次真实 target 结果为未锚定，不产生生物验证结论。
 - [x] 实现 ADR-0028 源格式适配器：下载前冻结三个透明八基因场代理及确定性归一化；流式读取 Wu 10x MatrixMarket；Jackson 位置/cluster exact join 且未知标签 fail-closed；逐个归档/解压输入复核路径、Rights、bytes、SHA-256。七项合成原始格式测试已贯通 target checker。
 - [x] 实现并执行 ADR-0029 AIDO 启发的状态条件序列干预：runner 可选 schedule 只在 L0 慢时钟生效并进入 manifest/checkpoint；CAR-M 2×2 timing×exposure 设计强制 onset 前逐层零差异。首次 15-run 矩阵 short/long timing L4 距离为 0.006580/0.020899，晚期干预体现 vitality/damage 与 inflammation 的混合 trade-off；仍是 reference-model 证据。
 - [x] 实现 ADR-0030 比赛版跨尺度虚拟实验室：`mgba lab-export` 冻结 request/bundle/catalog schema，并从既有 artifact 确定性生成三套延迟加载实验与 SHA-256 manifest；`web/` 完成首页、工作台、分享页、证据页、移动端阅读、Open Graph 和离线 Demo。观察层不进入 tick、不修改 DTO/Protocol。
@@ -191,5 +191,5 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 实现 ADR-0033 `ClockSectorObserver`：从正式空间 L3 与同 tick 可见 L0 生成六方向×三归一化距离环的独立 write-once artifact；顺序、尺度和 checkpoint 重建稳定，观察前后 trace/checkpoint/history digest 不变。半径/网格/ClockSector 真实 holdout 比较仍等待 Wu/Jackson Target。
 - [x] 实现 ADR-0034 OCellus 离线扰动锚点契约：许可/模型/SHA-256、empirical/predicted 分栏、冻结 Hallmark 六节点桥、train-only centroid、holdout MAE/方向/Spearman、负面结果和精确人审 schedule 候选均 fail-closed；当前无权重下载、无真实 OCellus 结果、无生成热路径接入。
 - [x] 完成 OCellus 三阶段回归门禁：Python 总测试增至 356 项；`mgba autolab-plan` 零执行、真实 `mgba autolab` 原身份/顺序/leader、冻结 identity、L0 扰动传播、完整测试与 AGENTS.md 三条最低命令均通过。
-- [ ] 在网络可达后下载已授权的 S1/S2 五文件，冻结真实解压 inventory、region_map 和 cluster label_map，生成可字节重建的去标识 L3 聚合 target；先验证统计管线，再决定是否实施参数锚定。失败结果保留，不增加自由参数追逐数据。
+- [x] 已下载并核验 S1/S2 五文件，冻结真实解压 inventory、region_map 和 cluster label_map，生成可字节重建的去标识 L3 target，并完成首次评估。ADR-0043 标定因 105 次评估超过 89 次上限，按 ADR-0044 仅保留为探索性结果；新的确认需新 target。
 - [ ] 预注册一个 L0/L1 真实 Perturb-seq state-conditioned target（control state、perturbation、dose/time、train/holdout、centroid baseline）；先验证透明六节点桥，再单独决定是否授权 AIDO.Cell/STATE 权重和独立推理环境。
