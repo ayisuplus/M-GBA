@@ -18,6 +18,12 @@ L0 基因/转录调控
 
 ## 当前状态
 
+- OE 成分外推边界测定完成（ADR-0049，2026-09-11）：holdout 48 单元按组合成分是否在训练集出现重分层（component-seen 37 / component-unseen 11）；外推层 MLP 0.0127172 不优于质心 0.0122139（margin −0.0005033），判据 **failed**，OE 外推方向正式关闭；ADR-0037 的 passed 保留但证据等级降为"插值证据"；对照锚核验偏差 0.0；产物在 `artifacts/extrapolation-boundary/`。
+- 管线证伪对照三组完成（ADR-0048，2026-09-11）：对照 1 标签打乱判据成立（打乱后 MLP 对质心 margin 转负 −0.001331，ADR-0037 门禁非空洞）；对照 2 层置换判据成立附边界（0/90 混合剖面落入真实库，但传播 tick 碰撞率 0.6667，tick 指标不宜单独作证据）；对照 3 目标置换**判据不成立**，负面结果原样登记（置换 target 的 holdout NAE 10.2334 反而优于真实 12.1461——空间锚定评估器在 holdout field 指标上无区分度）。产物在 `artifacts/falsification/`。
+- 桥覆盖审计完成（2026-09-11）：负反馈节点仅 54 映射基因（TGF-β 单集合）、KD 宇宙仅 38 基因；Norman 68.95% / KD 65.92% 基因不落入任何节点；负反馈扩充首选候选 HALLMARK_MTORC1_SIGNALING（200 基因）；产物在 `artifacts/audit/bridge-coverage-2026-09-11/`。
+- 效应稳健性探索性复分析完成（2026-09-11）：对已有 raw artifact 做细胞级配对 bootstrap 补 95% CI；发现消融效应群体一致、repair/empirical 效应单细胞承载、CAR-M 干预均值与逐细胞方向分裂；属探索性诊断层级，不改写历史结论；产物在 `artifacts/exploratory/effect-robustness-2026-09-11/`。
+- D1-context-ood 登记缺口修复（2026-09-11）：registry 18 → 26 条目，`tests/test_data_registry.py` 计数断言同步 18→26，`mgba data-check` 全绿；当前 631 项测试分批实测全绿（全套单次运行超出 300 秒窗口，采用 2026-09-11 分批实测口径）。
+- 跨细胞背景通路扰动外推管线已完成首轮预注册开发评估（ADR-0047，2026-09-03）：四背景真实 bundle 均通过可靠性门，577 个共有扰动中有 559 个冻结 Geneformer embedding 可用；20 折低秩交互模型的 joint-OOD 标准化 macro-MAE 为 0.81214，差于最佳简单基线 gene-only ridge 的 0.75420（相对退化 7.68%，按基因分块且保持 unit 权重的 bootstrap 差值 95% CI 0.04880–0.06711），四背景 0/4 胜出。开发 evaluation `context-pathway-eval-f85593e931801a3d` 判为 `failed`，已触发方法路线 No-Go；不再运行 GEARS/scGPT/biolord，不下载或解封 Arc H1，`paper_verdict` 保持 `sealed`，后续回到 evidence-governed 软件论文路线。
 - 实验源码身份整改完成（ADR-0045，2026-09-01）：新 `mgba-manifest-0.2` 为实际安装的 `mgba/**/*.py` 生成 SHA-256 `source_digest`，并把它纳入新实验 ID/history；历史 0.1 manifest 保持原 ID、可读且不补造指纹。模型数值 trace 与 WP8 matrix 不变。
 - 空间 L3 calibration 后审计（ADR-0044，2026-09-01）：ADR-0043 冻结上限为 89 次，实际执行 105 次，因此历史 `improved` 输出降级为**探索性参数诊断**，不再支持确认改善或 holdout 泛化主张；旧 target 已消费并由 CLI 禁止复用，搜索核心现强制 89 次硬预算。原 artifact 与冻结 reference 配置均不改写，恢复确认性证据需要新的未查看 target。
 - Stage 1 完成双源格式交叉校验（ADR-0042，2026-08-29）：GEO 原生管线（MatrixMarket 流式 + guide 归并）与 scPerturb 调和版在 234 个共享单元上 Spearman **0.99993**、方向一致率 **0.9986**（冻结阈值 0.8/0.8），verdict **consistent**；Stage 1 格式处理获独立复现性证据，scPerturb 版仍是唯一入链主源。
@@ -138,6 +144,10 @@ L0 基因/转录调控
 - [ADR-0043：CAR-M 空间 L3 标定契约](docs/决策记录/ADR-0043-CAR-M空间L3标定契约.md)
 - [ADR-0044：CAR-M 空间标定协议偏差与复核门禁](docs/决策记录/ADR-0044-CAR-M空间标定协议偏差与复核门禁.md)
 - [ADR-0045：实验源码指纹与 Manifest 迁移](docs/决策记录/ADR-0045-实验源码指纹与Manifest迁移.md)
+- [ADR-0046：Hallmark 全集结构化目标重训契约](docs/决策记录/ADR-0046-Hallmark结构化目标重训契约.md)
+- [ADR-0047：跨细胞背景通路扰动外推契约](docs/决策记录/ADR-0047-跨细胞背景通路扰动外推契约.md)
+- [ADR-0048：管线证伪对照契约](docs/决策记录/ADR-0048-管线证伪对照契约.md)
+- [ADR-0049：OE 成分外推边界契约](docs/决策记录/ADR-0049-OE成分外推边界契约.md)
 - [实验源码指纹复核](docs/复现/实验源码指纹复核.md)
 - [CAR-M 空间 L3 calibration 记录](docs/实验记录/CAR-M-spatial-calibration-2026-08-29.md)
 - [Stage 1 GEO 交叉校验记录](docs/实验记录/Stage1-GEO-native-crosscheck-2026-08-29.md)
@@ -233,6 +243,8 @@ python -m venv .venv
 
 覆盖率门禁只计量 `src/mgba` 核心包，`source` 与 `fail_under=80` 由 pyproject `[tool.coverage]` 提供；coverage 经 `pip install -e .[dev]` 装入开发环境（wheel 运行时零依赖不变）。coverage 追踪开销使全套测试约需 15–20 分钟，因此它是独立门禁，不替代上面的快速测试命令。
 `mgba run` 保留单 tick 契约演示。`mgba simulate` 默认执行 100 个新增 tick，可用 checkpoint 暂停恢复。`mgba experiment` 运行冻结 WP8 矩阵；只有显式给出 `--artifact-root` 才保存完整 raw/derived JSON。`mgba report` 验证并从该 raw artifact 重建 WP9 只读报告，默认写入矩阵内的 `derived/report/`。`mgba run-report` 从单个保存的 run artifact（`simulate --trace-out` 或矩阵 raw run）重建逐 tick 的 L0–L4 轨迹记录：6 张 SVG 折线图、6 个 CSV、只读 HTML 摘要和 SHA-256 manifest，默认写入 run 文件旁的 `<名称>-report/`；默认输出落在 raw 目录内会拒绝，需显式 `--output-dir`。`mgba collective-analyze` 对一个正式 raw run 做只读群体动力学分析，可选完整的 Cell→cohort JSON 映射，并把 `mgba-collective-dynamics-0.1` report 以 write-once 方式保存；它不拟合预测模型或修改 run。`mgba autolab-plan` 只编译或验证 closed-schema 计划并固定输出 `executed: false`；现有 `mgba autolab` 在真正调用 evaluator 前后分别执行计划 preflight 和 manifest/history 核验。`mgba carm-import` 只输出 cohort 聚合，不复制患者级记录；`mgba carm-experiment` 运行 CAR-M 7 条件 × 3 seed 冻结矩阵，显式提供 artifact root 时同时保存数据溯源并重建报告。`mgba carm-intervention-experiment` 运行相同 L0 clamp 的 early/late 等暴露 schedule，审计 onset 前零差异、timing contrast 和完整 raw trace；它不导入 AIDO 权重。`mgba carm-spatial-experiment` 运行固定图与可检查点空间 L3 的 2 条件 × 3 seed 对照，单独保存 raw run、空间指标、manifest 和 derived summary；它不修改冻结 CAR-M 矩阵。`mgba carm-spatial-ablation` 运行固定图参考加八个 movement×field×topology 因子组合，以一个显式 seed 做确定性机制审计并保存九份 raw run；该命令不把重复确定性运行包装成统计证据。`mgba spatial-source-adapt-field/neighborhood` 从逐文件核验的 10x/CSV 源生成临时 observation bundle；`mgba spatial-anchor-build` 再从 bundle 构建去标识 L3 聚合 target，`spatial-anchor-check` 重算身份并检查 raw 标识泄漏；`mgba carm-spatial-anchor-evaluate` 把正式空间 L3 投影到同一指标空间并按 calibration/holdout/external validation 分开评分，这五条命令都不进入生成热路径或自动调参。`mgba demo-export` 保留自包含单文件研究观察台与完全离线兜底。`mgba lab-export` 只读取已经存在的 raw/frozen artifact，将三套比赛实验转换为统一 `LabRunBundle`、小型 catalog 和文件 SHA-256 manifest；它不执行参数搜索、不修改 raw artifact，也不把显示状态反馈进模型。网站本地运行使用 `cd web; npm install; npm run dev`，验证使用 `npm test; npm run lint; npm run build`；在线功能默认关闭，只有配置 `LAB_LIVE_RUNS_ENABLED=true`、`MGBA_RUNNER_BASE_URL` 与 Worker 私有 `MGBA_RUNNER_TOKEN` 后才代理到容器服务。`scripts/mvp_demo.py` 仍冻结为 0.1.0 full/fallback 演示。`mgba data-check` 按 `data/registry.json` 逐条校验入库数据集。五层命令可用分层配置替换参考模型；`mgba sten-smoke` 只验证独立的 L3 通信与拓扑不变量。
+
+跨背景通路研究链中，原始 h5ad 先由 `.venv-train/Scripts/python scripts/build_context_pathway_bundle.py` 生成四个 bundle；核心命令 `mgba ood-split-build --embeddings <冻结表>` 按四背景交集与 embedding 可用性冻结 20 折，`.venv-train/Scripts/python scripts/train_context_pathway.py` 逐折训练，最后由 `mgba context-pathway-evaluate` 重算评估。真实输入与模型权重不提交 Git。
 
 ## 当前目录
 

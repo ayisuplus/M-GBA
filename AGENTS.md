@@ -155,6 +155,8 @@ $env:PYTHONDONTWRITEBYTECODE='1'
 
 不得通过降低断言、删除基线或把失败结果硬编码为预期值来“修复”测试。
 
+随机性主张的统计规范见 `docs/设计文件/统计规范.md`：“确定性重放”与“统计重复”为永久分离的两类证据，禁止把重放矩阵包装成统计证据。
+
 ## 8. 文档与决策同步
 
 以下变更必须同步更新文档：
@@ -268,6 +270,10 @@ AI Agent 可以帮助实现、测试、调研、重构和生成实验脚本，�
 - 四轴工程审查与零行为清理已落地（2026-08-30，算法/架构/规范/覆盖率四轴）：新增无依赖模块 `mgba.hashing`（canonical_json/digest_payload，拆除 experiment⇄layers 潜伏循环依赖）与 `mgba.validation`（数据边界校验单实现，fail-closed 语义统一：大写 digest 与未 trim 文本全域拒绝）；19 份 `_write_json_once` 收敛为 `mgba.experiment.write_json_once`（字节比对 + tmp 原子落盘）；60+ 处跨模块私有名导入经改名消除（compare_runs 等提升为公共名）；cli.py 拆为 37 个 `_register_*` 与 37 个 `_cmd_*`（parser 块与 HEAD 逐字节一致）；runner 模型版本 digest 改为构造时快照、checkpoint/trace 去除双重序列化、collective_dynamics 逐 Cell 序列构造降为 O(C·T)、扰动 profile 摘要复用已算指标。错误路径一致性：classify_metric 空输入抛 ValueError、SemanticMessage/TopologyProposal 补 bool/int 守卫、carm_spatial_ablation 补 E0 tick 完整性检查、l3_gnn 改用 neural.sigmoid。全部 563 项测试、冻结身份门禁、CLI 门禁与 ≥80% 覆盖率硬门禁保持通过；冻结基线、artifact 字节与 digest 链零变更。
 - 测试覆盖率硬门禁已落地（仅测试加固，零模型/契约/协议变更）：pyproject 新增 `[tool.coverage]`（`source=["src/mgba"]`、`fail_under=80`、show_missing、`__main__` 守卫排除）与 `dev = ["coverage>=7.0"]` extra（wheel 运行时零依赖身份不变）；§7 与 README 记录独立覆盖率门禁命令（coverage 追踪使全套约 15–20 分钟，不替代快速门禁）。当前 488 项 Python 测试全绿，总量 91%（10969 语句）；cli.py 99%、lab_server.py 100%、feedback/e3/carm_spatial_experiments 100%、latent/policy/neural/topology_experiments 各 99%、scenarios/carm/data.py 99%（253 为构造不可达守卫，按预注册保留）、spatial_source_adapters.py 86%；剩余缺行均为公共 API 不可达的防御性 raise。逐模块 ≥80% 为一次性核验结果，长期硬门禁只锁总量 80（coverage.py 无 per-module fail_under）。所有冻结基线（单 tick、100 tick `FAILED`、WP8/CAR-M、E3–E5、checkpoint）身份与断言均未改动。
 - ADR-0046 已执行 Hallmark 结构化目标重训（计算前预注册）：`mgba/hallmark_targets.py`（纯 stdlib）构建 `mgba-hallmark-target-0.1` 双臂靶标（50 Hallmark 集合维 + 冻结六节点并集头共 56 维，角色逐字继承 profile，构建期六节点头 1e-12 门禁逐单元通过）；`scripts/train_l0_hallmark_response.py`（仅 .venv-train）按 ADR-0037 冻结超参重训（Geneformer 768-d、seed 42、3000 epoch、CPU 单线程），双跑字节级确定性核验通过；`mgba/hallmark_training_evaluation.py` 与 `mgba hallmark-training-evaluate` 重算全部指标并在六节点头上施加冻结通过规则。**KD 主臂 failed**（holdout 头 MAE：MLP 0.014219 vs centroid 0.014819 vs ridge 0.014181，margin vs ridge −3.7e-05），OE 臂登记 `descriptive`；ridge 头 MAE 与 ADR-0040 逐位一致、质心头与预注册推导值 0.014819327207889445 完全一致（逐维独立基线零漂移）。KD 单敲低可学性在两条药方（更强特征 ADR-0040、更结构化目标本 ADR）均证伪后按记录关闭；未接链、未生成响应表。4 个 artifact 登记（registry 18 条目，`data-check` 绿）。ADR-0045 源码指纹按门禁既定通道更新（单/100 tick ID `mgba-4437aaca98878890`/`mgba-46de31d8b18fd252`，trace digest 与 WP8 matrix 身份不变）。当前 605 项测试全绿（基线 568 + 新增 37）。
+- ADR-0048 已完成三组管线证伪对照（2026-09-11）：对照 1 标签打乱判据成立（打乱后 MLP 对质心 margin 转负 −0.001331，ADR-0037 门禁非空洞）；对照 2 层置换判据成立附边界（0/90 混合剖面落入真实库，传播 tick 碰撞率 0.6667，tick 指标不宜单独作证据）；对照 3 目标置换判据不成立，负面结果原样登记（置换 target 的 holdout NAE 10.2334 反而优于真实 12.1461，空间锚定评估器在 holdout field 指标上无区分度）。产物在 `artifacts/falsification/`。
+- ADR-0049 已完成 OE 成分外推边界测定（2026-09-11）：holdout 48 单元 = component-seen 37 + component-unseen 11；外推层 MLP 0.0127172 vs 质心 0.0122139（margin −0.0005033），判据 failed，OE 外推方向正式关闭；ADR-0037 的 passed 保留但证据等级降为"插值证据"；对照锚核验偏差 0.0。产物在 `artifacts/extrapolation-boundary/`。
+- D1-context-ood 登记缺口已修复（2026-09-11）：`data/registry.json` 18 → 26 条目，`tests/test_data_registry.py` 计数断言同步 18→26，`mgba data-check` 全绿；当前 631 项测试分批实测全绿（全套单次运行超出 300 秒窗口，采用分批实测口径）。
+- 统计规范文档已就位（`docs/设计文件/统计规范.md`，2026-09-11）："确定性重放"与"统计重复"术语永久分离，随机主张最低 n≥10 seed + 预注册检验 + CI 与效应量同报，新"通过/效应"主张须配阴性对照；只约束新主张，不回溯改写历史 artifact 与冻结结论。
 ## Agent skills
 
 ### Issue tracker

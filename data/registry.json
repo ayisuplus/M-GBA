@@ -270,6 +270,126 @@
         "proxy_notice": "Descriptive arm; does not amend the ADR-0037 passed identity."
       },
       "notes": "evaluation_id hallmark-training-eval-30997ad89ff86614；verdict descriptive；holdout 六节点头 MLP 0.011287 vs centroid 0.012572（+1.3e-03）vs ridge 0.010691（−6.0e-04）；描述性参考，不产生 pass 主张。"
+    },
+    {
+      "dataset_id": "aivc-d1-context-bundle-replogle-k562",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/bundles/replogle-k562.context-bundle.json",
+      "sha256": "bab3c8f553ce348a0b3f914c12776a36a333d018aa18dea5a134ee05214bc964",
+      "provenance": {
+        "source": "scPerturb ReplogleWeissman2022_K562_essential.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0047 `scripts/build_context_pathway_bundle.py` 管线（.venv-train 实证段）生成",
+        "date": "2026-09-03",
+        "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "deidentified": true,
+        "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi K562 cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
+      },
+      "notes": "schema mgba-perturbation-context-bundle-0.1；split-half 可靠性 0.4943（种子 20260903，随 bundle 保存）；来源 h5ad SHA-256 与字节数内嵌 bundle；原始 h5ad 不入库；契约见 ADR-0047。"
+    },
+    {
+      "dataset_id": "aivc-d1-context-bundle-replogle-rpe1",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/bundles/replogle-rpe1.context-bundle.json",
+      "sha256": "c4dbc84c7ed7b72802602d3f045dd669672fcf65813af728d6f653be7988fc12",
+      "provenance": {
+        "source": "scPerturb ReplogleWeissman2022_rpe1.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
+        "date": "2026-09-03",
+        "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "deidentified": true,
+        "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi RPE1 cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
+      },
+      "notes": "schema mgba-perturbation-context-bundle-0.1；split-half 可靠性 0.7653（种子 20260903）；来源 h5ad SHA-256 与字节数内嵌 bundle；原始 h5ad 不入库。"
+    },
+    {
+      "dataset_id": "aivc-d1-context-bundle-nadig-hepg2",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/bundles/nadig-hepg2.context-bundle.json",
+      "sha256": "3e6b556562276c89944a6616865036d925399c67fa055a1e2b928212460c5293",
+      "provenance": {
+        "source": "GEO GSE264667 GSE264667_hepg2_raw_singlecell_01.h5ad + MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
+        "date": "2026-09-03",
+        "license": "NCBI GEO 公共数据（无数据集级复用许可；保留署名、不再分发）；Hallmark 遵守 MSigDB 条款",
+        "deidentified": true,
+        "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi HepG2 cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
+      },
+      "notes": "schema mgba-perturbation-context-bundle-0.1；split-half 可靠性 0.7235（种子 20260903）；来源 h5ad SHA-256 与字节数内嵌 bundle；原始 h5ad 不入库。"
+    },
+    {
+      "dataset_id": "aivc-d1-context-bundle-nadig-jurkat",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/bundles/nadig-jurkat.context-bundle.json",
+      "sha256": "fa7a1e63c0149d4f6e42df5ef52f92201436e7294b7cdc19f3728e8a00a2269e",
+      "provenance": {
+        "source": "GEO GSE264667 GSE264667_jurkat_raw_singlecell_01.h5ad + MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
+        "date": "2026-09-03",
+        "license": "NCBI GEO 公共数据（无数据集级复用许可；保留署名、不再分发）；Hallmark 遵守 MSigDB 条款",
+        "deidentified": true,
+        "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi Jurkat cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
+      },
+      "notes": "schema mgba-perturbation-context-bundle-0.1；split-half 可靠性 0.5341（种子 20260903）；来源 h5ad SHA-256 与字节数内嵌 bundle；原始 h5ad 不入库。"
+    },
+    {
+      "dataset_id": "aivc-d1-ood-split-manifest",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/ood-split-manifest.json",
+      "sha256": "67a125eaca3d2d58b3bc93f1ff0623c8e8718885bf12490fce9f7370badb1a93",
+      "provenance": {
+        "source": "ADR-0047 `mgba ood-split-build`（四个已核验 bundle + 冻结 mgba-gene-embedding-table-0.1；五个预注册 salt，70/15/15 拆分，外层 leave-one-cell-context-out）",
+        "date": "2026-09-03",
+        "license": "随源数据（scPerturb CC BY 4.0；GEO 公共数据；MSigDB 条款）",
+        "deidentified": true,
+        "proxy_notice": "Locked OOD split manifest over 559 shared genes; Arc H1 label summary registered with status sealed; offline development artifact only."
+      },
+      "notes": "split_id ood-split-7118cfcf9ffda6eb；schema mgba-ood-split-manifest-0.1；四背景原始交集 577 基因、可建模 559（18 个未映射旧符号固定排除，名单内嵌）；每折 391/83/85，共 20 折；四 bundle 与 embedding 表 SHA-256 内嵌核验；Arc H1 标签状态 sealed。"
+    },
+    {
+      "dataset_id": "aivc-d1-baseline-screen",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/baseline-screen.json",
+      "sha256": "e2960c81be4516dc3452a17a0633a7b0c947e33f5fffa82ba5e05435661e10ee",
+      "provenance": {
+        "source": "ADR-0047 首次 20 折简单基线筛查（zero/training-perturbed-mean/gene/context-mean/三类 ridge，alpha=1.0；同四 bundle 与冻结 split）",
+        "date": "2026-09-03",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Development-only simple-baseline screen; not a paper or external-test verdict; predictions do not enter the runtime chain."
+      },
+      "notes": "schema mgba-context-pathway-baseline-screen-0.1；覆盖 1,700 个 joint-OOD 单元，未使用 outer-context 扰动或 test-gene 训练标签；joint-OOD 最佳简单基线 gene_only_ridge 标准化 macro-MAE 0.75420；主模型 5% 门对应 ≤0.71649；来源 digest（bundle×4 + embedding + split manifest）内嵌。"
+    },
+    {
+      "dataset_id": "aivc-d1-interaction-evaluation",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/development/interaction-evaluation.json",
+      "sha256": "f41a52206240e9d8f451c4e0662a76081d3c0be0589130d01f8379e2d9d8ba80",
+      "provenance": {
+        "source": "ADR-0047 `mgba context-pathway-evaluate` 首次 20 折低秩交互模型开发评估（固定 seed 17/42/73/101/211 取均值；内层 leave-one-training-context-out 选超参）",
+        "date": "2026-09-03",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Offline pathway-level OOD development evaluation; development_verdict incomplete; paper_verdict sealed; not a biological validation."
+      },
+      "notes": "evaluation_id context-pathway-eval-0e503ab3dec0605d；**development_verdict incomplete**（三学习型基线未运行，coverage.protocol_complete=false）；joint-OOD 交互模型 macro-MAE 0.81214，相对最佳简单基线退化 7.68%；20 折 prediction_sha256 逐折内嵌，逐折权重 .npz SHA-256 随 prediction 文件登记，.npz 本体不入库；后续由 v2 评估替代机器结论。"
+    },
+    {
+      "dataset_id": "aivc-d1-interaction-evaluation-v2",
+      "kind": "external_profile",
+      "status": "materialized",
+      "path": "data/aivc/D1-context-ood/development/interaction-evaluation-v2.json",
+      "sha256": "a46e478d73a4c87a86a813fdd368860c8e2ffbf5b8c05aee6685756cfc21f232",
+      "provenance": {
+        "source": "ADR-0047 开发评估修复版（与 v1 同 split、同预测；补全简单基线比较统计）",
+        "date": "2026-09-03",
+        "license": "随源数据",
+        "deidentified": true,
+        "proxy_notice": "Offline pathway-level OOD development evaluation; development_verdict failed; paper_verdict sealed; not a biological validation."
+      },
+      "notes": "evaluation_id context-pathway-eval-f85593e931801a3d；**development_verdict failed**：joint-OOD macro-MAE 0.81214 退化 7.68%，基因分块 bootstrap 95% CI 0.04880–0.06711 不跨 0，四背景全部退化（HepG2/Jurkat/K562/RPE1 = 10.37%/7.08%/28.66%/7.00%）；按预注册规则触发 No-Go，学习型基线与 Arc H1 外部测试停止，paper_verdict 保持 sealed，负面结果原样保留。"
     }
   ]
 }

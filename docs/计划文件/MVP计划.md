@@ -192,4 +192,7 @@ STEN、LLM Agent 和通信性能是第四个问题之后的增强研究，不再
 - [x] 实现 ADR-0034 OCellus 离线扰动锚点契约：许可/模型/SHA-256、empirical/predicted 分栏、冻结 Hallmark 六节点桥、train-only centroid、holdout MAE/方向/Spearman、负面结果和精确人审 schedule 候选均 fail-closed；当前无权重下载、无真实 OCellus 结果、无生成热路径接入。
 - [x] 完成 OCellus 三阶段回归门禁：Python 总测试增至 356 项；`mgba autolab-plan` 零执行、真实 `mgba autolab` 原身份/顺序/leader、冻结 identity、L0 扰动传播、完整测试与 AGENTS.md 三条最低命令均通过。
 - [x] 已下载并核验 S1/S2 五文件，冻结真实解压 inventory、region_map 和 cluster label_map，生成可字节重建的去标识 L3 target，并完成首次评估。ADR-0043 标定因 105 次评估超过 89 次上限，按 ADR-0044 仅保留为探索性结果；新的确认需新 target。
-- [ ] 预注册一个 L0/L1 真实 Perturb-seq state-conditioned target（control state、perturbation、dose/time、train/holdout、centroid baseline）；先验证透明六节点桥，再单独决定是否授权 AIDO.Cell/STATE 权重和独立推理环境。
+- [x] 以 ADR-0047 冻结 L0/L1 真实 Perturb-seq state-conditioned 方法路线：四个 CRISPRi 背景、未处理对照状态、50 维 Hallmark target、5 salt × 4 outer context 的 gene/context/joint OOD、低秩交互与严格评估门均已实现；不修改 L0–L4。
+- [x] 补齐 Replogle RPE1、Nadig HepG2/Jurkat，生成四背景 bundle 并通过共享基因 ≥500、各背景 split-half Spearman ≥0.30 的数据门；最终可建模交集为 559 个基因。
+- [x] 以固定公共镜像摘要封存 Arc H1，锁定559基因×20折 split，并完成零泄漏简单基线筛查；joint-OOD 最佳为 gene-only ridge（标准化 macro-MAE 0.75420）。
+- [x] 完成 20 折低秩交互模型开发评估：joint-OOD 标准化 macro-MAE 0.81214，差于最佳简单基线 0.75420（相对退化 7.68%，四背景 0/4 胜出），已触发预注册 No-Go。按冻结规则停止 GEARS/scGPT/biolord 与 Arc H1，不换指标、不挑子集、不扩展网络，回到 evidence-governed 软件论文路线。

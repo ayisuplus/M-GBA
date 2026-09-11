@@ -20,5 +20,6 @@ data/aivc/A3-norman2019-geo/
 data/aivc/B1-tahoe100/
 data/aivc/B2-replogle2022/
 data/aivc/C1-geneformer/
+data/aivc/D1-context-ood/
 models/
 artifacts/

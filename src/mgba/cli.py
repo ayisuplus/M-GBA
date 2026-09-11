@@ -105,8 +105,21 @@ from .hallmark_training_evaluation import (
     load_hallmark_predictions,
     save_hallmark_training_evaluation,
 )
+from .context_pathway import (
+    EMBEDDING_DIM,
+    EMBEDDING_TABLE_SCHEMA_VERSION,
+    build_ood_split_manifest,
+    load_context_bundle,
+    save_ood_split_manifest,
+)
+from .context_pathway_evaluation import (
+    evaluate_context_pathway_predictions,
+    evaluate_external_context_pathway_predictions,
+    load_context_pathway_predictions,
+    save_context_pathway_evaluation,
+)
+from .validation import file_sha256
 from .calibration import load_calibration_protocol
-from .carm_spatial_experiments import build_carm_spatial_runners
 from .spatial_calibration import (
     CONSUMED_CONFIRMATION_TARGET_IDS,
     make_spatial_objective,
@@ -763,6 +776,79 @@ def _register_hallmark_training_evaluate(commands) -> None:
     )
 
 
+def _register_ood_split_build(commands) -> None:
+    split_build = commands.add_parser(
+        "ood-split-build",
+        help="freeze the four-context, five-salt gene/context-disjoint benchmark",
+    )
+    split_build.add_argument(
+        "--bundle",
+        action="append",
+        required=True,
+        help="mgba-perturbation-context-bundle-0.1 JSON; pass once per context",
+    )
+    split_build.add_argument(
+        "--external-labels-sha256",
+        required=True,
+        help="pre-recorded SHA-256 of the sealed Arc H1 response labels",
+    )
+    split_build.add_argument(
+        "--embeddings",
+        required=True,
+        help="frozen mgba-gene-embedding-table-0.1 JSON used for gene eligibility",
+    )
+    split_build.add_argument(
+        "--output",
+        required=True,
+        help="write-once OOD split manifest JSON output",
+    )
+
+
+def _register_context_pathway_evaluate(commands) -> None:
+    evaluation = commands.add_parser(
+        "context-pathway-evaluate",
+        help="verify OOD pathway predictions and apply the locked development gates",
+    )
+    evaluation.add_argument(
+        "--predictions",
+        action="append",
+        default=[],
+        help="one prediction artifact per evaluated fold",
+    )
+    evaluation.add_argument(
+        "--split",
+        required=True,
+        help="locked mgba-ood-split-manifest-0.1 JSON",
+    )
+    evaluation.add_argument(
+        "--bundle",
+        action="append",
+        required=True,
+        help="locked context bundle; pass once per development context",
+    )
+    evaluation.add_argument(
+        "--output",
+        required=True,
+        help="write-once context pathway evaluation JSON",
+    )
+    evaluation.add_argument(
+        "--external-predictions",
+        help="locked Arc H1 prediction artifact; enables the one-shot final gate",
+    )
+    evaluation.add_argument(
+        "--external-bundle",
+        help="Arc H1 context bundle whose source digest was sealed in the split",
+    )
+    evaluation.add_argument(
+        "--development-evaluation",
+        help="complete passed development evaluation required before Arc access",
+    )
+    evaluation.add_argument(
+        "--external-access-lock",
+        help="new path claimed before reading Arc labels; an existing path is refused",
+    )
+
+
 def _register_empirical_l0_experiment(commands) -> None:
     empirical_l0 = commands.add_parser(
         "empirical-l0-experiment",
@@ -1391,6 +1477,8 @@ def build_parser() -> argparse.ArgumentParser:
     _register_l0_response_table_build(commands)
     _register_hallmark_target_build(commands)
     _register_hallmark_training_evaluate(commands)
+    _register_ood_split_build(commands)
+    _register_context_pathway_evaluate(commands)
     _register_empirical_l0_experiment(commands)
     _register_empirical_l0_schedule_experiment(commands)
     _register_aivc_crosscheck(commands)
@@ -1824,6 +1912,94 @@ def _cmd_hallmark_training_evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "model_status": "offline-training-evaluation-not-a-runtime-change",
     }
     return result
+
+
+def _cmd_ood_split_build(args: argparse.Namespace) -> dict[str, Any]:
+    embeddings_path = Path(args.embeddings)
+    try:
+        table = json.loads(embeddings_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"invalid Geneformer embedding table: {error}") from error
+    if (
+        not isinstance(table, dict)
+        or table.get("schema_version") != EMBEDDING_TABLE_SCHEMA_VERSION
+        or table.get("embedding_dim") != EMBEDDING_DIM
+        or not isinstance(table.get("embeddings"), dict)
+        or not table["embeddings"]
+    ):
+        raise ValueError("expected a non-empty 768-dimensional Geneformer embedding table")
+    for gene, vector in table["embeddings"].items():
+        if not isinstance(gene, str) or not gene or not isinstance(vector, list) or len(vector) != EMBEDDING_DIM:
+            raise ValueError("Geneformer embedding entries must be named 768-element vectors")
+    manifest = build_ood_split_manifest(
+        [load_context_bundle(path) for path in args.bundle],
+        embedding_genes=list(table["embeddings"]),
+        embedding_table_sha256=file_sha256(embeddings_path),
+        external_labels_sha256=args.external_labels_sha256,
+    )
+    output = save_ood_split_manifest(manifest, args.output)
+    return {
+        "schema_version": manifest["schema_version"],
+        "split_id": manifest["split_id"],
+        "contexts": len(manifest["contexts"]),
+        "source_shared_genes": len(
+            manifest["feature_eligibility"]["source_shared_genes"]
+        ),
+        "embedding_excluded_genes": len(
+            manifest["feature_eligibility"]["excluded_genes"]
+        ),
+        "shared_genes": len(manifest["shared_genes"]),
+        "folds": len(manifest["folds"]),
+        "external_test_status": manifest["external_test"]["status"],
+        "output": str(output),
+        "model_status": "locked-offline-ood-protocol-not-a-runtime-change",
+    }
+
+
+def _cmd_context_pathway_evaluate(args: argparse.Namespace) -> dict[str, Any]:
+    external = (
+        args.external_predictions,
+        args.external_bundle,
+        args.development_evaluation,
+        args.external_access_lock,
+    )
+    if any(external) and not all(external):
+        raise SystemExit(
+            "external evaluation requires --external-predictions, --external-bundle, "
+            "--development-evaluation, and --external-access-lock"
+        )
+    if all(external) and not args.predictions:
+        raise SystemExit("external evaluation requires all development --predictions")
+    if not all(external) and not args.predictions:
+        raise SystemExit("development evaluation requires at least one --predictions")
+    evaluation = (
+        evaluate_external_context_pathway_predictions(
+            args.external_predictions,
+            args.external_bundle,
+            args.development_evaluation,
+            args.split,
+            args.bundle,
+            args.external_access_lock,
+            args.predictions,
+        )
+        if all(external)
+        else evaluate_context_pathway_predictions(
+            [load_context_pathway_predictions(path) for path in args.predictions],
+            args.split,
+            args.bundle,
+        )
+    )
+    output = save_context_pathway_evaluation(evaluation, args.output)
+    return {
+        "schema_version": evaluation["schema_version"],
+        "evaluation_id": evaluation["evaluation_id"],
+        "development_verdict": evaluation["pass_rule"]["development_verdict"],
+        "paper_verdict": evaluation["pass_rule"]["paper_verdict"],
+        "folds": evaluation["coverage"]["folds"],
+        "external_test_status": evaluation["coverage"]["external_test_status"],
+        "output": str(output),
+        "model_status": "offline-ood-evaluation-not-a-runtime-change",
+    }
 
 
 def _cmd_empirical_l0_schedule_experiment(args: argparse.Namespace) -> dict[str, Any]:
@@ -2414,6 +2590,8 @@ _COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], dict[str, Any]]] = {
     "l0-response-table-build": _cmd_l0_response_table_build,
     "hallmark-target-build": _cmd_hallmark_target_build,
     "hallmark-training-evaluate": _cmd_hallmark_training_evaluate,
+    "ood-split-build": _cmd_ood_split_build,
+    "context-pathway-evaluate": _cmd_context_pathway_evaluate,
     "empirical-l0-schedule-experiment": _cmd_empirical_l0_schedule_experiment,
     "empirical-l0-experiment": _cmd_empirical_l0_experiment,
     "carm-spatial-calibrate": _cmd_carm_spatial_calibrate,

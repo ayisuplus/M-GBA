@@ -77,7 +77,7 @@ class MultiscaleContractTests(unittest.TestCase):
         self.assertEqual(first["experiment"], second["experiment"])
         self.assertEqual(first["trace_digest"], second["trace_digest"])
         self.assertEqual(
-            "mgba-4437aaca98878890", first["experiment"]["experiment_id"]
+            "mgba-85a4d85a8d78fa83", first["experiment"]["experiment_id"]
         )
         self.assertEqual(
             "20f9578497fd67d04071cd4cd08627262ff883a620d5c7c02ea7dff4014a0135",
