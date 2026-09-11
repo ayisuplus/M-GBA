@@ -71,7 +71,7 @@ class FrozenIdentityGateTests(unittest.TestCase):
         )
         runner = ReferenceCrossScaleRunner(**self._layer_models())
         result = summarize_trace(scenario, runner.run(scenario))
-        self.assertEqual("mgba-85a4d85a8d78fa83", result["experiment"]["experiment_id"])
+        self.assertEqual("mgba-a5065feac221b5fb", result["experiment"]["experiment_id"])
         self.assertEqual(
             "20f9578497fd67d04071cd4cd08627262ff883a620d5c7c02ea7dff4014a0135",
             result["trace_digest"],
@@ -86,9 +86,9 @@ class FrozenIdentityGateTests(unittest.TestCase):
             **self._layer_models(),
         )
         run = runner.run(scenario, ticks=100)
-        self.assertEqual("mgba-c4801af10685fcb7", run.manifest.experiment_id)
+        self.assertEqual("mgba-b8737d8be66d13e3", run.manifest.experiment_id)
         self.assertEqual(
-            "5715209a09cc63b6495c0a4212467dac6fa662c9d03a885d1cd20df3e08325f2",
+            "f68b5570d3a0599d25641b63a36e827ccdb52a2a5f04ff4df74d9f069aac9093",
             run.history_digest,
         )
         self.assertEqual("failed", run.phenotype_window.outcome.value)

@@ -205,6 +205,7 @@ from .multiscale import (
     load_multiscale_scenario,
     summarize_trace,
 )
+from .evidence_report import build_evidence_report, verify_evidence_report
 from .reporting import build_causal_report
 from .run_report import build_run_report
 from .runner import (
@@ -372,6 +373,32 @@ def _register_run_report(commands) -> None:
     run_report.add_argument(
         "--output-dir",
         help="optional report directory; defaults to <run-stem>-report beside the run file",
+    )
+
+
+
+def _register_evidence_report(commands) -> None:
+    evidence_report = commands.add_parser(
+        "evidence-report",
+        help="build the unified read-only evidence overview across saved artifacts (ADR-0050)",
+    )
+    evidence_report.add_argument(
+        "--artifact-root",
+        default="artifacts",
+        help="artifact root scanned by the pipeline (default: artifacts)",
+    )
+    evidence_report.add_argument(
+        "--output",
+        help="optional report directory; defaults to <artifact-root>/evidence-report",
+    )
+    evidence_report.add_argument(
+        "--registry",
+        help="optional data registry JSON; defaults to <artifact-root>/../data/registry.json",
+    )
+    evidence_report.add_argument(
+        "--verify",
+        action="store_true",
+        help="rebuild into a temporary directory and byte-compare against the existing output",
     )
 
 
@@ -1463,6 +1490,7 @@ def build_parser() -> argparse.ArgumentParser:
     _register_experiment(commands)
     _register_report(commands)
     _register_run_report(commands)
+    _register_evidence_report(commands)
     _register_carm_import(commands)
     _register_carm_experiment(commands)
     _register_carm_spatial_experiment(commands)
@@ -1567,6 +1595,36 @@ def _cmd_run_report(args: argparse.Namespace) -> dict[str, Any]:
         "files": report_manifest["files"],
     }
     return result
+
+
+def _cmd_evidence_report(args: argparse.Namespace) -> dict[str, Any]:
+    if args.verify:
+        result = verify_evidence_report(
+            args.artifact_root, args.output, registry=args.registry
+        )
+        if not result["verified"]:
+            raise SystemExit(
+                "evidence report verification failed: "
+                + "; ".join(result["mismatches"])
+            )
+        return result
+    paths = build_evidence_report(
+        args.artifact_root, args.output, registry=args.registry
+    )
+    manifest = json.loads(paths.manifest.read_text(encoding="utf-8"))
+    summary = json.loads(paths.summary.read_text(encoding="utf-8"))
+    return {
+        "report_root": str(paths.root),
+        "report_manifest": str(paths.manifest),
+        "summary": str(paths.summary),
+        "html": str(paths.html),
+        "sections": {
+            section["section_id"]: section["status"]
+            for section in summary["sections"]
+        },
+        "negative_findings": len(summary["negative_findings"]),
+        "files": manifest["files"],
+    }
 
 
 def _cmd_carm_import(args: argparse.Namespace) -> dict[str, Any]:
@@ -2574,6 +2632,7 @@ _COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], dict[str, Any]]] = {
     "experiment": _cmd_experiment,
     "report": _cmd_report,
     "run-report": _cmd_run_report,
+    "evidence-report": _cmd_evidence_report,
     "carm-import": _cmd_carm_import,
     "carm-experiment": _cmd_carm_experiment,
     "carm-spatial-experiment": _cmd_carm_spatial_experiment,

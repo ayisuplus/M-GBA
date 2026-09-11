@@ -20,6 +20,7 @@ L0 基因/转录调控
 
 ## 当前状态
 
+- 证据总览报告流水线已落地（ADR-0050，2026-09-12）：`mgba evidence-report` 一条命令扫描九类既有证据产物（训练评估 / 外推边界 / 证伪对照 / 效应稳健性 / WP8 矩阵 / CAR-M 干预 / 空间锚定 / 桥覆盖 / 数据登记），按 collect → normalize → render → manifest → verify 五阶段归一化为统一证据模型 `mgba-evidence-report-0.1`，渲染零 JavaScript 中文 `index.html`（内联 SVG：条形图 / 森林图 / 色块表）+ 每区块 CSV + SHA-256 `manifest.json`；缺失源降级显示"未生成"不报错，`--verify` 重跑字节级比对实测 `verified=true`；KD failed、OE 外推 failed、对照 3 criteria_not_met、空间未锚定与 WP8 FAILED 结局全部进入顶部负面结果显著区。产物在 `artifacts/evidence-report/`；新增 13 项测试与 test_reporting / test_frozen_identity / test_cli 门禁实测全绿（全套 631+13 项沿用分批实测口径）。ADR-0045 源码指纹按既定通道更新（单/100 tick ID `mgba-a5065feac221b5fb`/`mgba-b8737d8be66d13e3`，trace digest 与 WP8 matrix 身份不变）。
 - OE 成分外推边界测定完成（ADR-0049，2026-09-11）：holdout 48 单元按组合成分是否在训练集出现重分层（component-seen 37 / component-unseen 11）；外推层 MLP 0.0127172 不优于质心 0.0122139（margin −0.0005033），判据 **failed**，OE 外推方向正式关闭；ADR-0037 的 passed 保留但证据等级降为"插值证据"；对照锚核验偏差 0.0；产物在 `artifacts/extrapolation-boundary/`。
 - 管线证伪对照三组完成（ADR-0048，2026-09-11）：对照 1 标签打乱判据成立（打乱后 MLP 对质心 margin 转负 −0.001331，ADR-0037 门禁非空洞）；对照 2 层置换判据成立附边界（0/90 混合剖面落入真实库，但传播 tick 碰撞率 0.6667，tick 指标不宜单独作证据）；对照 3 目标置换**判据不成立**，负面结果原样登记（置换 target 的 holdout NAE 10.2334 反而优于真实 12.1461——空间锚定评估器在 holdout field 指标上无区分度）。产物在 `artifacts/falsification/`。
 - 桥覆盖审计完成（2026-09-11）：负反馈节点仅 54 映射基因（TGF-β 单集合）、KD 宇宙仅 38 基因；Norman 68.95% / KD 65.92% 基因不落入任何节点；负反馈扩充首选候选 HALLMARK_MTORC1_SIGNALING（200 基因）；产物在 `artifacts/audit/bridge-coverage-2026-09-11/`。
@@ -150,6 +151,7 @@ L0 基因/转录调控
 - [ADR-0047：跨细胞背景通路扰动外推契约](docs/决策记录/ADR-0047-跨细胞背景通路扰动外推契约.md)
 - [ADR-0048：管线证伪对照契约](docs/决策记录/ADR-0048-管线证伪对照契约.md)
 - [ADR-0049：OE 成分外推边界契约](docs/决策记录/ADR-0049-OE成分外推边界契约.md)
+- [ADR-0050：证据总览报告流水线契约](docs/决策记录/ADR-0050-证据总览报告流水线契约.md)
 - [实验源码指纹复核](docs/复现/实验源码指纹复核.md)
 - [CAR-M 空间 L3 calibration 记录](docs/实验记录/CAR-M-spatial-calibration-2026-08-29.md)
 - [Stage 1 GEO 交叉校验记录](docs/实验记录/Stage1-GEO-native-crosscheck-2026-08-29.md)
@@ -180,6 +182,8 @@ python -m venv .venv
 .\.venv\Scripts\mgba run-report --run artifacts/run.json
 .\.venv\Scripts\mgba experiment --artifact-root artifacts
 .\.venv\Scripts\mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
+.\.venv\Scripts\mgba evidence-report --artifact-root artifacts
+.\.venv\Scripts\mgba evidence-report --artifact-root artifacts --verify
 .\.venv\Scripts\mgba carm-import --legacy-root "..\car-m-virtual-cell-main\car-m-virtual-cell-main" --output data/carm/tcga_brca_high_immune.json
 .\.venv\Scripts\mgba carm-experiment --artifact-root artifacts/carm
 .\.venv\Scripts\mgba carm-spatial-experiment --artifact-root artifacts/carm-spatial
@@ -224,6 +228,8 @@ python -m venv .venv
 .venv/bin/mgba run-report --run artifacts/run.json
 .venv/bin/mgba experiment --artifact-root artifacts
 .venv/bin/mgba report --matrix-root artifacts/matrix-7da4137aa39d5122
+.venv/bin/mgba evidence-report --artifact-root artifacts
+.venv/bin/mgba evidence-report --artifact-root artifacts --verify
 .venv/bin/mgba carm-import --legacy-root ../car-m-virtual-cell-main/car-m-virtual-cell-main --output data/carm/tcga_brca_high_immune.json
 .venv/bin/mgba carm-experiment --artifact-root artifacts/carm
 .venv/bin/mgba carm-spatial-experiment --artifact-root artifacts/carm-spatial
@@ -292,6 +298,7 @@ M-GBA/
 │   ├── experiments.py       # 配对扰动/消融、逐层效应与矩阵 artifact
 │   ├── reporting.py         # raw-only CSV/SVG/HTML 报告重建
 │   ├── run_report.py        # 单 run 逐 tick L0–L4 轨迹可视化记录
+│   ├── evidence_report.py   # 九源证据总览流水线（ADR-0050，collect→normalize→render→manifest→verify）
 │   ├── multiscale.py        # 五层参考实现、runner 与 trace
 │   ├── runner.py            # 多速率调度、逐 tick trace、checkpoint 与恢复
 │   ├── feedback.py          # L4→L3 稳态反馈控制器（PI+反饱和+安全屏障）与固定策略

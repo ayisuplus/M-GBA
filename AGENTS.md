@@ -274,6 +274,7 @@ AI Agent 可以帮助实现、测试、调研、重构和生成实验脚本，�
 - ADR-0049 已完成 OE 成分外推边界测定（2026-09-11）：holdout 48 单元 = component-seen 37 + component-unseen 11；外推层 MLP 0.0127172 vs 质心 0.0122139（margin −0.0005033），判据 failed，OE 外推方向正式关闭；ADR-0037 的 passed 保留但证据等级降为"插值证据"；对照锚核验偏差 0.0。产物在 `artifacts/extrapolation-boundary/`。
 - D1-context-ood 登记缺口已修复（2026-09-11）：`data/registry.json` 18 → 26 条目，`tests/test_data_registry.py` 计数断言同步 18→26，`mgba data-check` 全绿；当前 631 项测试分批实测全绿（全套单次运行超出 300 秒窗口，采用分批实测口径）。
 - 统计规范文档已就位（`docs/设计文件/统计规范.md`，2026-09-11）："确定性重放"与"统计重复"术语永久分离，随机主张最低 n≥10 seed + 预注册检验 + CI 与效应量同报，新"通过/效应"主张须配阴性对照；只约束新主张，不回溯改写历史 artifact 与冻结结论。
+- `src/mgba/evidence_report.py` 与 `mgba evidence-report` 已按 ADR-0050 实现生成链外证据总览流水线：九类枚举输入（训练评估 / 外推边界 / 证伪对照 / 效应稳健性 / WP8 矩阵 / CAR-M 干预 / 空间锚定 / 桥覆盖 / 数据登记）经 collect → normalize → render → manifest → verify 五阶段归一化为 `mgba-evidence-report-0.1` 统一证据模型，输出零 JavaScript 中文 `index.html`（内联 SVG 条形图 / 森林图 / 色块表）、每区块 CSV 与 SHA-256 manifest 至 `artifacts/evidence-report/`；缺失源降级"未生成"，负面结果（KD failed、OE 外推 failed、对照 3 criteria_not_met、空间未锚定、WP8 FAILED 结局）汇总进顶部显著区；`--verify` 字节级比对实测通过。ADR-0045 源码指纹按既定通道更新（单/100 tick ID `mgba-a5065feac221b5fb`/`mgba-b8737d8be66d13e3`，trace digest 与 WP8 matrix 身份不变）。新增 13 项测试，`tests.test_evidence_report` / `tests.test_reporting` / `tests.test_frozen_identity` / `tests.test_cli` 实测全绿。
 ## Agent skills
 
 ### Issue tracker
