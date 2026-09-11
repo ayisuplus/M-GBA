@@ -1,5 +1,7 @@
 # M-GBA
 
+License: MIT | Python ≥ 3.11
+
 M-GBA（Multi-scale Graph Biological Architecture）是一个跨尺度数字生命研究原型。项目的核心是用可运行模型表达生命状态从微观调控到宏观表型的逐层生成：
 
 比赛版网站：[M-GBA 跨尺度虚拟实验室](https://mgba-cross-scale-lab.zluo66977.chatgpt.site)

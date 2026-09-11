@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: M-GBA
+authors:
+  - name: ayisuplus
+version: 0.2.0
+date-released: 2026-08-19
+license: MIT
+repository-code: https://github.com/ayisuplus/M-GBA
+abstract: >-
+  M-GBA（Multi-scale Graph Biological Architecture）是一个跨尺度数字生命研究原型：
+  用可运行模型表达生命状态从 L0 基因/转录调控到 L4 宏观表型的自下而上逐层生成。
+  核心包（src/mgba）仅依赖 Python 标准库，配套严格证据治理
+  （ADR 决策记录、预注册、SHA-256 manifest、负面结果保留）。
+  本项目不宣称制造真实生命，也不具备临床预测能力。
