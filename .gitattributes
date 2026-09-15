@@ -1,3 +1,5 @@
+# Source bytes feed the ADR-0045 fingerprint; keep them LF on every checkout.
+*.py text eol=lf
 data/synthetic-feedback/** -text
 data/aivc/derived/** -text
 data/spatial-carm/derived/** -text
