@@ -726,9 +726,9 @@ class FrozenBaselineGuardTests(unittest.TestCase):
             **_layer_models(),
         )
         run = runner.run(scenario, ticks=100)
-        self.assertEqual("mgba-c4801af10685fcb7", run.manifest.experiment_id)
+        self.assertEqual("mgba-7e9ffaa415f66163", run.manifest.experiment_id)
         self.assertEqual(
-            "5715209a09cc63b6495c0a4212467dac6fa662c9d03a885d1cd20df3e08325f2",
+            "c073c47bf10a1c9d3052c8f62f881295e9f58730d0793097eca18bb3cdc379d7",
             run.history_digest,
         )
         self.assertEqual("failed", run.phenotype_window.outcome.value)

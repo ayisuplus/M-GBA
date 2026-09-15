@@ -211,7 +211,10 @@ def _collect(
     inputs: dict[str, list[_Input]] = {}
 
     registry = _load_input(
-        "data-registry", registry_path, project_root, ("mgba-data-registry-0.1",)
+        "data-registry",
+        registry_path,
+        project_root,
+        ("mgba-data-registry-0.1", "mgba-data-registry-0.2"),
     )
     inputs["data-registry"] = [registry]
 

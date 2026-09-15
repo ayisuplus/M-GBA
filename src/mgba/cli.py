@@ -2477,7 +2477,7 @@ def _cmd_autolab_propose(args: argparse.Namespace) -> dict[str, Any]:
 def _cmd_data_check(args: argparse.Namespace) -> dict[str, Any]:
     registry_path = Path(args.registry)
     entries = load_data_registry(registry_path)
-    status_by_id = {entry.dataset_id: entry.status for entry in entries}
+    by_id = {entry.dataset_id: entry for entry in entries}
     verdicts = validate_data_registry(
         entries, data_root=registry_path.resolve().parent.parent
     )
@@ -2488,7 +2488,8 @@ def _cmd_data_check(args: argparse.Namespace) -> dict[str, Any]:
         "entries": [
             {
                 "dataset_id": verdict.dataset_id,
-                "status": status_by_id[verdict.dataset_id],
+                "status": by_id[verdict.dataset_id].status,
+                "license_ids": list(by_id[verdict.dataset_id].provenance.license_ids),
                 "ok": verdict.ok,
                 "detail": verdict.detail,
             }

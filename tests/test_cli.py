@@ -931,6 +931,7 @@ class DataCheckCommandTests(unittest.TestCase):
         self.assertTrue(payload["ok"])
         self.assertTrue(payload["entries"])
         self.assertTrue(all(entry["ok"] for entry in payload["entries"]))
+        self.assertTrue(all(entry["license_ids"] for entry in payload["entries"]))
 
     def test_digest_mismatch_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -942,7 +943,7 @@ class DataCheckCommandTests(unittest.TestCase):
             registry = _write_json(
                 data_dir / "registry.json",
                 {
-                    "schema_version": "mgba-data-registry-0.1",
+                    "schema_version": "mgba-data-registry-0.2",
                     "datasets": [
                         {
                             "dataset_id": "fixture-dataset",
@@ -954,6 +955,8 @@ class DataCheckCommandTests(unittest.TestCase):
                                 "source": "fixture",
                                 "date": "2026-08-26",
                                 "license": "fixture license",
+                                "license_ids": ["LicenseRef-MGBA-Internal"],
+                                "source_refs": ["repo:blob.json"],
                                 "deidentified": True,
                                 "proxy_notice": "fixture",
                             },

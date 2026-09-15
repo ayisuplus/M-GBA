@@ -1,8 +1,10 @@
 """Tests for the machine-readable dataset registry and its validator.
 
 Covers the real data/registry.json gate (byte stability of registered
-artifacts), path/sha256 verdicts on temporary fixtures, and fail-fast
-loading of malformed registries.
+artifacts), path/sha256 verdicts on temporary fixtures, fail-fast
+loading of malformed registries, and the structured licence/source
+fields (controlled licence vocabulary, source ref schemes, dataset-ref
+resolution and downstream licence propagation).
 """
 
 import json
@@ -12,6 +14,8 @@ from hashlib import sha256
 from pathlib import Path
 
 from mgba.data_registry import (
+    ALLOWED_LICENSE_IDS,
+    REGISTRY_SCHEMA_VERSION,
     DatasetEntry,
     DatasetProvenance,
     load_data_registry,
@@ -24,6 +28,8 @@ _PROVENANCE = DatasetProvenance(
     source="unit-test fixture",
     date="2026-08-21",
     license="test",
+    license_ids=("LicenseRef-MGBA-Internal",),
+    source_refs=("url:https://example.org/fixture",),
     deidentified=True,
     proxy_notice="",
 )
@@ -44,10 +50,10 @@ def _entry(**overrides) -> DatasetEntry:
 
 
 def _registry_payload(*entries: dict) -> dict:
-    return {"schema_version": "mgba-data-registry-0.1", "datasets": list(entries)}
+    return {"schema_version": REGISTRY_SCHEMA_VERSION, "datasets": list(entries)}
 
 
-def _entry_payload(**overrides) -> dict:
+def _entry_payload(provenance: dict | None = None, **overrides) -> dict:
     payload = {
         "dataset_id": "fixture",
         "kind": "synthetic",
@@ -58,11 +64,14 @@ def _entry_payload(**overrides) -> dict:
             "source": "unit-test fixture",
             "date": "2026-08-21",
             "license": "test",
+            "license_ids": ["LicenseRef-MGBA-Internal"],
+            "source_refs": ["url:https://example.org/fixture"],
             "deidentified": True,
             "proxy_notice": "",
         },
         "notes": "",
     }
+    payload["provenance"].update(provenance or {})
     payload.update(overrides)
     return payload
 
@@ -150,6 +159,145 @@ class RegistryLoadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ValueError):
                 load_data_registry(Path(tmp) / "absent.json")
+
+    def test_legacy_schema_without_structured_fields_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = _registry_payload(_entry_payload())
+            payload["schema_version"] = "mgba-data-registry-0.1"
+            with self.assertRaises(ValueError):
+                load_data_registry(_write_registry(Path(tmp), payload))
+
+
+class StructuredProvenanceTests(unittest.TestCase):
+    def _load(self, *entries: dict):
+        with tempfile.TemporaryDirectory() as tmp:
+            return load_data_registry(
+                _write_registry(Path(tmp), _registry_payload(*entries))
+            )
+
+    def _assert_rejected(self, *entries: dict, message: str = "") -> None:
+        with self.assertRaises(ValueError) as caught:
+            self._load(*entries)
+        self.assertIn(message, str(caught.exception))
+
+    def test_unknown_license_id_rejected(self) -> None:
+        self._assert_rejected(
+            _entry_payload({"license_ids": ["Free-For-Everyone"]}),
+            message="unknown license ids",
+        )
+
+    def test_missing_or_empty_license_ids_rejected(self) -> None:
+        self._assert_rejected(_entry_payload({"license_ids": []}))
+        self._assert_rejected(_entry_payload({"license_ids": "CC-BY-4.0"}))
+        payload = _entry_payload()
+        del payload["provenance"]["license_ids"]
+        self._assert_rejected(payload)
+
+    def test_duplicate_license_ids_rejected(self) -> None:
+        self._assert_rejected(
+            _entry_payload({"license_ids": ["CC-BY-4.0", "CC-BY-4.0"]})
+        )
+
+    def test_malformed_source_refs_rejected(self) -> None:
+        for ref in (
+            "ftp:example.org/data",
+            "no-scheme",
+            "doi:zenodo.7041849",
+            "geo:SRP123",
+            "url:http://example.org/insecure",
+            "repo:/abs/path.py",
+            "repo:../outside.json",
+            "url: https://example.org/untrimmed",
+        ):
+            with self.subTest(ref=ref):
+                self._assert_rejected(_entry_payload({"source_refs": [ref]}))
+
+    def test_empty_source_refs_rejected(self) -> None:
+        self._assert_rejected(_entry_payload({"source_refs": []}))
+
+    def test_external_profile_must_cite_external_source(self) -> None:
+        self._assert_rejected(
+            _entry_payload(
+                {"source_refs": ["repo:scripts/build.py"]},
+                kind="external_profile",
+                status="materialized",
+            ),
+            message="must cite a dataset, doi, geo or url",
+        )
+
+    def test_dataset_ref_must_resolve(self) -> None:
+        self._assert_rejected(
+            _entry_payload({"source_refs": ["dataset:ghost"]}),
+            message="cites unregistered dataset ghost",
+        )
+
+    def test_dataset_ref_to_itself_rejected(self) -> None:
+        self._assert_rejected(
+            _entry_payload({"source_refs": ["dataset:fixture"]}),
+            message="must not cite the entry itself",
+        )
+
+    def test_downstream_entry_must_keep_upstream_license_ids(self) -> None:
+        upstream = _entry_payload(
+            {"license_ids": ["CC-BY-4.0", "LicenseRef-MSigDB"]},
+            dataset_id="upstream",
+        )
+        downstream = _entry_payload(
+            {"license_ids": ["CC-BY-4.0"], "source_refs": ["dataset:upstream"]},
+            dataset_id="downstream",
+        )
+        self._assert_rejected(
+            upstream,
+            downstream,
+            message="downstream drops upstream license ids from upstream: LicenseRef-MSigDB",
+        )
+
+    def test_downstream_superset_of_upstream_licenses_loads(self) -> None:
+        upstream = _entry_payload(
+            {"license_ids": ["CC-BY-4.0"]}, dataset_id="upstream"
+        )
+        downstream = _entry_payload(
+            {
+                "license_ids": ["CC-BY-4.0", "LicenseRef-Geneformer"],
+                "source_refs": ["dataset:upstream"],
+            },
+            dataset_id="downstream",
+        )
+        entries = self._load(upstream, downstream)
+        self.assertEqual(
+            ("upstream",), entries[1].provenance.refs("dataset")
+        )
+
+    def test_missing_repo_source_ref_fails_verdict(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            entry = _entry(
+                kind="external_planned",
+                status="planned",
+                sha256=None,
+                provenance=DatasetProvenance(
+                    source="planned fixture",
+                    date="2026-09-15",
+                    license="per resource",
+                    license_ids=("LicenseRef-Per-Resource",),
+                    source_refs=("repo:manifests/README.md",),
+                    deidentified=True,
+                    proxy_notice="",
+                ),
+            )
+            (verdict,) = validate_data_registry((entry,), data_root=Path(tmp))
+            self.assertFalse(verdict.ok)
+            self.assertIn("repo source ref missing", verdict.detail)
+
+            (Path(tmp) / "manifests").mkdir()
+            (Path(tmp) / "manifests" / "README.md").write_text("list", encoding="utf-8")
+            (verdict,) = validate_data_registry((entry,), data_root=Path(tmp))
+            self.assertTrue(verdict.ok)
+
+    def test_repository_registry_uses_only_vocabulary_license_ids(self) -> None:
+        entries = load_data_registry(ROOT / "data" / "registry.json")
+        used = {item for entry in entries for item in entry.provenance.license_ids}
+        self.assertTrue(used)
+        self.assertLessEqual(used, set(ALLOWED_LICENSE_IDS))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 {
-  "schema_version": "mgba-data-registry-0.1",
+  "schema_version": "mgba-data-registry-0.2",
   "datasets": [
     {
       "dataset_id": "carm-tcga-brca-high-immune",
@@ -11,6 +11,13 @@
         "source": "legacy CAR-M TCGA-BRCA GAT 预测聚合（752 例，无样本 ID）",
         "date": "2026-08-19",
         "license": "TCGA 公共数据；GAT 预测为旧项目派生产物",
+        "license_ids": [
+          "LicenseRef-Legacy-CARM",
+          "LicenseRef-TCGA-Public"
+        ],
+        "source_refs": [
+          "url:https://portal.gdc.cancer.gov/projects/TCGA-BRCA"
+        ],
         "deidentified": true,
         "proxy_notice": "TCGA-BRCA immune values are legacy GAT predictions trained against gene-signature-derived proxy labels; they are not clinical ground truth."
       },
@@ -26,6 +33,12 @@
         "source": "M-GBA 合成场景生成器（seed 2026；benchmark_spec.json + scenarios/）",
         "date": "2026-08-21",
         "license": "项目内部合成数据",
+        "license_ids": [
+          "LicenseRef-MGBA-Internal"
+        ],
+        "source_refs": [
+          "repo:scripts/synthetic_feedback_benchmark.py"
+        ],
         "deidentified": true,
         "proxy_notice": ""
       },
@@ -41,6 +54,12 @@
         "source": "AIVC 外部资源对接清单（ADR-0035 起分批授权下载中）",
         "date": "2026-08-21",
         "license": "逐条见 data/aivc/README.md 清单",
+        "license_ids": [
+          "LicenseRef-Per-Resource"
+        ],
+        "source_refs": [
+          "repo:data/aivc/README.md"
+        ],
         "deidentified": true,
         "proxy_notice": ""
       },
@@ -56,6 +75,14 @@
         "source": "CAR-M L3 空间数据锚定预注册清单（Wu Visium + Jackson IMC）",
         "date": "2026-08-21",
         "license": "Wu CC BY 4.0；Jackson CC BY 1.0 Generic（2026-08-21 官方元数据已核验）",
+        "license_ids": [
+          "CC-BY-1.0",
+          "CC-BY-4.0"
+        ],
+        "source_refs": [
+          "doi:10.5281/zenodo.4739739",
+          "doi:10.5281/zenodo.4607374"
+        ],
         "deidentified": true,
         "proxy_notice": "Spatial transcriptomic spots and published imaging cell clusters are external proxy observations for L3 field/topology statistics; they are not cell identities, clinical truth, or treatment outcomes."
       },
@@ -71,6 +98,15 @@
         "source": "Wu/Swarbrick Visium 三文件 + Jackson IMC 两文件（Zenodo 10.5281/zenodo.4739739 与 10.5281/zenodo.4607374），经 ADR-0028 源适配与 ADR-0026 去标识聚合管线生成",
         "date": "2026-08-28",
         "license": "Wu CC BY 4.0；Jackson CC BY 1.0 Generic",
+        "license_ids": [
+          "CC-BY-1.0",
+          "CC-BY-4.0"
+        ],
+        "source_refs": [
+          "doi:10.5281/zenodo.4739739",
+          "doi:10.5281/zenodo.4607374",
+          "dataset:carm-spatial-anchor-planned"
+        ],
         "deidentified": true,
         "proxy_notice": "Spatial field/neighborhood statistics are external proxy observations for L3 calibration only; they are not cell identities, clinical truth, or treatment outcomes."
       },
@@ -86,6 +122,14 @@
         "source": "scPerturb NormanWeissman2019_filtered.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0036 两段管线（.venv-train 实证段 + 核心聚合段）生成",
         "date": "2026-08-28",
         "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "doi:10.5281/zenodo.7041849",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Six-node Hallmark-bridged log2FC vectors describe public Perturb-seq aggregate responses in L0 semantic space; they are not a biological fit, a virtual-cell claim, or an efficacy predictor."
       },
@@ -101,6 +145,13 @@
         "source": "ADR-0037 首次 L0 训练实验（.venv-train CPU 单线程 + 核心核验段），target 为 aivc-norman-perturbation-profile",
         "date": "2026-08-28",
         "license": "随源数据（scPerturb CC BY 4.0；MSigDB 条款）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-norman-perturbation-profile"
+        ],
         "deidentified": true,
         "proxy_notice": "Offline perturbation-response evaluation on K562 CRISPRa data; predictions do not enter the runtime chain and are not a biological fit or efficacy predictor."
       },
@@ -116,6 +167,14 @@
         "source": "scPerturb ReplogleWeissman2022_K562_essential.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0039 管线（dense-X 实证段 + 核心聚合段）生成",
         "date": "2026-08-29",
         "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "doi:10.5281/zenodo.7041849",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Six-node Hallmark-bridged log2FC vectors describe public CRISPRi knockdown aggregate responses; reference-model grade description only, not a biological fit or efficacy predictor."
       },
@@ -131,6 +190,13 @@
         "source": "ADR-0039 KD 训练实验（与 ADR-0037 同冻结超参；.venv-train CPU 单线程 + 核心核验段）",
         "date": "2026-08-29",
         "license": "随源数据（scPerturb CC BY 4.0；MSigDB 条款）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-replogle-kd-perturbation-profile"
+        ],
         "deidentified": true,
         "proxy_notice": "Offline KD perturbation-response evaluation; predictions do not enter the runtime chain."
       },
@@ -146,6 +212,12 @@
         "source": "Geneformer-V2-104M_CLcancer 输入 token 嵌入表纯查表提取（无模型前向），映射链 symbol→gene_name_id_dict→Ensembl→token_dictionary→嵌入行",
         "date": "2026-08-29",
         "license": "Geneformer 仓库条款",
+        "license_ids": [
+          "LicenseRef-Geneformer"
+        ],
+        "source_refs": [
+          "url:https://huggingface.co/ctheodoris/Geneformer"
+        ],
         "deidentified": true,
         "proxy_notice": "Gene token embedding rows are pretrained static features for perturbation-identity encoding; no inference or fine-tuning was run."
       },
@@ -161,6 +233,15 @@
         "source": "ADR-0040 KD 嵌入重训（1,780 覆盖单元；与 ADR-0039 同盐、同冻结超参）",
         "date": "2026-08-29",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-replogle-kd-perturbation-profile",
+          "dataset:aivc-gene-embedding-table"
+        ],
         "deidentified": true,
         "proxy_notice": "Offline evaluation; predictions do not enter the runtime chain."
       },
@@ -176,6 +257,15 @@
         "source": "ADR-0040 OE 描述臂（Norman profile 同盐；仅描述性，不进通过判定）",
         "date": "2026-08-29",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-norman-perturbation-profile",
+          "dataset:aivc-gene-embedding-table"
+        ],
         "deidentified": true,
         "proxy_notice": "Descriptive arm; does not amend the ADR-0037 passed identity."
       },
@@ -191,6 +281,14 @@
         "source": "GEO GSE133344 原生处理文件（filtered matrix + barcodes + genes + cell_identities），经 ADR-0042 归并规则与 ADR-0036 同冻结归一化管线生成",
         "date": "2026-08-29",
         "license": "GEO 公共数据；Hallmark 遵守 MSigDB 条款",
+        "license_ids": [
+          "LicenseRef-GEO-Public",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "geo:GSE133344",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "GEO-native six-node profile of the same Norman dataset, built only for the two-source reproducibility check; the scPerturb profile remains the frozen in-chain source."
       },
@@ -206,6 +304,15 @@
         "source": "Stage 1 双源格式交叉校验（scPerturb 调和版 vs GEO 原生），ADR-0042 冻结判据",
         "date": "2026-08-29",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-GEO-Public",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-norman-perturbation-profile",
+          "dataset:aivc-norman-geo-perturbation-profile"
+        ],
         "deidentified": true,
         "proxy_notice": "Reproducibility evidence across source formats; not a biological validation."
       },
@@ -221,6 +328,14 @@
         "source": "ADR-0046 结构化靶标构建段（replogle-kd bundle + 同名 Stage 1 profile + MSigDB v2026.1 Hallmark 全 50 集合；核心纯 stdlib）",
         "date": "2026-09-02",
         "license": "随源数据（scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-replogle-kd-perturbation-profile",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Structured Hallmark-set + six-node-head supervised target over public CRISPRi aggregate log2FC; offline training target only, not a biological fit or efficacy predictor."
       },
@@ -236,6 +351,14 @@
         "source": "ADR-0046 结构化靶标构建段（norman bundle + 同名 Stage 1 profile + MSigDB v2026.1 Hallmark 全 50 集合；核心纯 stdlib）",
         "date": "2026-09-02",
         "license": "随源数据（scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-norman-perturbation-profile",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Structured Hallmark-set + six-node-head supervised target over public CRISPRa aggregate log2FC; offline training target only, not a biological fit or efficacy predictor."
       },
@@ -251,6 +374,15 @@
         "source": "ADR-0046 KD 结构化目标重训（1,780 覆盖单元；与 ADR-0039/0040 同盐、同冻结超参；.venv-train CPU 单线程 + 核心核验段）",
         "date": "2026-09-02",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-replogle-kd-hallmark-target",
+          "dataset:aivc-gene-embedding-table"
+        ],
         "deidentified": true,
         "proxy_notice": "Offline KD perturbation-response evaluation; predictions do not enter the runtime chain."
       },
@@ -266,6 +398,15 @@
         "source": "ADR-0046 OE 描述臂（Norman hallmark target 同盐；仅描述性，不进通过判定）",
         "date": "2026-09-02",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-norman-hallmark-target",
+          "dataset:aivc-gene-embedding-table"
+        ],
         "deidentified": true,
         "proxy_notice": "Descriptive arm; does not amend the ADR-0037 passed identity."
       },
@@ -281,6 +422,14 @@
         "source": "scPerturb ReplogleWeissman2022_K562_essential.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0047 `scripts/build_context_pathway_bundle.py` 管线（.venv-train 实证段）生成",
         "date": "2026-09-03",
         "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "doi:10.5281/zenodo.7041849",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi K562 cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
       },
@@ -296,6 +445,14 @@
         "source": "scPerturb ReplogleWeissman2022_rpe1.h5ad（Zenodo 10.5281/zenodo.7041849）+ MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
         "date": "2026-09-03",
         "license": "scPerturb CC BY 4.0；Hallmark 遵守 MSigDB 条款（不随仓库分发）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "doi:10.5281/zenodo.7041849",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi RPE1 cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
       },
@@ -311,6 +468,14 @@
         "source": "GEO GSE264667 GSE264667_hepg2_raw_singlecell_01.h5ad + MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
         "date": "2026-09-03",
         "license": "NCBI GEO 公共数据（无数据集级复用许可；保留署名、不再分发）；Hallmark 遵守 MSigDB 条款",
+        "license_ids": [
+          "LicenseRef-GEO-Public",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "geo:GSE264667",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi HepG2 cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
       },
@@ -326,6 +491,14 @@
         "source": "GEO GSE264667 GSE264667_jurkat_raw_singlecell_01.h5ad + MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
         "date": "2026-09-03",
         "license": "NCBI GEO 公共数据（无数据集级复用许可；保留署名、不再分发）；Hallmark 遵守 MSigDB 条款",
+        "license_ids": [
+          "LicenseRef-GEO-Public",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "geo:GSE264667",
+          "url:https://www.gsea-msigdb.org/gsea/msigdb/"
+        ],
         "deidentified": true,
         "proxy_notice": "Fifty-dimensional Hallmark-pathway aggregate effects over public CRISPRi Jurkat cells with split-half reliability; offline development input only, not a biological fit or efficacy predictor."
       },
@@ -341,6 +514,19 @@
         "source": "ADR-0047 `mgba ood-split-build`（四个已核验 bundle + 冻结 mgba-gene-embedding-table-0.1；五个预注册 salt，70/15/15 拆分，外层 leave-one-cell-context-out）",
         "date": "2026-09-03",
         "license": "随源数据（scPerturb CC BY 4.0；GEO 公共数据；MSigDB 条款）",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-GEO-Public",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-d1-context-bundle-replogle-k562",
+          "dataset:aivc-d1-context-bundle-replogle-rpe1",
+          "dataset:aivc-d1-context-bundle-nadig-hepg2",
+          "dataset:aivc-d1-context-bundle-nadig-jurkat",
+          "dataset:aivc-gene-embedding-table"
+        ],
         "deidentified": true,
         "proxy_notice": "Locked OOD split manifest over 559 shared genes; Arc H1 label summary registered with status sealed; offline development artifact only."
       },
@@ -356,6 +542,20 @@
         "source": "ADR-0047 首次 20 折简单基线筛查（zero/training-perturbed-mean/gene/context-mean/三类 ridge，alpha=1.0；同四 bundle 与冻结 split）",
         "date": "2026-09-03",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-GEO-Public",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-d1-context-bundle-replogle-k562",
+          "dataset:aivc-d1-context-bundle-replogle-rpe1",
+          "dataset:aivc-d1-context-bundle-nadig-hepg2",
+          "dataset:aivc-d1-context-bundle-nadig-jurkat",
+          "dataset:aivc-gene-embedding-table",
+          "dataset:aivc-d1-ood-split-manifest"
+        ],
         "deidentified": true,
         "proxy_notice": "Development-only simple-baseline screen; not a paper or external-test verdict; predictions do not enter the runtime chain."
       },
@@ -371,6 +571,20 @@
         "source": "ADR-0047 `mgba context-pathway-evaluate` 首次 20 折低秩交互模型开发评估（固定 seed 17/42/73/101/211 取均值；内层 leave-one-training-context-out 选超参）",
         "date": "2026-09-03",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-GEO-Public",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-d1-context-bundle-replogle-k562",
+          "dataset:aivc-d1-context-bundle-replogle-rpe1",
+          "dataset:aivc-d1-context-bundle-nadig-hepg2",
+          "dataset:aivc-d1-context-bundle-nadig-jurkat",
+          "dataset:aivc-gene-embedding-table",
+          "dataset:aivc-d1-ood-split-manifest"
+        ],
         "deidentified": true,
         "proxy_notice": "Offline pathway-level OOD development evaluation; development_verdict incomplete; paper_verdict sealed; not a biological validation."
       },
@@ -386,6 +600,20 @@
         "source": "ADR-0047 开发评估修复版（与 v1 同 split、同预测；补全简单基线比较统计）",
         "date": "2026-09-03",
         "license": "随源数据",
+        "license_ids": [
+          "CC-BY-4.0",
+          "LicenseRef-GEO-Public",
+          "LicenseRef-Geneformer",
+          "LicenseRef-MSigDB"
+        ],
+        "source_refs": [
+          "dataset:aivc-d1-context-bundle-replogle-k562",
+          "dataset:aivc-d1-context-bundle-replogle-rpe1",
+          "dataset:aivc-d1-context-bundle-nadig-hepg2",
+          "dataset:aivc-d1-context-bundle-nadig-jurkat",
+          "dataset:aivc-gene-embedding-table",
+          "dataset:aivc-d1-ood-split-manifest"
+        ],
         "deidentified": true,
         "proxy_notice": "Offline pathway-level OOD development evaluation; development_verdict failed; paper_verdict sealed; not a biological validation."
       },
