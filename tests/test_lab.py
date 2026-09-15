@@ -38,7 +38,7 @@ def _fixture_bundle(bundle_id: str) -> dict:
         "description": "deterministic bundle fixture",
         "model_status": "contract demonstrator",
         "boundary_note": "not a clinical predictor",
-        "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定，ADR-0043 calibration 确认 improved。",
+        "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定。ADR-0043 calibration 的 improved 输出因评估次数超出预注册上限（105 > 89），已按 ADR-0044 降级为探索性参数诊断，该 target 已消费。",
         "seed": 42,
         "roles": {"tumor-001": "tumor"},
         "layout": {"tumor-001": [0.5, 0.5]},

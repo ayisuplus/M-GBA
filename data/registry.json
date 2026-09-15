@@ -464,6 +464,7 @@
       "status": "materialized",
       "path": "data/aivc/D1-context-ood/bundles/nadig-hepg2.context-bundle.json",
       "sha256": "3e6b556562276c89944a6616865036d925399c67fa055a1e2b928212460c5293",
+      "distribution": "local-only",
       "provenance": {
         "source": "GEO GSE264667 GSE264667_hepg2_raw_singlecell_01.h5ad + MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
         "date": "2026-09-03",
@@ -487,6 +488,7 @@
       "status": "materialized",
       "path": "data/aivc/D1-context-ood/bundles/nadig-jurkat.context-bundle.json",
       "sha256": "fa7a1e63c0149d4f6e42df5ef52f92201436e7294b7cdc19f3728e8a00a2269e",
+      "distribution": "local-only",
       "provenance": {
         "source": "GEO GSE264667 GSE264667_jurkat_raw_singlecell_01.h5ad + MSigDB v2026.1 Hallmark，经 ADR-0047 同冻结管线生成",
         "date": "2026-09-03",

@@ -17,6 +17,10 @@ ALLOWED_KINDS = (
 )
 ALLOWED_STATUSES = ("materialized", "generated", "planned")
 _HASHED_STATUSES = ("materialized", "generated")
+# ``local-only`` marks registered bytes whose licence forbids redistribution:
+# the sha256 is still checked wherever the file exists, but its absence (a
+# clean clone, CI) is reported instead of failing the gate.
+ALLOWED_DISTRIBUTIONS = ("repository", "local-only")
 # Machine-readable licence vocabulary: SPDX identifiers where one exists,
 # ``LicenseRef-*`` for terms that have none. The prose ``license`` field keeps
 # the human wording; only these identifiers are audited.
@@ -126,6 +130,7 @@ class DatasetEntry:
     sha256: str | None
     provenance: DatasetProvenance
     notes: str
+    distribution: str = "repository"
 
     def __post_init__(self) -> None:
         _require_text(self.dataset_id, "dataset_id")
@@ -134,6 +139,10 @@ class DatasetEntry:
             raise ValueError(f"unknown dataset kind: {self.kind}")
         if self.status not in ALLOWED_STATUSES:
             raise ValueError(f"unknown dataset status: {self.status}")
+        if self.distribution not in ALLOWED_DISTRIBUTIONS:
+            raise ValueError(f"unknown dataset distribution: {self.distribution}")
+        if self.distribution == "local-only" and self.status not in _HASHED_STATUSES:
+            raise ValueError("only materialized or generated datasets can be local-only")
         if self.status in _HASHED_STATUSES:
             if not isinstance(self.sha256, str):
                 raise ValueError(f"{self.status} datasets must register a sha256")
@@ -189,6 +198,7 @@ def _parse_entry(raw: Any) -> DatasetEntry:
             proxy_notice=str(provenance.get("proxy_notice", "")),
         ),
         notes=str(raw.get("notes", "")),
+        distribution=str(raw.get("distribution", "repository")),
     )
 
 
@@ -264,6 +274,18 @@ def validate_data_registry(
             )
             continue
         target = root / entry.path
+        if not target.is_file() and entry.distribution == "local-only":
+            verdicts.append(
+                DatasetVerdict(
+                    dataset_id=entry.dataset_id,
+                    ok=True,
+                    detail=(
+                        "local-only; not distributed with the repository, "
+                        f"sha256 not checked here: {entry.path}"
+                    ),
+                )
+            )
+            continue
         if not target.is_file():
             verdicts.append(
                 DatasetVerdict(

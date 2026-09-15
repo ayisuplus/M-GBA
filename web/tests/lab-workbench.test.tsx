@@ -79,7 +79,7 @@ const bundle: LabBundle = {
   description: '测试实验',
   model_status: 'reference model',
   boundary_note: '不是临床预测。',
-  target_status: '真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定，ADR-0043 calibration 确认 improved。',
+  target_status: '真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定。ADR-0043 calibration 的 improved 输出因评估次数超出预注册上限（105 > 89），已按 ADR-0044 降级为探索性参数诊断，该 target 已消费。',
   seed: 42,
   roles: { 'eng-mac-004': 'engineered_macrophage', 'tumor-001': 'tumor' },
   layout: { 'eng-mac-004': [.3, .4], 'tumor-001': [.7, .6] },
@@ -94,7 +94,7 @@ const bundle: LabBundle = {
 
 const catalog: LabCatalog = {
   schema_version: 'mgba-lab-catalog-0.1',
-  title: 'Catalog', target_status: '真实数据 Target 已生成（2026-08-28）；首次评估未锚定 → calibration improved（ADR-0043）', catalog_digest: 'd'.repeat(64),
+  title: 'Catalog', target_status: '真实数据 Target 已生成（2026-08-28）；首次评估未锚定；calibration improved 已按 ADR-0044 降级为探索性诊断', catalog_digest: 'd'.repeat(64),
   experiments: [{ bundle_id: 'state-intervention', kind: bundle.kind, title: bundle.title, description: bundle.description, path: '/lab-data/state-intervention.json', ticks: 2, cell_count: 2, condition_count: 2, default_comparison_condition: 'intervention', bundle_digest: bundle.bundle_digest }],
 };
 

@@ -2489,6 +2489,7 @@ def _cmd_data_check(args: argparse.Namespace) -> dict[str, Any]:
             {
                 "dataset_id": verdict.dataset_id,
                 "status": by_id[verdict.dataset_id].status,
+                "distribution": by_id[verdict.dataset_id].distribution,
                 "license_ids": list(by_id[verdict.dataset_id].provenance.license_ids),
                 "ok": verdict.ok,
                 "detail": verdict.detail,

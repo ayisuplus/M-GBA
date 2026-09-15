@@ -1,0 +1,1715 @@
+{
+  "coverage": {
+    "folds": 20,
+    "genes": 559,
+    "outer_context_perturbations_used_for_training": 0,
+    "test_genes_used_for_training": 0
+  },
+  "folds": [
+    {
+      "fold_id": "replogle-k562--1",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5407179349596958,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5310979045230368,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.538982974838212,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5246577587001139,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5364729024834247,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.45680657531187974,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6274992888289056,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6550240457785418,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6550247236330429,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.645909823084636,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6732338634602604,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6879266010562023,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.4796303761986469,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.4782617220522566,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.47889927997290477,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.4946750326106069,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.41053872187745827,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-rpe1--1",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.0458150061388405,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.0892869552011788,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.9575617459886007,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.0377904937691433,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.0732922035377432,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.136489740111776,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6264273194072231,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6574652140843529,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6574660672147626,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.631572246801497,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6625557621511087,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6732208249124432,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.9793247076633583,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.000797659118646,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.971845834336707,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.9884368130202932,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.0464158805604704,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-hepg2--1",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6985633408120617,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7453656217989406,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6269633433626435,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6716742551784487,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7151569358396469,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7240554387697491,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6023109700619528,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6229559412164394,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6229567121403491,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6292693005858866,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.651670638853444,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6539730531162982,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6856205690941556,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7192366329659516,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6492508866802851,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6799781632814131,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.683172496034761,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-jurkat--1",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6541322635895984,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6412805573628834,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6621798299676644,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6836571960612412,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6810366565379662,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6472256397107187,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5951610001508143,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6250054763416073,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6250057485919361,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6200212573402875,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6505603421580732,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6465121738137082,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6487578724698507,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.653616441212777,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6825957627859707,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6947336298457721,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.666497616660175,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-k562--2",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5406896690991352,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5372499930797745,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.5338900335022573,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5169122438998495,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5353098419367919,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.4573791583690723,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6935657327610082,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7032234039376222,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.7032242733097896,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7038111740143899,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7149846815540888,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7203313654475734,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5881490428656136,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5749518541772158,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5527998722296829,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5628086754611482,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.473000996964007,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-rpe1--2",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.03832051672023,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.0776383020041636,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.9605731540431164,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.031266359261198,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.0631892573418409,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.1266185042023087,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.685811299496259,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.688364127024945,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6883649917252594,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.686698152998016,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.690696983446796,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.693236828989355,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.1316686898008246,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.146201178069023,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.1129240002687184,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.1242316216852273,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.1726735400904382,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-hepg2--2",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6793977718315958,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.731211077590452,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6221129230269439,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6581997528869662,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7057838215542774,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7138845985848913,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6648103292055244,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6703212875888337,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6703220175493777,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6842998971283956,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6925800540218464,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.681250969088021,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7772742052043342,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7928673499546123,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7477099869111995,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7577210003392462,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7604261742433239,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-jurkat--2",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.680941531549157,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6701057887507662,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6789073016066263,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7088870811771039,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7074276253810488,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6826331755408845,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.70606916228639,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7248173905782841,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.7248177720715003,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7217715412032231,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7427498387354748,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.739398498256583,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5922661650402851,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5750186589337681,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6268417062826381,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6184325592249879,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.5874129221921388,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-k562--3",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5200577073611482,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5196080739460367,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.5250927787547093,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5020221383803019,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5214775656004059,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.4352631641728919,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6469611071984042,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6746836956699392,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6746841557742683,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6644598507813576,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6924838185501058,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7044344885043469,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5645104706972658,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5556598090359911,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5329791880723755,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5446654205858733,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.4884486489636288,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-rpe1--3",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.0500795939901162,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.0897134995077356,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.9593391983734499,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.0460592826359054,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.0765490736145698,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.1409807722957719,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6779796322791928,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6981808360692617,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6981813808350221,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6891820431797602,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7084779882007228,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7274372508114552,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.019063384170416,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.0551867717431083,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.0015965705965089,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.0270907253146129,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.0779622921915377,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-hepg2--3",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.699389994175682,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7459465554698518,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.622691202935584,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6744988674948463,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7176474957072151,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7276555262942844,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6417158527647991,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6613258423893251,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6613265686392815,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6614628054802217,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6833308732878842,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6896072659579182,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7140863013975041,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7442344614454298,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6969392360579798,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7228703014935907,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7328607098965972,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-jurkat--3",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6459407802448943,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6340318203670728,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6579961717155131,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6765872771033706,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6757622601272829,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6450904333109619,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6324629904480427,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6649752562498493,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.6649756247617303,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6473793698604279,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6826897011458094,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.694344794965796,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6715957239054899,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6546366237449941,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7030781003496664,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6964628858618572,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6678219083911164,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-k562--4",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5333358710498636,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5326419803394744,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.5408108716346446,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5166786764741363,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5327508497573028,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.4547323554720307,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7058305540391704,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7372627788148013,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.737263171743284,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7292247862663866,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7594509343563351,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7875657389061426,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5683595576655327,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5695383945491743,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.556015179953821,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5678047428355631,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.48060899720568134,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-rpe1--4",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.0630356614324616,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.1006338400314999,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.9808332604119286,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.054701643661586,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.0843612486771588,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.1480107041741237,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7212594940141034,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7517502734976629,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.751750756156593,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7333290997323818,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7616254730132201,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7734732909644707,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.1188909709469046,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.1432604928472074,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.1123101108511104,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.134132289880033,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.2092059772072763,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-hepg2--4",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6969682007791174,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7404809624552564,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6425503939042934,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6707097396388785,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7116980680100402,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7201774907184888,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6817124050137049,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7054273968178815,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.705427777763447,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.718770189672847,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7406961085365827,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7514553313155676,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7726585456779226,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.810675197982926,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7564984215764948,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.791986742317655,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7976096242355522,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-jurkat--4",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6640676796733852,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6514864587383555,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6672449937705139,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6901571680872359,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.6872818921863759,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6654208668497033,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6690265180382997,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7098610906043504,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.7098612382439486,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6992034436777365,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7390302189366393,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.753032796153938,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.726636385188536,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7259307873547166,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7579127299393361,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7596751879717426,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7495803495905723,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-k562--5",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.539214059536226,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5347135759985888,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.5334113172558733,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5152265093838849,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.531543648415983,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.4506089294234372,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7105803514896176,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7358821074877357,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.7358826682680615,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7299142847952848,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7550010734088387,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7803936224078905,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.5364864860464365,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.5425177532811557,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.5209017535167485,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.5467738727768345,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.48748053476855674,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "replogle-rpe1--5",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.0395213939369916,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.0861338631780189,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.9477284464823569,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.0329172449681885,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.0716950966222372,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.1319725560947058,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7086232384429206,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7354573960946119,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.7354581556180411,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7160797011702505,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7430399933340549,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7613546492081805,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 1.1450803558600136,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 1.1671192129876087,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 1.1419284139138683,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 1.158540954774761,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 1.2316698767478906,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-hepg2--5",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6948811948905879,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7398215505344404,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6266759116889632,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6694765346231227,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7101365355309813,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.71242005497398,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6885530254357901,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.708599732156265,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.7086004545042034,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7140066883496475,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7373793591947134,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7492990252804602,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7604702869508314,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7891428220374456,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7355438948112373,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7617919650657168,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7809523917014286,
+            "unit_count": 85
+          }
+        }
+      }
+    },
+    {
+      "fold_id": "nadig-jurkat--5",
+      "metrics": {
+        "context_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.650484519859264,
+            "unit_count": 391
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.6416048804545108,
+            "unit_count": 391
+          },
+          "gene_mean": {
+            "standardized_macro_mae": 0.6555592876240824,
+            "unit_count": 391
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6779620069167155,
+            "unit_count": 391
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.678904412064776,
+            "unit_count": 391
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.6521993790832779,
+            "unit_count": 391
+          }
+        },
+        "gene_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.6786605537727131,
+            "unit_count": 255
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7129059114176304,
+            "unit_count": 255
+          },
+          "context_perturbed_mean": {
+            "standardized_macro_mae": 0.7129062190315867,
+            "unit_count": 255
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.6977091577878852,
+            "unit_count": 255
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7345596685234896,
+            "unit_count": 255
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7547032970185067,
+            "unit_count": 255
+          }
+        },
+        "joint_ood": {
+          "additive_ridge": {
+            "standardized_macro_mae": 0.7146514585233427,
+            "unit_count": 85
+          },
+          "context_only_ridge": {
+            "standardized_macro_mae": 0.7147543884379108,
+            "unit_count": 85
+          },
+          "gene_only_ridge": {
+            "standardized_macro_mae": 0.7453408987361217,
+            "unit_count": 85
+          },
+          "training_perturbed_mean": {
+            "standardized_macro_mae": 0.7550939745998162,
+            "unit_count": 85
+          },
+          "zero_response": {
+            "standardized_macro_mae": 0.7227029829340501,
+            "unit_count": 85
+          }
+        }
+      }
+    }
+  ],
+  "joint_ood_best_simple": {
+    "predictor": "gene_only_ridge",
+    "standardized_macro_mae": 0.7541955913921687,
+    "unit_count": 1700
+  },
+  "joint_ood_by_context": {
+    "nadig-hepg2": {
+      "additive_ridge": 0.7420219816649496,
+      "context_only_ridge": 0.7712312928772731,
+      "gene_only_ridge": 0.7171884852074393,
+      "training_perturbed_mean": 0.7428696344995243,
+      "zero_response": 0.7510042792223327
+    },
+    "nadig-jurkat": {
+      "additive_ridge": 0.6707815210255008,
+      "context_only_ridge": 0.6647913799368333,
+      "gene_only_ridge": 0.7031538396187467,
+      "training_perturbed_mean": 0.7048796475008351,
+      "zero_response": 0.6788031559536105
+    },
+    "replogle-k562": {
+      "additive_ridge": 0.5474271866946991,
+      "context_only_ridge": 0.5441859066191588,
+      "gene_only_ridge": 0.5283190547491066,
+      "training_perturbed_mean": 0.5433455488540053,
+      "zero_response": 0.46801557995586646
+    },
+    "replogle-rpe1": {
+      "additive_ridge": 1.0788056216883035,
+      "context_only_ridge": 1.1025130629531186,
+      "gene_only_ridge": 1.0681209859933827,
+      "training_perturbed_mean": 1.0864864809349855,
+      "zero_response": 1.1475855133595225
+    }
+  },
+  "metrics": {
+    "context_ood": {
+      "additive_ridge": {
+        "standardized_macro_mae": 0.7337777345815026,
+        "unit_count": 7820
+      },
+      "context_only_ridge": {
+        "standardized_macro_mae": 0.7520026630666019,
+        "unit_count": 7820
+      },
+      "gene_mean": {
+        "standardized_macro_mae": 0.6970552570443989,
+        "unit_count": 7820
+      },
+      "gene_only_ridge": {
+        "standardized_macro_mae": 0.728002111515112,
+        "unit_count": 7820
+      },
+      "training_perturbed_mean": {
+        "standardized_macro_mae": 0.7508738695463534,
+        "unit_count": 7820
+      },
+      "zero_response": {
+        "standardized_macro_mae": 0.741481253173247,
+        "unit_count": 7820
+      }
+    },
+    "gene_ood": {
+      "additive_ridge": {
+        "standardized_macro_mae": 0.6682510412567417,
+        "unit_count": 5100
+      },
+      "context_only_ridge": {
+        "standardized_macro_mae": 0.692174460190997,
+        "unit_count": 5100
+      },
+      "context_perturbed_mean": {
+        "standardized_macro_mae": 0.6921750238787743,
+        "unit_count": 5100
+      },
+      "gene_only_ridge": {
+        "standardized_macro_mae": 0.6862037406955259,
+        "unit_count": 5100
+      },
+      "training_perturbed_mean": {
+        "standardized_macro_mae": 0.7108398687434745,
+        "unit_count": 5100
+      },
+      "zero_response": {
+        "standardized_macro_mae": 0.7211475933087429,
+        "unit_count": 5100
+      }
+    },
+    "joint_ood": {
+      "additive_ridge": {
+        "standardized_macro_mae": 0.7597590777683632,
+        "unit_count": 1700
+      },
+      "context_only_ridge": {
+        "standardized_macro_mae": 0.770680410596596,
+        "unit_count": 1700
+      },
+      "gene_only_ridge": {
+        "standardized_macro_mae": 0.7541955913921687,
+        "unit_count": 1700
+      },
+      "training_perturbed_mean": {
+        "standardized_macro_mae": 0.7693953279473376,
+        "unit_count": 1700
+      },
+      "zero_response": {
+        "standardized_macro_mae": 0.761352132122833,
+        "unit_count": 1700
+      }
+    }
+  },
+  "protocol_status": "simple-baselines-complete",
+  "schema_version": "mgba-context-pathway-baseline-screen-0.1",
+  "scientific_boundary": "Development-only screen; not a paper or external-test verdict.",
+  "source": {
+    "bundle_sha256": {
+      "nadig-hepg2": "3e6b556562276c89944a6616865036d925399c67fa055a1e2b928212460c5293",
+      "nadig-jurkat": "fa7a1e63c0149d4f6e42df5ef52f92201436e7294b7cdc19f3728e8a00a2269e",
+      "replogle-k562": "bab3c8f553ce348a0b3f914c12776a36a333d018aa18dea5a134ee05214bc964",
+      "replogle-rpe1": "c4dbc84c7ed7b72802602d3f045dd669672fcf65813af728d6f653be7988fc12"
+    },
+    "embedding_table_sha256": "34785e7ace44c91652a9cd5e5d381772e5a49d3108b3f37db8c36806f5d66791",
+    "split_manifest_sha256": "67a125eaca3d2d58b3bc93f1ff0623c8e8718885bf12490fce9f7370badb1a93"
+  },
+  "study_id": "mgba-context-pathway-ood-2026-09-03"
+}

@@ -91,6 +91,18 @@ class RealRegistryGateTests(unittest.TestCase):
         failures = [verdict for verdict in verdicts if not verdict.ok]
         self.assertEqual([], [f"{v.dataset_id}: {v.detail}" for v in failures])
 
+    def test_local_only_entries_are_the_non_redistributable_geo_bundles(self) -> None:
+        # Deliberate guard: local-only must not become a way to skip the sha256
+        # gate. Extend only when a licence forbids redistributing a new entry.
+        entries = load_data_registry(ROOT / "data" / "registry.json")
+        self.assertEqual(
+            [
+                "aivc-d1-context-bundle-nadig-hepg2",
+                "aivc-d1-context-bundle-nadig-jurkat",
+            ],
+            sorted(e.dataset_id for e in entries if e.distribution == "local-only"),
+        )
+
 
 class RegistryValidationTests(unittest.TestCase):
     def test_matching_sha256_passes(self) -> None:
@@ -124,6 +136,24 @@ class RegistryValidationTests(unittest.TestCase):
             entry = _entry(kind="external_planned", status="planned", sha256=None)
             (verdict,) = validate_data_registry((entry,), data_root=Path(tmp))
             self.assertTrue(verdict.ok)
+
+    def test_missing_local_only_file_is_reported_not_failed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            entry = _entry(distribution="local-only")
+            (verdict,) = validate_data_registry((entry,), data_root=Path(tmp))
+            self.assertTrue(verdict.ok)
+            self.assertIn("local-only", verdict.detail)
+            self.assertIn("sha256 not checked", verdict.detail)
+
+    def test_present_local_only_file_is_still_sha256_checked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "fixture").mkdir()
+            (root / "fixture" / "payload.json").write_bytes(b'{"tampered": true}')
+            entry = _entry(distribution="local-only")
+            (verdict,) = validate_data_registry((entry,), data_root=root)
+            self.assertFalse(verdict.ok)
+            self.assertIn("mismatch", verdict.detail)
 
 
 class RegistryLoadTests(unittest.TestCase):
@@ -159,6 +189,32 @@ class RegistryLoadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ValueError):
                 load_data_registry(Path(tmp) / "absent.json")
+
+    def test_distribution_defaults_to_repository(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (entry,) = load_data_registry(
+                _write_registry(Path(tmp), _registry_payload(_entry_payload()))
+            )
+            self.assertEqual("repository", entry.distribution)
+
+    def test_unknown_distribution_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = _registry_payload(_entry_payload(distribution="elsewhere"))
+            with self.assertRaises(ValueError):
+                load_data_registry(_write_registry(Path(tmp), payload))
+
+    def test_planned_entry_cannot_be_local_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = _registry_payload(
+                _entry_payload(
+                    kind="external_planned",
+                    status="planned",
+                    sha256=None,
+                    distribution="local-only",
+                )
+            )
+            with self.assertRaises(ValueError):
+                load_data_registry(_write_registry(Path(tmp), payload))
 
     def test_legacy_schema_without_structured_fields_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

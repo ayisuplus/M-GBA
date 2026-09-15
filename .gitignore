@@ -20,7 +20,19 @@ data/aivc/A3-norman2019-geo/
 data/aivc/B1-tahoe100/
 data/aivc/B2-replogle2022/
 data/aivc/C1-geneformer/
-data/aivc/D1-context-ood/
+# D1: only registered, redistributable derivatives are tracked. The nadig
+# (GEO GSE264667) bundles are registered as local-only and stay ignored.
+data/aivc/D1-context-ood/*
+!data/aivc/D1-context-ood/ood-split-manifest.json
+!data/aivc/D1-context-ood/baseline-screen.json
+!data/aivc/D1-context-ood/bundles/
+data/aivc/D1-context-ood/bundles/*
+!data/aivc/D1-context-ood/bundles/replogle-k562.context-bundle.json
+!data/aivc/D1-context-ood/bundles/replogle-rpe1.context-bundle.json
+!data/aivc/D1-context-ood/development/
+data/aivc/D1-context-ood/development/*
+!data/aivc/D1-context-ood/development/interaction-evaluation.json
+!data/aivc/D1-context-ood/development/interaction-evaluation-v2.json
 models/
 artifacts/
 %TEMP%*

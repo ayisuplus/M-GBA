@@ -450,7 +450,7 @@ def run_lab_experiment(
             "description": "同一 L0 clamp 在冻结状态窗口内与 baseline 做单 seed 配对。",
             "model_status": "reference-model paired run; not a clinical predictor",
             "boundary_note": BOUNDARY_NOTE,
-            "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定，ADR-0043 calibration 确认 improved。",
+            "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定。ADR-0043 calibration 的 improved 输出因评估次数超出预注册上限（105 > 89），已按 ADR-0044 降级为探索性参数诊断，该 target 已消费。",
             "seed": 42,
             "roles": role_map,
             "layout": build_layout(role_map),
@@ -614,7 +614,7 @@ def _bundle_from_playbook(playbook: Mapping[str, Any]) -> dict[str, Any]:
             "description": "0.0 / 0.7 / 1.0 L0 signal_expression 与 baseline 的冻结配对回放。",
             "model_status": "CAR-M reference-model dose comparison",
             "boundary_note": str(playbook["boundary_note"]),
-            "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定，ADR-0043 calibration 确认 improved。",
+            "target_status": "真实数据 Target 已于 2026-08-28 生成（spatial-anchor-29c87ba1411d4fc8）；首次评估未锚定。ADR-0043 calibration 的 improved 输出因评估次数超出预注册上限（105 > 89），已按 ADR-0044 降级为探索性参数诊断，该 target 已消费。",
             "seed": int(playbook["seed"]),
             "roles": dict(playbook["roles"]),
             "layout": dict(playbook["layout"]),
@@ -746,7 +746,7 @@ def write_lab_bundle_set(
         "title": "M-GBA 跨尺度虚拟实验室",
         "live_request_schema": LAB_REQUEST_SCHEMA,
         "live_execution_revision": LAB_EXECUTION_REVISION,
-        "target_status": "真实数据 Target 已生成（2026-08-28）；首次评估未锚定 → calibration improved（ADR-0043）",
+        "target_status": "真实数据 Target 已生成（2026-08-28）；首次评估未锚定；calibration improved 已按 ADR-0044 降级为探索性诊断",
         "experiments": [
             {
                 "bundle_id": bundle["bundle_id"],

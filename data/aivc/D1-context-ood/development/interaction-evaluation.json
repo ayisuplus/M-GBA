@@ -1,0 +1,377 @@
+{
+  "coverage": {
+    "external_test_status": "sealed",
+    "folds": 20,
+    "protocol_complete": false,
+    "required_folds": 20
+  },
+  "evaluation_id": "context-pathway-eval-0e503ab3dec0605d",
+  "metrics": {
+    "context_ood": {
+      "additive_ridge": {
+        "direction_agreement": 0.6082992327365728,
+        "mean_pathway_spearman": 0.18950548990790592,
+        "standardized_macro_mae": 0.7337777341566495,
+        "strong_response_top5_recall": 0.4437340153452685,
+        "unit_count": 7820
+      },
+      "context_only_ridge": {
+        "direction_agreement": 0.5966445012787724,
+        "mean_pathway_spearman": 0.018165214191454327,
+        "standardized_macro_mae": 0.7520026630866926,
+        "strong_response_top5_recall": 0.45560102301790284,
+        "unit_count": 7820
+      },
+      "gene_mean": {
+        "direction_agreement": 0.6448312020460358,
+        "mean_pathway_spearman": 0.37976478698632443,
+        "standardized_macro_mae": 0.6970552570443989,
+        "strong_response_top5_recall": 0.4032992327365729,
+        "unit_count": 7820
+      },
+      "gene_only_ridge": {
+        "direction_agreement": 0.6188670076726343,
+        "mean_pathway_spearman": 0.13571363267172695,
+        "standardized_macro_mae": 0.7280021116176165,
+        "strong_response_top5_recall": 0.44974424552429665,
+        "unit_count": 7820
+      },
+      "interaction_model": {
+        "direction_agreement": 0.5881841432225065,
+        "mean_pathway_spearman": 0.03419677051015104,
+        "standardized_macro_mae": 0.7945807013944768,
+        "strong_response_top5_recall": 0.4324040920716113,
+        "unit_count": 7820
+      },
+      "training_perturbed_mean": {
+        "direction_agreement": 0.6126368286445012,
+        "mean_pathway_spearman": -0.20415800936174308,
+        "standardized_macro_mae": 0.7508738695463534,
+        "strong_response_top5_recall": 0.459156010230179,
+        "unit_count": 7820
+      },
+      "zero_response": {
+        "direction_agreement": 0.0,
+        "mean_pathway_spearman": 0.0,
+        "standardized_macro_mae": 0.7414812531732469,
+        "strong_response_top5_recall": 0.06514066496163683,
+        "unit_count": 7820
+      }
+    },
+    "gene_ood": {
+      "additive_ridge": {
+        "direction_agreement": 0.6401450980392157,
+        "mean_pathway_spearman": 0.2806119303789081,
+        "standardized_macro_mae": 0.6682510413470591,
+        "strong_response_top5_recall": 0.477921568627451,
+        "unit_count": 5100
+      },
+      "context_only_ridge": {
+        "direction_agreement": 0.634964705882353,
+        "mean_pathway_spearman": 0.19040157147004202,
+        "standardized_macro_mae": 0.6921744601808673,
+        "strong_response_top5_recall": 0.4775294117647059,
+        "unit_count": 5100
+      },
+      "context_perturbed_mean": {
+        "direction_agreement": 0.634964705882353,
+        "mean_pathway_spearman": 0.19061251833273063,
+        "standardized_macro_mae": 0.6921750238787743,
+        "strong_response_top5_recall": 0.4775294117647059,
+        "unit_count": 5100
+      },
+      "gene_only_ridge": {
+        "direction_agreement": 0.6281882352941177,
+        "mean_pathway_spearman": 0.18518278455563536,
+        "standardized_macro_mae": 0.6862037407868063,
+        "strong_response_top5_recall": 0.4721960784313726,
+        "unit_count": 5100
+      },
+      "interaction_model": {
+        "direction_agreement": 0.6466274509803922,
+        "mean_pathway_spearman": 0.2788477691497059,
+        "standardized_macro_mae": 0.6576092178516295,
+        "strong_response_top5_recall": 0.5023921568627452,
+        "unit_count": 5100
+      },
+      "training_perturbed_mean": {
+        "direction_agreement": 0.6250549019607844,
+        "mean_pathway_spearman": 0.05401583243430849,
+        "standardized_macro_mae": 0.7108398687434745,
+        "strong_response_top5_recall": 0.47047058823529414,
+        "unit_count": 5100
+      },
+      "zero_response": {
+        "direction_agreement": 0.0,
+        "mean_pathway_spearman": 0.0,
+        "standardized_macro_mae": 0.7211475933087429,
+        "strong_response_top5_recall": 0.06152941176470589,
+        "unit_count": 5100
+      }
+    },
+    "joint_ood": {
+      "additive_ridge": {
+        "direction_agreement": 0.603,
+        "mean_pathway_spearman": 0.12635840858953015,
+        "standardized_macro_mae": 0.7597590770329004,
+        "strong_response_top5_recall": 0.4485882352941177,
+        "unit_count": 1700
+      },
+      "context_only_ridge": {
+        "direction_agreement": 0.5972705882352941,
+        "mean_pathway_spearman": 0.0072786226475272066,
+        "standardized_macro_mae": 0.7706804106330466,
+        "strong_response_top5_recall": 0.4610588235294118,
+        "unit_count": 1700
+      },
+      "gene_only_ridge": {
+        "direction_agreement": 0.6150588235294117,
+        "mean_pathway_spearman": 0.04891825725867573,
+        "standardized_macro_mae": 0.754195591418117,
+        "strong_response_top5_recall": 0.4567058823529412,
+        "unit_count": 1700
+      },
+      "interaction_model": {
+        "direction_agreement": 0.5883529411764706,
+        "mean_pathway_spearman": 0.01979745444089361,
+        "standardized_macro_mae": 0.8121355783829184,
+        "strong_response_top5_recall": 0.4335294117647059,
+        "unit_count": 1700
+      },
+      "training_perturbed_mean": {
+        "direction_agreement": 0.6148588235294118,
+        "mean_pathway_spearman": -0.21012070616615192,
+        "standardized_macro_mae": 0.7693953279473376,
+        "strong_response_top5_recall": 0.4631764705882353,
+        "unit_count": 1700
+      },
+      "zero_response": {
+        "direction_agreement": 0.0,
+        "mean_pathway_spearman": 0.0,
+        "standardized_macro_mae": 0.761352132122833,
+        "strong_response_top5_recall": 0.06152941176470589,
+        "unit_count": 1700
+      }
+    }
+  },
+  "pass_rule": {
+    "development_verdict": "incomplete",
+    "external_requirement": "Arc H1 remains sealed; paper go additionally requires >=3% improvement over its best simple baseline in a separate one-shot evaluation.",
+    "paper_verdict": "sealed",
+    "reasons": [
+      "all 20 folds and all three learned baselines are required",
+      "joint OOD improvement versus the best simple baseline is below 5%",
+      "paired bootstrap 95% CI versus the best simple baseline crosses zero",
+      "joint OOD improvement versus the best learned baseline is below 2%",
+      "the interaction model wins in fewer than three development contexts",
+      "at least one development context regresses by more than 2%"
+    ]
+  },
+  "schema_version": "mgba-context-pathway-evaluation-0.1",
+  "scientific_boundary": "Offline pathway-level CRISPRi response benchmark. Development claims are restricted to gene-disjoint, context-disjoint, and joint OOD evaluation; the sealed Arc H1 labels are not development data. This is not a clinical, CAR-M efficacy, full-transcriptome, or validated virtual-cell claim.",
+  "selection": {
+    "best_learned": null,
+    "best_simple": "gene_only_ridge",
+    "development_contexts_won": 0,
+    "locked_external_hyperparameters": null,
+    "per_context": {
+      "nadig-hepg2": {
+        "best_simple": 0.7171884851328209,
+        "best_simple_id": "gene_only_ridge",
+        "interaction_model": 0.7915726196671717,
+        "relative_improvement": -0.10371629784403914,
+        "won": false
+      },
+      "nadig-jurkat": {
+        "best_simple": 0.6707815207863288,
+        "best_simple_id": "additive_ridge",
+        "interaction_model": 0.7118747920823544,
+        "relative_improvement": -0.06126178199997769,
+        "won": false
+      },
+      "replogle-k562": {
+        "best_simple": 0.4680155799558665,
+        "best_simple_id": "zero_response",
+        "interaction_model": 0.6021575809621966,
+        "relative_improvement": -0.2866186655986529,
+        "won": false
+      },
+      "replogle-rpe1": {
+        "best_simple": 1.0681209861379206,
+        "best_simple_id": "gene_only_ridge",
+        "interaction_model": 1.142937320819951,
+        "relative_improvement": -0.07004481295002819,
+        "won": false
+      }
+    },
+    "relative_improvement_vs_learned": null,
+    "relative_improvement_vs_simple": -0.07682355561885029,
+    "worst_context_regression": 0.2866186655986529
+  },
+  "source": {
+    "bundle_sha256": {
+      "nadig-hepg2": "3e6b556562276c89944a6616865036d925399c67fa055a1e2b928212460c5293",
+      "nadig-jurkat": "fa7a1e63c0149d4f6e42df5ef52f92201436e7294b7cdc19f3728e8a00a2269e",
+      "replogle-k562": "bab3c8f553ce348a0b3f914c12776a36a333d018aa18dea5a134ee05214bc964",
+      "replogle-rpe1": "c4dbc84c7ed7b72802602d3f045dd669672fcf65813af728d6f653be7988fc12"
+    },
+    "feature_source": {
+      "dim": 768,
+      "path": "gene-embedding-table.json",
+      "schema_version": "mgba-gene-embedding-table-0.1",
+      "sha256": "34785e7ace44c91652a9cd5e5d381772e5a49d3108b3f37db8c36806f5d66791"
+    },
+    "learned_sources": {},
+    "prediction_sha256": [
+      "0588513ebe919ee3965f31fbadc56015cc033c50ac5aa492c346f2bc2d68b72e",
+      "117dd53857c054966fb44a62cb0c8a19ad263af57f6b9140476f7a30ed839a5f",
+      "1b6702aa17df3db143dd6d8c29c67131bd64bdc22915c0cca609163d3a99372e",
+      "23e21807593713a5c5070945ae74281599abc55c08cbf567a025b296982df184",
+      "243ec014b90d3ef89dff899a83164c5935a8d7a08cbbc1b817a50357a8ceb891",
+      "3cc4be595e54a356e184f4b89c59cc82360e264dc20d3a189f920b95a5c64b46",
+      "3d21c582d010bd982a61de6b17d9059ef77eb99f78729cb6bf525bdfe8582524",
+      "41b993d3cbf2d669466eb88cd0112fddf6927198e1eda39f79e742460dc3fbbd",
+      "5830e94691a3e0ba9c88405a8515cb65e6637c923b13b8d569b46638e39cb687",
+      "59042f6983ede0a5c92c3eb151521f068c6cbc17dfa2b4e39e3b859247ac46e5",
+      "6ed498229d29fe136fd61bcd244a208fbb15b9f1f3dd5c16da7cfaa2812e213e",
+      "78c62a8cbde16c2cefb143de3f636fd893e721f697d06cede7a9b3126bcefcbe",
+      "7c01b5f86d5871d0079f7d4600e1f25265610c5e2da4717a3fbbd1c2e211fca3",
+      "85b3f325924a09d271a2c0db765f4c92d61c72643ddb82f9c52eaa195379fad5",
+      "9f6684509e5c12149afed126b176e798c81c411464f080f1519e253292035ac8",
+      "be51e2ed3935b43d8f54ddeb5205bec2c5247d1d431adf9fbcb6450326b83fe8",
+      "cc26ee56d691b2987021ffbc23c64bd154a9fac1e6600f534dbcc68046a4586d",
+      "f31895f60b624cbe4af9bdbeb8410852681867babb36b179ab127394ed0f7698",
+      "f5cb3e9c7b86f494296366b247d34e59a9ed5ded09fdc9ce442caaf92f9e3c3f",
+      "fbc93085400c37c7ca019057388f2298b3f2756ed40524aa93e9c7640dd1175f"
+    ],
+    "split_manifest_sha256": "67a125eaca3d2d58b3bc93f1ff0623c8e8718885bf12490fce9f7370badb1a93"
+  },
+  "statistics": {
+    "block": "perturbation-gene",
+    "bootstrap_resamples": 10000,
+    "comparisons": {
+      "additive_ridge": {
+        "ci95_lower": 0.04327086506881804,
+        "ci95_upper": 0.05924202951955594,
+        "mean_difference": 0.05117310307974903,
+        "p_value_bh": 0.0,
+        "p_value_two_sided": 0.0
+      },
+      "gene_only_ridge": {
+        "ci95_lower": 0.04733373313573787,
+        "ci95_upper": 0.0646273086918798,
+        "mean_difference": 0.05590151169068161,
+        "p_value_bh": 0.0,
+        "p_value_two_sided": 0.0
+      },
+      "training_perturbed_mean": {
+        "ci95_lower": 0.038090617599682665,
+        "ci95_upper": 0.04630664805963902,
+        "mean_difference": 0.042134180009282506,
+        "p_value_bh": 0.0,
+        "p_value_two_sided": 0.0
+      },
+      "zero_response": {
+        "ci95_lower": 0.03382358699590518,
+        "ci95_upper": 0.06422621804251975,
+        "mean_difference": 0.04902933822695995,
+        "p_value_bh": 0.0,
+        "p_value_two_sided": 0.0
+      }
+    },
+    "secondary_comparisons": {
+      "direction_agreement": {
+        "additive_ridge": {
+          "ci95_lower": -0.02060289389067524,
+          "ci95_upper": -0.005921757770632367,
+          "mean_difference": -0.013132368703108249,
+          "p_value_bh": 0.0004363636363636364,
+          "p_value_two_sided": 0.0004
+        },
+        "gene_only_ridge": {
+          "ci95_lower": -0.03272240085744909,
+          "ci95_upper": -0.018555734190782422,
+          "mean_difference": -0.02561361200428724,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        },
+        "training_perturbed_mean": {
+          "ci95_lower": -0.029745444801714895,
+          "ci95_upper": -0.021065112540192926,
+          "mean_difference": -0.02547829581993569,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        },
+        "zero_response": {
+          "ci95_lower": 0.5814375669882101,
+          "ci95_upper": 0.5978108252947482,
+          "mean_difference": 0.5898432475884244,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        }
+      },
+      "mean_pathway_spearman": {
+        "additive_ridge": {
+          "ci95_lower": -0.1347025028307461,
+          "ci95_upper": -0.07012605164017295,
+          "mean_difference": -0.1020640642559453,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        },
+        "gene_only_ridge": {
+          "ci95_lower": -0.06550689932455857,
+          "ci95_upper": 0.017775831915949628,
+          "mean_difference": -0.023891114705859674,
+          "p_value_bh": 0.2478,
+          "p_value_two_sided": 0.2478
+        },
+        "training_perturbed_mean": {
+          "ci95_lower": 0.20336061391425111,
+          "ci95_upper": 0.2599391439493583,
+          "mean_difference": 0.23189318080966315,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        },
+        "zero_response": {
+          "ci95_lower": 0.011192226765235446,
+          "ci95_upper": 0.03433375693554181,
+          "mean_difference": 0.02288434300676067,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        }
+      },
+      "strong_response_top5_recall": {
+        "additive_ridge": {
+          "ci95_lower": -0.02382100750267953,
+          "ci95_upper": -0.007944801714898178,
+          "mean_difference": -0.01579581993569132,
+          "p_value_bh": 0.0004363636363636364,
+          "p_value_two_sided": 0.0004
+        },
+        "gene_only_ridge": {
+          "ci95_lower": -0.0329983922829582,
+          "ci95_upper": -0.015434083601286177,
+          "mean_difference": -0.02428992497320472,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        },
+        "training_perturbed_mean": {
+          "ci95_lower": -0.03791532690246517,
+          "ci95_upper": -0.021329046087888534,
+          "mean_difference": -0.029581993569131836,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        },
+        "zero_response": {
+          "ci95_lower": 0.3502947481243301,
+          "ci95_upper": 0.3909699892818864,
+          "mean_difference": 0.3709807073954984,
+          "p_value_bh": 0.0,
+          "p_value_two_sided": 0.0
+        }
+      }
+    },
+    "secondary_spearman_method": "gene-block bootstrap of fixed full-sample pathway-rank contributions"
+  },
+  "study_id": "mgba-context-pathway-ood-2026-09-03"
+}
